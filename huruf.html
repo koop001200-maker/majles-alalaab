@@ -257,12 +257,71 @@ textarea{width:100%;min-height:90px;resize:vertical}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+/* ---------- الرئيسية وطريقة اللعب (نفس ترتيب «رتّبها صح») ---------- */
+[hidden]{display:none!important}
+.home{height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2.6vh,30px);text-align:center;padding:16px;overflow:hidden}
+.home .logo{display:flex;gap:clamp(6px,1vw,14px);direction:rtl}
+.home .logo span{width:clamp(54px,min(6.5vw,11vh),110px);aspect-ratio:1;display:grid;place-items:center;padding-top:.12em;font-family:var(--display);font-size:clamp(30px,min(4vw,7vh),70px);background:#fff;color:#111827;border:3px solid #111827;border-radius:16px;box-shadow:5px 5px 0 #111827}
+.home .logo span:nth-child(2){background:#fbbf24;transform:rotate(6deg)}
+.home .logo span:nth-child(3){background:#6ee7b7;transform:rotate(-5deg)}
+.home .logo span:nth-child(4){transform:rotate(3deg)}
+.home .title{margin:0;font-size:clamp(46px,min(8.5vw,13vh),150px);line-height:1.15}
+.home .title em{font-style:normal;display:inline-block;background:#fbbf24;border:3px solid #111827;box-shadow:5px 5px 0 #111827;padding:0 .25em;transform:rotate(-2deg)}
+.home .subtitle{margin:0;max-width:38em;font-size:clamp(16px,min(1.6vw,2.7vh),28px);line-height:1.5}
+.home .row{display:flex;flex-wrap:wrap;gap:clamp(8px,1vw,16px);justify-content:center}
+.home .summary,.home .stats{margin:0;font-size:clamp(14px,min(1.15vw,2.1vh),22px);font-weight:700}
+.home .row .btn:not(.big):not(.huge){font-size:clamp(14px,min(1.1vw,2vh),22px);padding:.5em 1.2em}
+.btn.big{font-size:clamp(16px,min(1.4vw,2.5vh),28px);padding:.6em 1.3em}
+.btn.huge{font-size:clamp(20px,min(2.1vw,3.6vh),40px);padding:.45em 1.6em}
+.howto-v{height:100dvh;display:flex;flex-direction:column;gap:16px;padding:clamp(12px,2.5vh,28px) max(16px,3vw);max-width:1100px;margin:0 auto}
+.howto-v .page-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.howto-v .page-head h2{margin:0;font-size:clamp(28px,4vh,48px)}
+.howto-v .howto{flex:1;min-height:0;overflow-y:auto;font-size:clamp(15px,min(1.3vw,2.3vh),24px);line-height:1.7}
+.howto-v .howto h3{margin:.6em 0 .2em}
+@media (max-width:600px){.home .btn.big,.home .btn.huge{width:100%}.home .row{width:100%}}
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@500;600;700;800&display=swap">
 <link rel="stylesheet" href="css/majlis-theme.css">
 </head>
 <body class="g-hf">
 <div class="app" id="app">
+  <!-- ========== الرئيسية (نفس ترتيب «رتّبها صح») ========== -->
+  <section class="home" id="view-home" hidden aria-label="الرئيسية">
+    <div class="logo" aria-hidden="true"><span>ت</span><span>ح</span><span>د</span><span>ي</span></div>
+    <h1 class="title">تحدي <em>الحروف</em></h1>
+    <p class="subtitle">حروف مبعثرة على الشاشة… أول واحد يرتّبها ويقول الكلمة بصوت عالي ياخذ النقطة!</p>
+    <button class="btn primary big" id="h-resume" type="button" hidden>كمّل المسابقة</button>
+    <div class="row">
+      <button class="btn good huge" id="h-start" type="button">ابدأ ▶</button>
+      <button class="btn big" id="h-setup" type="button">المتسابقون والإعدادات</button>
+      <button class="btn big ghost" id="h-screen" type="button">شاشة عرض منفصلة</button>
+    </div>
+    <p class="summary" id="h-summary"></p>
+    <div class="row">
+      <button class="btn ghost" id="h-howto" type="button">طريقة اللعب</button>
+      <a class="btn ghost" href="index.html" style="text-decoration:none">🏠 كل الألعاب</a>
+    </div>
+    <p class="stats" id="h-stats"></p>
+  </section>
+
+  <!-- ========== طريقة اللعب ========== -->
+  <section class="howto-v" id="view-howto" hidden aria-label="طريقة اللعب">
+    <div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" type="button" data-go="home">الرئيسية</button></div>
+    <div class="card howto">
+      <ol>
+        <li>اكتبوا أسماء المتسابقين من «المتسابقون والإعدادات»، واختاروا المستوى والمؤقت وعدد الجولات.</li>
+        <li>تظهر على الشاشة حروف كلمة مبعثرة. أول واحد يعرف الكلمة يقولها بصوت عالي.</li>
+        <li>اضغطوا اسمه في لوحة الترتيب (أو رقمه من الكيبورد) وتنضاف له نقطة واحدة.</li>
+        <li>إذا خلص الوقت وما أحد عرفها تنكشف الكلمة بلا نقاط، وبعدها «الجولة التالية».</li>
+        <li>بعد آخر جولة يطلع البطل ولوحة النتائج النهائية.</li>
+      </ol>
+      <h3>شاشة عرض منفصلة</h3>
+      <p>عندكم لابتوب متصل بالتلفزيون؟ افتحوا «شاشة عرض منفصلة» واسحبوها للتلفزيون، وخلّوا صفحة الإعدادات عند المنظّم: تشوف فيها الكلمة الصحيحة وتسجّل الفائز. الصفحتان تتزامنان تلقائيًا.</p>
+      <h3>الكيبورد</h3>
+      <p><span class="kbd">1</span>–<span class="kbd">9</span> تسجيل الفائز · <span class="kbd">N</span> الجولة التالية · <span class="kbd">مسافة</span> إيقاف · <span class="kbd">F</span> ملء الشاشة</p>
+    </div>
+  </section>
+
   <!-- ========== شاشة العرض ========== -->
   <section class="display" id="view-display" hidden aria-label="شاشة العرض">
     <header class="d-top">
@@ -287,8 +346,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <button class="btn ghost" id="d-undo" type="button" hidden>تراجع عن الفائز</button>
       <button class="btn" id="d-fs" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>ملء الشاشة</button>
       <button class="btn ghost" id="d-sound" type="button" hidden>تفعيل الصوت</button>
-      <button class="btn ghost" id="d-control" type="button">لوحة المنظّم</button>
-      <a class="btn ghost" href="index.html" style="text-decoration:none">🏠 الألعاب</a>
+      <button class="btn ghost" id="d-control" type="button">الإعدادات</button>
+      <button class="btn ghost" type="button" data-go="home">الرئيسية</button>
       <span class="hint">اختصارات: <span class="kbd">F</span> ملء الشاشة · <span class="kbd">N</span> التالية · <span class="kbd">مسافة</span> إيقاف</span>
     </footer>
     <canvas id="confetti" aria-hidden="true"></canvas>
@@ -298,12 +357,12 @@ textarea{width:100%;min-height:90px;resize:vertical}
   <section class="control" id="view-control" hidden aria-label="لوحة تحكم المنظّم">
     <header class="c-top">
       <div class="brand"><span class="brand-mark" aria-hidden="true">ح</span>
-        <div><h1>تحدي الحروف</h1><p class="sub">لوحة تحكم المنظّم · لا تعرضها على المتسابقين</p></div>
+        <div><h1>المتسابقون والإعدادات</h1><p class="sub">صفحة المنظّم · فيها الكلمة الصحيحة، لا تعرضها على المتسابقين</p></div>
       </div>
       <span class="status" id="c-status">لم تبدأ</span>
-      <button class="btn primary" id="c-open-display" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>فتح شاشة العرض</button>
-      <button class="btn" id="c-here" type="button">عرض على هذه الشاشة</button>
-      <a class="btn ghost" href="index.html" style="text-decoration:none">🏠 كل الألعاب</a>
+      <button class="btn good" id="c-here" type="button">ابدأ ▶</button>
+      <button class="btn" id="c-open-display" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>شاشة عرض منفصلة</button>
+      <button class="btn ghost" type="button" data-go="home">الرئيسية</button>
     </header>
 
     <div class="c-tabs" role="tablist" aria-label="أقسام لوحة المنظّم">
@@ -371,7 +430,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
           <ul class="help">
             <li>على تلفزيون متصل باللابتوب: اضغط «فتح شاشة العرض» واسحب النافذة إلى التلفزيون ثم «ملء الشاشة».</li>
             <li>إن لم تُفتح نافذة جديدة: افتح رابط الصفحة نفسه في تبويب آخر وأضف في آخره <span class="kbd" dir="ltr">#display</span>. التبويبان يتزامنان تلقائيًا على الجهاز نفسه.</li>
-            <li>على جهاز واحد: «عرض على هذه الشاشة»، وزر «لوحة المنظّم» أسفل العرض يعيدك هنا.</li>
+            <li>على جهاز واحد: اضغط «ابدأ ▶»، وزر «الإعدادات» أسفل الشاشة يرجّعك هنا.</li>
           </ul>
         </section>
       </div>
@@ -513,11 +572,11 @@ textarea{width:100%;min-height:90px;resize:vertical}
     g.round++; g.used.push(w.id); g.wordId = w.id; beginRound(g, w.text);
   }
   const A = {
-    start() {
-      if (!S.players.length) return toast('أضف متسابقًا واحدًا على الأقل أولًا');
+    start(after) {
+      if (!S.players.length) { if (after) { location.hash = 'control'; selectTab('people'); setTimeout(() => $('#in-player').focus(), 50); } return toast('أضف متسابقًا واحدًا على الأقل أولًا'); }
       const lv = S.settings.level;
       if (!S.words.some((w) => lv === 'all' || w.level === lv)) return toast('لا توجد كلمات في المستوى المختار');
-      const go = () => commit((s) => { s.players.forEach((p) => (p.score = 0)); Object.assign(s.game, { used: [], round: 0, reason: '' }); advance(s); });
+      const go = () => { commit((s) => { s.players.forEach((p) => (p.score = 0)); Object.assign(s.game, { used: [], round: 0, reason: '' }); advance(s); }); if (typeof after === 'function') after(); };
       if (inRound(G().status)) ask('بدء مسابقة جديدة؟ ستُصفَّر النقاط وتبدأ من الجولة الأولى.', go); else go();
     },
     next() {
@@ -772,16 +831,25 @@ textarea{width:100%;min-height:90px;resize:vertical}
     $('#s-level').title = `كلمات متبقية في هذا المستوى: ${left}`;
   }
 
+  function renderHome() {
+    const g = G(), R = +S.settings.rounds || 0, T = +S.settings.timer || 0, n = S.players.length;
+    $('#h-resume').hidden = !inRound(g.status);
+    $('#h-start').textContent = inRound(g.status) ? 'مسابقة جديدة ▶' : 'ابدأ ▶';
+    $('#h-summary').textContent = (n ? n + ' متسابقين' : 'لا يوجد متسابقون بعد') + ' · ' + (R ? R + ' جولات' : 'حتى نفاد الكلمات') +
+      ' · ' + (T ? T + ' ثانية' : 'بدون مؤقت') + ' · ' + (S.settings.level === 'all' ? 'كل المستويات' : 'مستوى ' + LEVELS[S.settings.level]);
+    $('#h-stats').innerHTML = `في البنك <b>${S.words.length}</b> كلمة`;
+  }
   function render() {
-    if (view === 'display') renderDisplay(); else renderControl();
+    if (view === 'display') renderDisplay(); else if (view === 'control') renderControl(); else if (view === 'home') renderHome();
     paintClock(); updateSoundBtn(); firstPaint = false;
   }
+  const VIEWS = ['home', 'howto', 'display', 'control'];
   function setView() {
-    view = location.hash === '#display' ? 'display' : 'control';
-    $('#view-display').hidden = view !== 'display';
-    $('#view-control').hidden = view !== 'control';
+    const h = location.hash.slice(1);
+    view = VIEWS.includes(h) ? h : 'home';
+    VIEWS.forEach((v) => { $('#view-' + v).hidden = view !== v; });
     stageKey = ''; firstPaint = true; fxKey = '';
-    document.title = view === 'display' ? 'تحدي الحروف' : 'تحدي الحروف · المنظّم';
+    document.title = view === 'control' ? 'تحدي الحروف · المنظّم' : 'تحدي الحروف';
     render();
     if (view === 'display') wake();
   }
@@ -816,7 +884,19 @@ textarea{width:100%;min-height:90px;resize:vertical}
   $('#d-pause').onclick = A.pause; $('#d-undo').onclick = A.undo;
   $('#d-sound').onclick = () => { ac(); setTimeout(updateSoundBtn, 100); };
   $('#d-control').onclick = () => { location.hash = 'control'; };
-  $('#c-here').onclick = () => { location.hash = 'display'; };
+  const showGame = () => { location.hash = 'display'; };
+  // «ابدأ»: يبدأ مسابقة جديدة إذا ما فيه جولة جارية، وإلا يفتح شاشة اللعب على الجولة الحالية
+  $('#c-here').onclick = () => (inRound(G().status) ? showGame() : A.start(showGame));
+  $('#h-start').onclick = () => A.start(showGame);
+  $('#h-resume').onclick = showGame;
+  $('#h-setup').onclick = () => { location.hash = 'control'; selectTab(S.players.length ? 'round' : 'people'); };
+  $('#h-howto').onclick = () => { location.hash = 'howto'; };
+  $('#h-screen').onclick = () => $('#c-open-display').click();
+  function selectTab(name) {
+    document.querySelectorAll('[data-ctab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.ctab === name)));
+    document.querySelectorAll('[data-col]').forEach((c) => c.classList.toggle('on', c.dataset.col === name));
+  }
+  document.addEventListener('click', (e) => { const t = e.target.closest('[data-go]'); if (t) location.hash = t.dataset.go; });
   $('#c-open-display').onclick = () => {
     let w = null;
     try { w = window.open(location.href.split('#')[0] + '#display', 'tahaddi-display', 'popup=yes,width=1280,height=720'); } catch (e) {}
@@ -855,6 +935,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     if (el.dataset && el.dataset.edit) { if (e.key === 'Enter') { e.preventDefault(); saveName(el.dataset.edit); } else if (e.key === 'Escape') { editing = null; render(); } return; }
     if (!$('#modal').hidden) { if (e.key === 'Escape') $('#modal-no').click(); return; }
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (view !== 'display' && view !== 'control') return;
     const k = e.key.toLowerCase();
     if (/^[1-9]$/.test(k)) { const p = S.players[+k - 1]; if (p) A.award(p.id); }
     else if (k === 'n' || k === 'ى') A.next();
