@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>مجلس الألعاب</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="ألعاب عائلية جماعية: مين أكون؟ وخمّن وش هو؟">
+<meta name="description" content="ألعاب عائلية جماعية: مين أكون؟ وخمّن وش هو؟ ورتّبها صح">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Reem+Kufi:wght@600;700&family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@800&family=Reem+Kufi:wght@600;700&family=Tajawal:wght@400;500;700;800&display=swap">
 <style>
 /* Hub: neutral night majlis; each game card keeps its own game's identity. Two cards side by side, stacked on phones. */
 :root {
@@ -18,6 +18,7 @@
   --line: rgba(255, 245, 230, .14);
   --a-bg: #0c2729; --a-acc: #d6b25e; --a-acc2: #f2d68e;
   --b-bg: #251a55; --b-acc: #ffb703; --b-acc2: #ff5d73;
+  --c-bg: #121a3a; --c-acc: #3ee6b5; --c-acc2: #ff8a3d;
   --font-body: "Tajawal", "Segoe UI", Tahoma, sans-serif;
   color-scheme: dark;
 }
@@ -36,7 +37,7 @@ body {
 header { text-align: center; display: grid; gap: 4px; }
 h1 { margin: 0; font-family: "Reem Kufi", var(--font-body); font-size: clamp(32px, min(6vw, 9vh), 84px); line-height: 1.1; }
 header p { margin: 0; color: var(--muted); }
-.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 2.4vw, 32px); width: min(100%, 1300px); min-height: 0; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 2vw, 28px); width: min(100%, 1700px); min-height: 0; }
 .card {
   position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(6px, 1.6vh, 18px);
   padding: clamp(16px, 3.4vh, 40px) clamp(14px, 2vw, 32px); border-radius: 30px; text-decoration: none; color: var(--text);
@@ -48,6 +49,13 @@ header p { margin: 0; color: var(--muted); }
 .card.a:hover, .card.a:focus-visible { border-color: var(--a-acc); box-shadow: 0 24px 60px rgba(214, 178, 94, .25); }
 .card.b { background: linear-gradient(180deg, #31246c, var(--b-bg)); }
 .card.b:hover, .card.b:focus-visible { border-color: var(--b-acc); box-shadow: 0 24px 60px rgba(255, 183, 3, .25); }
+.card.c { background: linear-gradient(180deg, #1b2550, var(--c-bg)); }
+.card.c:hover, .card.c:focus-visible { border-color: var(--c-acc); box-shadow: 0 24px 60px rgba(62, 230, 181, .25); }
+.card.c::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .8;
+  background: conic-gradient(from 160deg at 15% -10%, transparent 0deg, rgba(62, 230, 181, .12) 12deg, transparent 26deg), conic-gradient(from 175deg at 85% -10%, transparent 0deg, rgba(255, 138, 61, .12) 12deg, transparent 26deg); }
+.nums { display: flex; gap: 6px; }
+.nums span { width: clamp(34px, 7vh, 64px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; background: #1b2550; border: 2px solid rgba(190, 205, 255, .2); font-family: "Changa", var(--font-body); font-weight: 800; font-size: clamp(20px, 3.8vh, 36px); }
+.nums span:nth-child(1) { color: var(--c-acc); } .nums span:nth-child(2) { color: var(--c-acc2); } .nums span:nth-child(3) { color: #6aa8ff; } .nums span:nth-child(4) { color: #ff5f8f; }
 .card.a::before { content: ""; position: absolute; inset: 0; opacity: .5; pointer-events: none;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23d6b25e' stroke-opacity='0.12' stroke-width='1.2'%3E%3Crect x='28' y='28' width='40' height='40'/%3E%3Crect x='28' y='28' width='40' height='40' transform='rotate(45 48 48)'/%3E%3C/g%3E%3C/svg%3E"); }
 .card.b::before { content: ""; position: absolute; inset: 0; opacity: .7; pointer-events: none;
@@ -61,15 +69,22 @@ header p { margin: 0; color: var(--muted); }
 .name { margin: 0; font-size: clamp(34px, min(5vw, 8vh), 90px); line-height: 1.05; font-weight: 400; }
 .card.a .name { font-family: "Reem Kufi", var(--font-body); font-weight: 700; color: var(--a-acc2); }
 .card.b .name { font-family: "Lalezar", var(--font-body); color: var(--b-acc); text-shadow: 0 5px 0 #9a3b1f; }
+.card.c .name { font-family: "Changa", var(--font-body); font-weight: 800; color: #f5f7ff; }
+.card.c .name em { font-style: normal; color: var(--c-acc); }
 .desc { margin: 0; color: var(--muted); max-width: 34ch; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .tags span { padding: .05em .8em; border-radius: 999px; border: 1px solid var(--line); background: rgba(0, 0, 0, .2); font-size: .8em; font-weight: 700; }
 .play { margin-top: auto; padding: .45em 2em; border-radius: 999px; font-weight: 800; font-size: 1.1em; }
 .card.a .play { background: linear-gradient(180deg, var(--a-acc2), var(--a-acc)); color: #1d1606; }
 .card.b .play { background: var(--b-acc); color: #241500; border-radius: 18px; box-shadow: 0 6px 0 #c98a00; }
+.card.c .play { background: var(--c-acc); color: #04291f; border-radius: 16px; box-shadow: 0 6px 0 #1f9c78; }
 .resume { position: absolute; top: 14px; inset-inline-start: 14px; padding: .1em .8em; border-radius: 999px; font-size: .75em; font-weight: 800; background: #46c486; color: #062214; }
 .resume[hidden] { display: none; }
 footer { color: var(--muted); font-size: .8em; text-align: center; }
+@media (max-width: 1100px) and (min-width: 761px) {
+  .desc { font-size: .88em; }
+  .tags span { font-size: .72em; }
+}
 @media (max-width: 760px) {
   body { overflow-y: auto; }
   #hub { height: auto; min-height: 100%; justify-content: flex-start; }
@@ -78,8 +93,11 @@ footer { color: var(--muted); font-size: .8em; text-align: center; }
 @media (max-width: 760px) and (min-height: 640px) {
   body { overflow: hidden; }
   #hub { height: 100%; }
-  .cards { flex: 1; grid-template-rows: repeat(2, minmax(0, 1fr)); }
-  .card { justify-content: center; padding-block: 12px; gap: 6px; }
+  .cards { flex: 1; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .card { justify-content: center; padding-block: 8px; gap: 4px; border-radius: 22px; }
+  .card .desc, .card .tags { display: none; }
+  .name { font-size: clamp(28px, 5vh, 44px); }
+  .nums span { width: clamp(30px, 5vh, 44px); font-size: clamp(18px, 3vh, 26px); }
   .mark { font-size: clamp(36px, 7vh, 60px); }
   .star { width: clamp(50px, 8vh, 80px); }
   .desc { font-size: .9em; }
@@ -111,6 +129,14 @@ footer { color: var(--muted); font-size: .8em; text-align: center; }
       <div class="tags"><span>2 حتى 16 لاعب</span><span>بدون مقدّم</span><span>329 شيء في 10 تصنيفات</span></div>
       <span class="play">العب</span>
     </a>
+    <a class="card c" href="rattebha.html">
+      <span class="resume" id="resume-c" hidden>مباراة محفوظة</span>
+      <div class="nums" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+      <h2 class="name">رتّبها <em>صح</em></h2>
+      <p class="desc">بطاقات مبعثرة وعليكم ترتيبها: من الأقدم للأحدث، من الأصغر للأكبر. ناقشوا واختلفوا واعتمدوا!</p>
+      <div class="tags"><span>لاعبان حتى 6 فرق</span><span>مع مضيف أو تلقائي</span><span>111 سؤال</span></div>
+      <span class="play">العب</span>
+    </a>
   </div>
   <footer>تعمل بدون تسجيل وبدون إنترنت بعد التحميل · النتائج تنحفظ على هذا الجهاز</footer>
 </main>
@@ -121,6 +147,7 @@ footer { color: var(--muted); font-size: .8em; text-align: center; }
   }
   if (saved("mak_game_v1", "status", "over")) document.getElementById("resume-a").hidden = false;
   if (saved("kh_game_v1", "phase", "over")) document.getElementById("resume-b").hidden = false;
+  if (saved("rt_game_v1", "phase", "over")) document.getElementById("resume-c").hidden = false;
 })();
 </script>
 </body>
