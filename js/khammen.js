@@ -32,6 +32,7 @@
     return out;
   }
   var bank = Store.get(K.bank, null);
+  if (Array.isArray(bank)) bank = bank.filter(function (it) { return it && typeof it.id === "string" && typeof it.name === "string" && it.name.trim() && CATS.some(function (c) { return c.id === it.cat; }); }).map(function (it) { it.syn = Array.isArray(it.syn) ? it.syn.map(String) : []; it.lvl = [1, 2, 3, 4].indexOf(+it.lvl) >= 0 ? +it.lvl : 2; it.emoji = String(it.emoji || "❓"); return it; });
   if (!Array.isArray(bank) || !bank.length) bank = defaultBank();
   function saveBank() { Store.set(K.bank, bank); }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
@@ -72,11 +73,31 @@
     cats: [], level: 0, rounds: 3, turnTime: 90, memTime: 6,
     double: true, surprise: true, random: false, sound: true
   };
-  var settings = Object.assign(clone(defaults), Store.get(K.settings, {}));
+  var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
+  if (["solo", "teams", "duel"].indexOf(settings.mode) < 0) settings.mode = "solo";
+  if (!Array.isArray(settings.players)) settings.players = defaults.players.slice();
+  settings.players = settings.players.map(function (x) { return String(x == null ? "" : x).slice(0, 16); }).slice(0, 16);
+  if (!Array.isArray(settings.teamOf)) settings.teamOf = settings.players.map(function (x, i) { return i % 2; });
+  settings.teamCount = [2, 3, 4].indexOf(+settings.teamCount) >= 0 ? +settings.teamCount : 2;
+  if (!Array.isArray(settings.cats)) settings.cats = []; settings.cats = settings.cats.filter(function (c) { return CATS.some(function (x) { return x.id === c; }); });
+  settings.level = [0, 1, 2, 3, 4].indexOf(+settings.level) >= 0 ? +settings.level : 0;
+  settings.rounds = Math.min(10, Math.max(1, Math.round(+settings.rounds) || 3));
+  settings.turnTime = [45, 60, 90, 120].indexOf(+settings.turnTime) >= 0 ? +settings.turnTime : 90;
+  settings.memTime = [4, 6, 8, 10].indexOf(+settings.memTime) >= 0 ? +settings.memTime : 6;
   function saveSettings() { Store.set(K.settings, settings); }
 
   var view = "home", setupTab = "players", setupErr = "", modal = null, bankF = { cat: "", lvl: "", q: "" }, pendingDel = null;
-  var game = Store.get(K.game, null);
+  var game = validGame(Store.get(K.game, null));
+  function validGame(g) {
+    try {
+      if (!g || !Array.isArray(g.players) || g.players.length < 2 || !g.settings || !Array.isArray(g.order)) return null;
+      if (["handoff", "memorize", "ready", "guess", "result", "over"].indexOf(g.phase) < 0) return null;
+      if (g.phase !== "over" && (!g.cur || !item(g.cur.itemId) || typeof g.cur.player !== "number" || !g.players[g.cur.player])) return null;
+      if (!Array.isArray(g.used)) g.used = []; if (!Array.isArray(g.log)) g.log = [];
+      g.players.forEach(function (p) { p.score = +p.score || 0; p.wins = +p.wins || 0; p.turns = +p.turns || 0; p.name = String(p.name || "لاعب"); });
+      return g;
+    } catch (e) { return null; }
+  }
   if (game && game.phase === "guess") game.cur.paused = true;
   if (game && game.phase === "memorize") game.phase = "handoff";
   function saveGame() { if (game) Store.set(K.game, game); else Store.del(K.game); }
@@ -173,7 +194,7 @@
       var avail = bank.filter(function (it) { return cats.indexOf(it.cat) >= 0 && free(it); });
       if (avail.length) { var r = pick(avail); cats = [r.cat]; level = s.level ? s.level : r.lvl; }
     }
-    var hist = Store.get(K.used, []);
+    var hist = Store.get(K.used, []); if (!Array.isArray(hist)) hist = [];
     var tries = [
       function (it) { return cats.indexOf(it.cat) >= 0 && (!level || it.lvl === level) && free(it); },
       function (it) { return cats.indexOf(it.cat) >= 0 && free(it); },
@@ -247,8 +268,12 @@
     saveGame();
   }
 
+  var ACT_PHASE = { peek: "handoff", memdone: "memorize", start: "ready", pause: "guess", guess: "guess", spoken: "guess", check: "guess", "judge-yes": "guess", "judge-no": "guess", "judge-vote": "guess", object: "guess", "vote-done": "guess", skip: "guess", redo: "guess", next: "result", "accept-end": "guess" };
   function act(name) {
     var c = game && game.cur;
+    if (!game || (ACT_PHASE[name] && game.phase !== ACT_PHASE[name])) return;
+    if ((name === "vote-done" && (!modal || modal.type !== "vote")) || (name === "confirm-yes" && (!modal || modal.type !== "confirm"))) return;
+    if ((name === "judge-yes" || name === "judge-no" || name === "judge-vote") && (!modal || modal.type !== "judge")) return;
     switch (name) {
       case "peek": game.phase = "memorize"; c.memLeft = game.settings.memTime; c.flash = null; SFX.pop(); ensureTimer(); commit(); break;
       case "memdone": game.phase = "ready"; SFX.pop(); commit(); break;
@@ -627,6 +652,12 @@
   }
 
   function render() {
+    try { renderInner(); } catch (err) {
+      if (window.console) console.error(err);
+      game = null; saveGame(); view = "home"; modal = null; renderInner(); toast("صار خلل في اللعبة المحفوظة، فبدأنا من جديد");
+    }
+  }
+  function renderInner() {
     var app = document.getElementById("app"), html;
     if (view === "game" && game) html = game.phase === "over" ? vOver() : vGame();
     else if (view === "setup") html = vSetup();
@@ -714,6 +745,7 @@
     var el = e.target.closest("[data-act],[data-ui],[data-mode],[data-teams],[data-cat],[data-level],[data-time],[data-mem],[data-tab],[data-del-player],[data-team-cycle],[data-vote],[data-edit],[data-del],[data-del-yes],[data-del-no]");
     if (!el) return;
     var d = el.dataset;
+    if (e.detail > 1 && (d.act || (d.ui && d.ui !== "rounds-" && d.ui !== "rounds+"))) return;
     if (d.ui) return ui(d.ui, el, e);
     if (d.act) return act(d.act);
     if (d.mode) { settings.mode = d.mode; if (d.mode === "teams") settings.teamOf = settings.players.map(function (n, i) { return i % settings.teamCount; }); saveSettings(); setupErr = ""; render(); return; }
@@ -774,6 +806,7 @@
     if (e.target.dataset.bf === "q") { bankF.q = e.target.value; render(); var s = document.getElementById("bf-q"); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
   });
   document.addEventListener("keydown", function (e) {
+    if (e.repeat && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return; }
     if (e.key === "Escape" && modal && modal.type !== "vote") { modal = null; render(); return; }
     if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName || "") || modal) return;
     if (e.key === " " || e.key === "Enter") {

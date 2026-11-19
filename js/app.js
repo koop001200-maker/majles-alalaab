@@ -32,6 +32,7 @@
 
   /* ---------- bank ---------- */
   var bank = Store.get(K.bank, null);
+  if (Array.isArray(bank)) bank = bank.filter(function (q) { return q && typeof q.id === "string" && Array.isArray(q.clues) && q.clues.length === 4 && q.answer; });
   if (!Array.isArray(bank) || !bank.length) bank = clone(window.DEFAULT_QUESTIONS);
   function saveBank() { Store.set(K.bank, bank); }
   function findQ(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
@@ -47,14 +48,28 @@
     modes: { quick: false, double: false, steal: true, golden: false, random: false, final: false },
     timer: false, timerSec: 45, sound: true
   };
-  var settings = Object.assign(clone(defaultSettings), Store.get(K.settings, {}));
+  var settings = Object.assign(clone(defaultSettings), Store.get(K.settings, {}) || {});
+  if (["players", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
+  if (!Array.isArray(settings.names)) settings.names = DEFAULT_NAMES.slice();
+  if (!Array.isArray(settings.cats)) settings.cats = CATS.map(function (c) { return c.id; });
+  settings.rounds = Math.min(30, Math.max(3, Math.round(+settings.rounds) || 8));
+  settings.level = [1, 2, 3].indexOf(+settings.level) >= 0 ? +settings.level : 2;
   settings.modes = Object.assign(clone(defaultSettings.modes), settings.modes || {});
   for (var ni = 0; ni < 6; ni++) if (typeof settings.names[ni] !== "string") settings.names[ni] = DEFAULT_NAMES[ni];
   function teamCount() { return settings.format === "players" ? 2 : +settings.format; }
 
   /* ---------- state ---------- */
   var view = "home";
-  var game = Store.get(K.game, null);
+  var game = (function (g) {
+    try {
+      if (!g || !Array.isArray(g.teams) || g.teams.length < 2 || !Array.isArray(g.plan) || !g.plan.length || !g.settings || ["playing", "final", "over"].indexOf(g.status) < 0) return null;
+      if (g.status === "playing" && (!g.round || typeof g.idx !== "number" || !g.plan[g.idx])) return null;
+      if (g.status === "final" && !g.final) return null;
+      if (!Array.isArray(g.log)) g.log = [];
+      g.teams.forEach(function (t) { t.score = +t.score || 0; t.name = String(t.name || "فريق"); });
+      return g;
+    } catch (e) { return null; }
+  })(Store.get(K.game, null));
   var modal = null;
   var bankFilter = { cat: "", lvl: "", q: "" };
   var pendingDelete = null;
@@ -88,7 +103,7 @@
 
   /* ---------- question picking ---------- */
   function pickQuestion(cats, lvl, exclude) {
-    var used = Store.get(K.used, []);
+    var used = Store.get(K.used, []); if (!Array.isArray(used)) used = [];
     function pool(filterFn) { return bank.filter(function (q) { return exclude.indexOf(q.id) < 0 && filterFn(q); }); }
     var tries = [
       function (q) { return cats.indexOf(q.cat) >= 0 && +q.lvl === +lvl; },
@@ -107,7 +122,7 @@
   }
 
   function markUsed(id) {
-    var used = Store.get(K.used, []);
+    var used = Store.get(K.used, []); if (!Array.isArray(used)) used = [];
     if (used.indexOf(id) < 0) used.push(id);
     if (used.length >= bank.length) used = [id];
     Store.set(K.used, used);
@@ -649,6 +664,12 @@
   /* ---------- render ---------- */
   var setupErr = "";
   function render() {
+    try { renderInner(); } catch (err) {
+      if (window.console) console.error(err);
+      game = null; saveGame(); view = "home"; modal = null; renderInner(); toast("صار خلل في اللعبة المحفوظة، فبدأنا من جديد");
+    }
+  }
+  function renderInner() {
     var app = document.getElementById("app");
     var html;
     if (view === "game" && game) {
@@ -731,12 +752,12 @@
       case "rounds-": collectNames(); settings.rounds = Math.max(3, settings.rounds - 1); saveSettings(); render(); break;
       case "rounds+": collectNames(); settings.rounds = Math.min(30, settings.rounds + 1); saveSettings(); render(); break;
       case "cats-all": collectNames(); settings.cats = CATS.map(function (c) { return c.id; }); saveSettings(); render(); break;
-      case "reveal": revealNext(); break;
-      case "answer": revealAnswer(); break;
-      case "next": nextRound(); break;
+      case "reveal": if (game && game.status === "playing") revealNext(); break;
+      case "answer": if (game && game.status === "playing" && game.round.revealed > 0) revealAnswer(); break;
+      case "next": if (game && game.status === "playing") nextRound(); break;
       case "skip": game.round.done = true; nextRound(); break;
       case "end-confirm": modal = { type: "confirm", title: "إنهاء اللعبة؟", text: "سيتم عرض النتائج الحالية وإعلان الفائز.", yes: "end", yesLabel: "إنهاء وعرض النتائج" }; render(); break;
-      case "end": modal = null; finishGame(); break;
+      case "end": if (!modal) break; modal = null; finishGame(); break;
       case "finish": finishGame(); break;
       case "fullscreen":
         try {
@@ -746,14 +767,16 @@
         break;
       case "sound": settings.sound = !settings.sound; saveSettings(); render(); break;
       case "final-start":
+        if (!game || game.status !== "final" || game.final.stage !== "wager") break;
         document.querySelectorAll("[data-wager]").forEach(function (inp) {
           var i = +inp.getAttribute("data-wager"), max = Math.max(0, game.teams[i].score);
           game.final.wagers[i] = Math.min(max, Math.max(0, Math.floor(+inp.value || 0)));
         });
         game.final.stage = "play"; commit(); break;
-      case "final-reveal": if (game.final.revealed < 4) { game.final.revealed++; freshClue = game.final.revealed - 1; SFX.reveal(); commit(); } break;
-      case "final-answer": game.final.stage = "mark"; SFX.reveal(); commit(); break;
+      case "final-reveal": if (game && game.status === "final" && game.final.stage === "play" && game.final.revealed < 4) { game.final.revealed++; freshClue = game.final.revealed - 1; SFX.reveal(); commit(); } break;
+      case "final-answer": if (!game || game.status !== "final" || game.final.stage !== "play" || game.final.revealed < 1) break; game.final.stage = "mark"; SFX.reveal(); commit(); break;
       case "final-apply":
+        if (!game || game.status !== "final" || game.final.stage !== "mark" || game.final.marks.some(function (m) { return m === null; })) break;
         game.final.marks.forEach(function (m, i) { game.teams[i].score += m ? game.final.wagers[i] : -game.final.wagers[i]; });
         finishGame(); break;
       case "q-new":
@@ -823,6 +846,7 @@
   document.addEventListener("click", function (e) {
     var el = e.target.closest("[data-act],[data-sc-step],[data-tab],[data-preset],[data-format],[data-level],[data-cat],[data-answer-mode],[data-correct],[data-wrong],[data-edit],[data-del],[data-del-yes],[data-del-no],[data-wager-set],[data-mark]");
     if (!el) return;
+    if (e.detail > 1 && (el.hasAttribute("data-correct") || el.hasAttribute("data-wrong") || (el.hasAttribute("data-act") && ["rounds-", "rounds+"].indexOf(el.getAttribute("data-act")) < 0))) return;
     if (el.hasAttribute("data-act")) {
       var act = el.getAttribute("data-act");
       if (act === "modal-back" && e.target !== el) return;
@@ -859,11 +883,13 @@
       bank = bank.filter(function (b) { return b.id !== id; }); saveBank(); pendingDelete = null; toast("تم الحذف"); render(); return;
     }
     if (el.hasAttribute("data-wager-set")) {
+      if (!game || game.status !== "final" || game.final.stage !== "wager") return;
       var parts = el.getAttribute("data-wager-set").split(":");
       var inp = document.getElementById("wager-" + parts[0]); if (inp) inp.value = parts[1];
       game.final.wagers[+parts[0]] = +parts[1]; saveGame(); return;
     }
     if (el.hasAttribute("data-mark")) {
+      if (!game || game.status !== "final" || game.final.stage !== "mark") return;
       var mp = el.getAttribute("data-mark").split(":");
       game.final.marks[+mp[0]] = mp[1] === "1"; commit(); return;
     }
@@ -914,6 +940,7 @@
   });
 
   document.addEventListener("keydown", function (e) {
+    if (e.repeat && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return; }
     if (modal && e.key === "Escape") { modal = null; render(); return; }
     if (modal && modal.type === "scores" && e.key === "Enter") { e.preventDefault(); handleAct("scores-save"); return; }
     if (modal || /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ""))) return;

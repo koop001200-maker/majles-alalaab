@@ -292,3 +292,12 @@ a.btn { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* centred column that never pushes content off-screen when it is taller than the space */
+.final, .winner { justify-content: flex-start !important; }
+.final > :first-child, .winner > :first-child { margin-top: auto; }
+.final > :last-child, .winner > :last-child { margin-bottom: auto; }
+@media (max-height: 800px) {
+  .trophy, .crown { font-size: clamp(36px, 8vh, 80px) !important; }
+  .champ, .winner-name { font-size: clamp(30px, min(6vw, 8vh), 80px) !important; }
+}

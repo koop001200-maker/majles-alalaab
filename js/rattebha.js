@@ -33,19 +33,41 @@
 
   /* ordering math: number of swapped pairs (one adjacent swap = one mistake) */
   function inversions(order) { var c = 0; for (var i = 0; i < order.length; i++) for (var j = i + 1; j < order.length; j++) if (order[i] > order[j]) c++; return c; }
-  function basePoints(err) { return err === 0 ? 10 : err === 1 ? 6 : 3; }
+  /* 10 perfect, 6 one mistake, 3 a few mistakes, 0 when half the pairs or more are wrong (no better than a random guess) */
+  function maxPairs(n) { return n * (n - 1) / 2; }
+  function basePoints(err, n) { if (err === 0) return 10; if (err === 1) return 6; return (n && err >= maxPairs(n) / 2) ? 0 : 3; }
+  function errLabel(err, n) { return err === 0 ? "ترتيب كامل" : err === 1 ? "خطأ واحد" : basePoints(err, n) === 0 ? "لخبطة كاملة" : "خطآن أو أكثر"; }
   window.RT_SCORE = { inversions: inversions, basePoints: basePoints };
 
   /* ---------- settings ---------- */
   var defaults = { format: "2", names: ["فريق الصقور", "فريق النخيل", "فريق النجوم", "فريق القمر", "فريق الفرسان", "فريق الواحة"], level: 1, perTeam: 3, timer: 60, host: "auto", specials: true, speedBonus: false, music: false, sound: true };
-  var settings = Object.assign(clone(defaults), Store.get(K.settings, {}));
+  var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
+  if (["pvp", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
+  if ([1, 2, 3].indexOf(+settings.level) < 0) settings.level = 1; settings.level = +settings.level;
+  settings.perTeam = Math.min(8, Math.max(1, Math.round(+settings.perTeam) || 3));
+  if ([0, 45, 60, 90, 120].indexOf(+settings.timer) < 0) settings.timer = 60; settings.timer = +settings.timer;
+  if (settings.host !== "host") settings.host = "auto";
+  if (!Array.isArray(settings.names)) settings.names = defaults.names.slice();
   for (var ni = 0; ni < 6; ni++) if (typeof settings.names[ni] !== "string") settings.names[ni] = defaults.names[ni];
   function saveSettings() { Store.set(K.settings, settings); }
   function teamCount() { return settings.format === "pvp" ? 2 : +settings.format; }
 
   var view = "home", setupTab = "teams", setupErr = "", modal = null;
-  var game = Store.get(K.game, null);
+  var game = validGame(Store.get(K.game, null));
   if (game && game.phase === "play" && game.cur) game.cur.paused = true;
+  /* saved data from an older version, another tab or a manual edit must never break the page */
+  function validGame(g) {
+    try {
+      if (!g || !Array.isArray(g.teams) || g.teams.length < 2 || !Array.isArray(g.tiles) || typeof g.turn !== "number") return null;
+      if (["pick", "intro", "cover", "play", "reveal", "scores", "over"].indexOf(g.phase) < 0) return null;
+      if (g.phase !== "pick" && g.phase !== "over") {
+        var c = g.cur; if (!c || !q(c.qid) || !Array.isArray(c.order) || c.order.length !== q(c.qid).items.length || !Array.isArray(c.queue) || !Array.isArray(c.results)) return null;
+      }
+      g.teams.forEach(function (t) { t.score = +t.score || 0; t.perfect = +t.perfect || 0; t.name = String(t.name || "فريق"); });
+      if (!Array.isArray(g.used)) g.used = []; if (!Array.isArray(g.log)) g.log = [];
+      return g;
+    } catch (e) { return null; }
+  }
   function saveGame() { if (game) Store.set(K.game, game); else Store.del(K.game); }
   saveGame();
 
@@ -113,7 +135,7 @@
     var teams = keepTeams ? keepTeams.map(function (t, i) { return { name: t.name, color: COLORS[i], score: 0, perfect: 0 }; })
       : settings.names.slice(0, n).map(function (nm, i) { nm = (nm || "").trim(); return { name: nm || (settings.format === "pvp" ? "اللاعب " + (i + 1) : defaults.names[i]), color: COLORS[i], score: 0, perfect: 0 }; });
     var total = settings.perTeam * teams.length;
-    var tilesN = Math.min(36, total + Math.max(3, Math.ceil(total * .25)));
+    var tilesN = Math.min(30, total + Math.max(3, Math.ceil(total * .25)));
     var tiles = []; for (var i = 1; i <= tilesN; i++) tiles.push({ n: i, opened: false, team: -1 });
     game = { settings: clone(settings), teams: teams, turn: 0, total: total, tiles: tiles, used: [], phase: "pick", cur: null, specialsSeen: 0, lastSpecial: null, tiebreaks: 0, log: [] };
     focusTile = 0;
@@ -132,7 +154,7 @@
   }
 
   function pickQuestion(special, levelOverride) {
-    var s = game.settings, hist = Store.get(K.used, []);
+    var s = game.settings, hist = Store.get(K.used, []); if (!Array.isArray(hist)) hist = [];
     var level = levelOverride || (special === "decider" ? Math.min(3, s.level + 1) : s.level);
     var free = function (x) { return game.used.indexOf(x.id) < 0; };
     var size = function (x) { return special === "challenge" ? x.items.length >= 6 : true; };
@@ -162,6 +184,7 @@
   }
 
   function openTile(idx) {
+    if (game.phase !== "pick") return;
     var tile = game.tiles[idx]; if (!tile || tile.opened) return;
     var team = teamOfTurn(game.turn), special = chooseSpecial();
     tile.opened = true; tile.team = team;
@@ -202,11 +225,11 @@
     commit();
   }
 
-  function startPlay() { var c = game.cur; c.order = c.start.slice(); c.timeLeft = c.limit; c.elapsed = 0; c.ruleLeft = c.special === "unknown" ? UNKNOWN_DELAY : 0; c.paused = false; game.phase = "play"; dealAnim = true; focusCard = 0; grabbed = false; SFX.whoosh(); commit(); }
+  function startPlay() { if (game.phase !== "cover") return; var c = game.cur; c.order = c.start.slice(); c.timeLeft = c.limit; c.elapsed = 0; c.ruleLeft = c.special === "unknown" ? UNKNOWN_DELAY : 0; c.paused = false; game.phase = "play"; dealAnim = true; focusCard = 0; grabbed = false; SFX.whoosh(); commit(); }
 
   function submit(auto) {
     var c = game.cur; if (game.phase !== "play") return;
-    var team = c.queue[c.qi], err = inversions(c.order), base = basePoints(err), bonus = 0;
+    var team = c.queue[c.qi], err = inversions(c.order), base = basePoints(err, c.order.length), bonus = 0;
     if (game.settings.speedBonus && err === 0 && !c.tiebreak) {
       var ref = c.limit || 60;
       bonus = c.elapsed <= ref / 3 ? 3 : c.elapsed <= ref * 2 / 3 ? 1 : 0;
@@ -223,7 +246,7 @@
   var revealTimer = null;
   function doRevealSoon() { SFX.roll(); clearTimeout(revealTimer); revealTimer = setTimeout(doReveal, 2600); }
   function doReveal() {
-    var c = game.cur; if (!c || c.revealed) return;
+    var c = game.cur; if (!c || c.revealed || game.phase !== "reveal") return;
     c.revealed = true;
     c.results.forEach(function (r) {
       var t = game.teams[r.team]; t.score += r.points; if (r.errors === 0) t.perfect++;
@@ -236,12 +259,21 @@
     commit();
   }
 
-  function toScores() { game.phase = "scores"; if (game.cur) game.cur.autoLeft = game.settings.host === "host" ? 0 : 10; SFX.pick(); commit(); }
+  function toScores() { if (game.phase !== "reveal" && game.phase !== "play") return; if (game.phase === "reveal" && !game.cur.revealed) return; game.phase = "scores"; if (game.cur) game.cur.autoLeft = game.settings.host === "host" ? 0 : 10; SFX.pick(); commit(); }
 
   function nextTurn() {
+    if (game.phase !== "scores") return;
     if (game.cur && game.cur.tiebreak) { afterTiebreak(); return; }
     game.turn++;
-    if (game.turn < game.total) { game.phase = "pick"; game.cur = null; focusTile = firstFreeTile(); commit(); return; }
+    if (game.turn < game.total) {
+      /* long matches: when every number has been opened, deal a fresh board */
+      if (game.tiles.every(function (t) { return t.opened; })) {
+        var start = game.tiles[game.tiles.length - 1].n, left = game.total - game.turn, nn = Math.min(30, left + Math.max(3, Math.ceil(left * .25)));
+        game.tiles = []; for (var i = 1; i <= nn; i++) game.tiles.push({ n: start + i, opened: false, team: -1 });
+        toast("لوحة أرقام جديدة! 🎲");
+      }
+      game.phase = "pick"; game.cur = null; focusTile = firstFreeTile(); commit(); return;
+    }
     checkEnd();
   }
 
@@ -386,13 +418,13 @@
     } else {
       left = '<div class="col"><h3>نتائج الفرق</h3><ol style="--n:' + c.results.length + '">' + c.results.map(function (r, i) {
         var t = game.teams[r.team];
-        return '<li class="rv ' + (r.errors === 0 ? "ok" : "no") + '" style="animation-delay:' + (i * .15) + 's;border-inline-start:8px solid ' + t.color + '"><span class="rk">' + (r.errors === 0 ? "🏆" : r.errors === 1 ? "👌" : "😅") + '</span><span class="tx">' + esc(t.name) + "<small>" + (r.errors === 0 ? "ترتيب كامل" : r.errors === 1 ? "خطأ واحد" : "خطآن أو أكثر") + (r.timedOut ? " · خلص الوقت" : "") + '</small></span><span class="dt">+' + r.points + "</span></li>";
+        return '<li class="rv ' + (r.errors === 0 ? "ok" : "no") + '" style="animation-delay:' + (i * .15) + 's;border-inline-start:8px solid ' + t.color + '"><span class="rk">' + (r.errors === 0 ? "🏆" : r.errors === 1 ? "👌" : "😅") + '</span><span class="tx">' + esc(t.name) + "<small>" + errLabel(r.errors, n) + (r.timedOut ? " · خلص الوقت" : "") + '</small></span><span class="dt">+' + r.points + "</span></li>";
       }).join("") + "</ol></div>";
     }
     var best = single ? r0 : null, verdict = "";
     if (single) {
-      verdict = r0.errors === 0 ? '<div class="big good">ترتيب كامل! 🎉</div>' : r0.errors === 1 ? '<div class="big mid">خطأ واحد بس! 👌</div>' : '<div class="big bad">' + pick(["قريبة… من بعيد 😅", "اللخبطة واضحة 🙃", "الترتيب له رأي ثاني 😂"]) + "</div>";
-      verdict += '<div class="pts"><span>' + (r0.errors === 0 ? "صحيح بالكامل 10" : r0.errors === 1 ? "خطأ واحد 6" : "خطآن أو أكثر 3") + "</span>" + (r0.bonus ? "<span>⚡ سرعة +" + r0.bonus + "</span>" : "") + (r0.mult > 1 ? "<span>🔥 ×2</span>" : "") + (r0.timedOut ? "<span>⏰ خلص الوقت</span>" : "") + '<span class="tot">+' + r0.points + " " + ptsWord(r0.points) + "</span></div>";
+      verdict = r0.errors === 0 ? '<div class="big good">ترتيب كامل! 🎉</div>' : r0.errors === 1 ? '<div class="big mid">خطأ واحد بس! 👌</div>' : r0.base === 0 ? '<div class="big bad">' + pick(["ولا وحدة بمكانها تقريباً 🙈", "عكستوها؟ 😂", "الترتيب زعلان منكم 😅"]) + "</div>" : '<div class="big bad">' + pick(["قريبة… من بعيد 😅", "اللخبطة واضحة 🙃", "الترتيب له رأي ثاني 😂"]) + "</div>";
+      verdict += '<div class="pts"><span>' + (errLabel(r0.errors, n) + " " + r0.base) + "</span>" + (r0.bonus ? "<span>⚡ سرعة +" + r0.bonus + "</span>" : "") + (r0.mult > 1 ? "<span>🔥 ×2</span>" : "") + (r0.timedOut ? "<span>⏰ خلص الوقت</span>" : "") + '<span class="tot">+' + r0.points + " " + ptsWord(r0.points) + "</span></div>";
     } else verdict = '<div class="big good">' + (c.tiebreak ? "نتيجة الجولة الفاصلة" : "النتائج 👥") + "</div>";
     var nextBtn = game.settings.host === "host" ? '<button class="btn go huge" data-ui="to-scores">لوحة النتائج 📊</button>' :
       '<button class="btn go huge" data-ui="to-scores">لوحة النتائج 📊 <span class="muted" style="font-size:.5em">(<span id="auto-left">' + c.autoLeft + "</span>)</span></button>";
@@ -477,7 +509,7 @@
     return '<section class="screen"><div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" data-ui="home">الرئيسية</button></div><div class="scroll"><div class="howto panel">' +
       "<ol><li>الفريق صاحب الدور يختار رقماً من اللوحة، وكل رقم يفتح سؤالاً مختلفاً.</li><li>تظهر بطاقات مبعثرة وقاعدة الترتيب: من الأقدم للأحدث، من الأصغر للأكبر، وغيرها. البطاقة الأولى فوق والأخيرة تحت.</li>" +
       "<li>رتّبوا البطاقات بالسحب، أو بأزرار ▲▼، أو بالكيبورد، ثم اضغطوا «اعتماد الترتيب».</li><li>ينكشف الترتيب الصحيح مع مقارنة ترتيبكم وشرح المعلومة، وتنضاف النقاط تلقائياً.</li></ol>" +
-      "<h3>النقاط</h3><ul><li>ترتيب صحيح بالكامل: <b>10</b></li><li>خطأ واحد (بطاقتان متبادلتان): <b>6</b></li><li>خطآن أو أكثر: <b>3</b></li><li>نقاط السرعة (إذا فعّلتوها): +3 للترتيب الكامل في أول ثلث الوقت، و+1 في الثلث الثاني.</li></ul>" +
+      "<h3>النقاط</h3><ul><li>ترتيب صحيح بالكامل: <b>10</b></li><li>خطأ واحد (بطاقتان متبادلتان): <b>6</b></li><li>خطآن أو أكثر: <b>3</b></li><li>إذا كان نصف أزواج البطاقات أو أكثر مقلوباً، يعني الترتيب أسوأ من العشوائي: <b>0</b></li><li>نقاط السرعة (إذا فعّلتوها): +3 للترتيب الكامل في أول ثلث الوقت، و+1 في الثلث الثاني.</li></ul>" +
       "<p>نحسب الأخطاء بعدد أزواج البطاقات المقلوبة: تبديل بطاقتين متجاورتين = خطأ واحد.</p>" +
       "<h3>الجولات الخاصة 🎁</h3><ul><li><b>السرعة ⚡:</b> 25 ثانية فقط.</li><li><b>التحدي 🧩:</b> 6 بطاقات أو أكثر.</li><li><b>الكل يشارك 👥:</b> كل الفرق تحل نفس السؤال بالتناوب، والباقون لا يشوفون الشاشة.</li><li><b>المجهول ❓:</b> طريقة الترتيب تنكشف بعد 8 ثوانٍ.</li><li><b>الحسم 🔥:</b> سؤال أصعب ونقاط مضاعفة.</li></ul>" +
       "<p>تظهر عشوائياً، فبعض المباريات فيها أكثر من غيرها.</p>" +
@@ -502,6 +534,12 @@
   }
 
   function render() {
+    try { renderInner(); } catch (err) {
+      if (window.console) console.error(err);
+      game = null; saveGame(); view = "home"; modal = null; renderInner(); toast("صار خلل في المباراة المحفوظة، فبدأنا من جديد");
+    }
+  }
+  function renderInner() {
     var app = document.getElementById("app"), html;
     if (view === "game" && game) {
       html = { pick: vPick, intro: vIntro, cover: vCover, play: vPlay, reveal: vReveal, scores: vScores, over: vOver }[game.phase]();
@@ -626,9 +664,12 @@
     }
   }
 
+  var REPEATABLE = { "per-": 1, "per+": 1, scores: 0, music: 1, sound: 1 };
   document.addEventListener("click", function (e) {
     var el = e.target.closest("[data-ui],[data-tile],[data-move],[data-format],[data-level],[data-timer],[data-host],[data-tab],[data-dice],[data-sc]");
     if (!el) return;
+    /* a double-click must not press the button that appears under the cursor after the first click */
+    if (e.detail > 1 && (el.dataset.tile != null || (el.dataset.ui && !REPEATABLE[el.dataset.ui]))) return;
     var d = el.dataset;
     if (d.ui) return ui(d.ui, el, e);
     if (d.tile) { focusTile = +d.tile; SFX.pick(); openTile(+d.tile); return; }
@@ -650,6 +691,7 @@
 
   document.addEventListener("keydown", function (e) {
     var k = e.key;
+    if (e.repeat && (k === "Enter" || k === " ")) { e.preventDefault(); return; }
     if (modal) {
       if (k === "Escape") { modal = null; render(); }
       else if (k === "Enter" && modal.type === "scores") { e.preventDefault(); ui("scores-save"); }
@@ -688,6 +730,9 @@
     }
   });
 
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden && game && game.phase === "play" && game.cur && !game.cur.paused && game.cur.limit) { game.cur.paused = true; commit(); }
+  });
   if (game && game.phase !== "over") ensureTicker();
   render();
 })();
