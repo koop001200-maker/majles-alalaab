@@ -233,12 +233,35 @@ textarea{width:100%;min-height:90px;resize:vertical}
   .list li{grid-template-columns:minmax(0,1fr) auto auto}
   .list li .sc{grid-row:1;grid-column:2}
 }
+
+/* ===== one TV screen: host panel in three columns (tabs on smaller screens), display never scrolls ===== */
+.control{height:100vh;height:100dvh;max-width:none;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:12px;padding-block:12px;overflow:hidden}
+.c-grid{min-height:0;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr);align-items:stretch}
+.c-grid .col{min-height:0;overflow-y:auto;align-content:start;padding:2px 4px 8px}
+.words{max-height:none}
+.c-tabs{display:none;gap:6px}
+.c-tabs button{flex:1;border:1px solid var(--line);background:var(--ink-2);border-radius:12px;min-height:42px;font-weight:700}
+.c-tabs button[aria-selected="true"]{background:var(--saffron);color:var(--ink);border-color:var(--saffron)}
+@media (max-width:1099px){
+  .c-tabs{display:flex}
+  .c-grid{grid-template-columns:minmax(0,1fr)}
+  .c-grid .col{display:none}
+  .c-grid .col.on{display:grid}
+}
+@media (max-width:900px){
+  .display{height:100vh;height:100dvh;overflow:hidden}
+  .d-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .d-body .board{max-height:28vh}
+  .d-foot .hint{display:none}
+}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="css/majlis-theme.css">
 </head>
-<body>
+<body class="g-hf">
 <div class="app" id="app">
   <!-- ========== شاشة العرض ========== -->
   <section class="display" id="view-display" hidden aria-label="شاشة العرض">
@@ -283,8 +306,13 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <a class="btn ghost" href="index.html" style="text-decoration:none">🏠 كل الألعاب</a>
     </header>
 
+    <div class="c-tabs" role="tablist" aria-label="أقسام لوحة المنظّم">
+      <button type="button" role="tab" data-ctab="round" aria-selected="true">الجولة</button>
+      <button type="button" role="tab" data-ctab="people" aria-selected="false">المتسابقون والإعدادات</button>
+      <button type="button" role="tab" data-ctab="words" aria-selected="false">الكلمات</button>
+    </div>
     <div class="c-grid">
-      <div class="col">
+      <div class="col on" data-col="round">
         <section class="card" aria-labelledby="h-round">
           <h2 id="h-round">الجولة الحالية</h2>
           <div class="round-box">
@@ -312,6 +340,16 @@ textarea{width:100%;min-height:90px;resize:vertical}
           <div class="who" id="c-who"></div>
           <p class="note">اضغط اسم أول من نطق الكلمة الصحيحة. تُحتسب نقطة واحدة فقط لكل جولة. أرقام الأزرار اختصارات من لوحة المفاتيح.</p>
         </section>
+      </div>
+      <div class="col" data-col="people">
+        <section class="card" aria-labelledby="h-players">
+          <h2 id="h-players">المتسابقون <span class="count" id="c-pcount"></span></h2>
+          <form class="field" id="f-player" autocomplete="off">
+            <input id="in-player" maxlength="24" placeholder="اسم المتسابق" aria-label="اسم المتسابق">
+            <button class="btn primary" type="submit">إضافة</button>
+          </form>
+          <ul class="list" id="c-players"></ul>
+        </section>
 
         <section class="card" aria-labelledby="h-set">
           <h2 id="h-set">الإعدادات</h2>
@@ -337,17 +375,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
           </ul>
         </section>
       </div>
-
-      <div class="col">
-        <section class="card" aria-labelledby="h-players">
-          <h2 id="h-players">المتسابقون <span class="count" id="c-pcount"></span></h2>
-          <form class="field" id="f-player" autocomplete="off">
-            <input id="in-player" maxlength="24" placeholder="اسم المتسابق" aria-label="اسم المتسابق">
-            <button class="btn primary" type="submit">إضافة</button>
-          </form>
-          <ul class="list" id="c-players"></ul>
-        </section>
-
+      <div class="col" data-col="words">
         <section class="card" aria-labelledby="h-words">
           <h2 id="h-words">الكلمات <span class="count" id="c-wcount"></span></h2>
           <form class="field" id="f-word" autocomplete="off">
@@ -863,6 +891,12 @@ textarea{width:100%;min-height:90px;resize:vertical}
   $('#a-bulk').onclick = () => { const ta = $('#in-bulk'); const lines = ta.value.split(/[\n،,]+/); if (addWords(lines, $('#in-level').value)) ta.value = ''; };
   $('#a-defaults').onclick = () => addWords(DEFAULT_WORDS, 'auto');
   $('#a-clearwords').onclick = () => ask('حذف كل الكلمات؟', () => commit((s) => { s.words = []; }));
+
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-ctab]'); if (!t) return;
+    document.querySelectorAll('[data-ctab]').forEach((b) => b.setAttribute('aria-selected', String(b === t)));
+    document.querySelectorAll('[data-col]').forEach((c) => c.classList.toggle('on', c.dataset.col === t.dataset.ctab));
+  });
 
   setView();
 })();
