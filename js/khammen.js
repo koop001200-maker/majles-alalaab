@@ -44,6 +44,9 @@
   function saveBank() { Store.set(K.bank, bank); }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
   function photo(id) { return Store.raw(K.img + id); }
+  /* photo shown in play: the family's own photo first, then the bundled photo pack (if enabled) */
+  function packPhoto(id) { var P = window.KH_PHOTOS; return settings.photos !== false && P && P[id] ? P[id].src : null; }
+  function shownPhoto(id) { return photo(id) || packPhoto(id); }
 
   /* ---------- answer matching ---------- */
   function norm(s) {
@@ -78,7 +81,7 @@
   var defaults = {
     mode: "solo", players: ["فهد", "نورة", "سلطان", "ريم"], teamOf: [0, 1, 0, 1], teamCount: 2,
     cats: [], level: 0, rounds: 3, turnTime: 90, memTime: 6,
-    double: true, surprise: true, random: false, sound: true
+    double: true, surprise: true, random: false, sound: true, photos: true
   };
   var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
   if (["solo", "teams", "duel"].indexOf(settings.mode) < 0) settings.mode = "solo";
@@ -409,7 +412,7 @@
   function commit() { saveGame(); render(); }
 
   function itemVisual(it, cls) {
-    var ph = photo(it.id);
+    var ph = shownPhoto(it.id);
     return ph ? '<img class="big-photo ' + (cls || "") + '" src="' + ph + '" alt="' + esc(it.name) + '">' : '<div class="big-emoji ' + (cls || "") + '" aria-hidden="true">' + it.emoji + "</div>";
   }
 
@@ -573,7 +576,7 @@
       '<div class="field"><span class="label">وقت ' + (s.mode === "duel" ? "كل لاعب" : "الدور") + '</span><div class="chips">' + [45, 60, 90, 120].map(function (t) { return '<button class="chip" data-time="' + t + '" aria-pressed="' + (s.turnTime === t) + '">' + t + " ث</button>"; }).join("") + "</div></div>" +
       '<div class="field"><span class="label">وقت حفظ الشيء</span><div class="chips">' + [4, 6, 8, 10].map(function (t) { return '<button class="chip" data-mem="' + t + '" aria-pressed="' + (s.memTime === t) + '">' + t + " ث</button>"; }).join("") + "</div></div>" +
       '<div class="field"><span class="label">إضافات الحماس</span><div class="toggles">' +
-      [["double", "🔥 الجولة الأخيرة دبل", "النقاط ×2 في آخر جولة"], ["surprise", "🎉 جولة المفاجأة", "جولة في النص كلها أشياء غريبة"], ["random", "🎲 النمط العشوائي", "النظام يختار التصنيف والصعوبة واللاعب"], ["sound", "🔊 الأصوات", "مؤقت وأصوات للصح والغلط"]]
+      [["double", "🔥 الجولة الأخيرة دبل", "النقاط ×2 في آخر جولة"], ["surprise", "🎉 جولة المفاجأة", "جولة في النص كلها أشياء غريبة"], ["random", "🎲 النمط العشوائي", "النظام يختار التصنيف والصعوبة واللاعب"], ["sound", "🔊 الأصوات", "مؤقت وأصوات للصح والغلط"], ["photos", "📷 صور حقيقية", "صورة بدل الرمز للأشياء اللي لها صورة"]]
         .map(function (t) { return '<label class="toggle"><input type="checkbox" id="opt-' + t[0] + '" data-opt="' + t[0] + '"' + (s[t[0]] ? " checked" : "") + "><span><b>" + t[1] + "</b><small>" + t[2] + "</small></span></label>"; }).join("") +
       "</div></div></div>";
     return '<section class="screen"><div class="page-head"><h2>جهّزوا اللعبة</h2><button class="btn ghost" data-ui="home">الرئيسية</button></div>' +
@@ -605,7 +608,7 @@
       return true;
     });
     var items = list.map(function (it) {
-      var ph = photo(it.id);
+      var ph = shownPhoto(it.id);
       var del = pendingDel === it.id ? '<button class="btn small no" data-del-yes="' + it.id + '">تأكيد</button><button class="btn small ghost" data-del-no="1">لا</button>' : '<button class="btn small ghost" data-del="' + it.id + '" aria-label="حذف ' + esc(it.name) + '">🗑</button>';
       return '<div class="bank-item"><span class="em">' + (ph ? '<img src="' + ph + '" alt="">' : it.emoji) + '</span><span style="min-width:0"><span class="nm">' + esc(it.name) + '</span><span class="mt">' + cat(it.cat).icon + " " + lvl(it.lvl).name + " · " + it.syn.length + " مرادف</span></span>" +
         '<span class="acts"><button class="btn small" data-edit="' + it.id + '">تعديل</button>' + del + "</span></div>";
@@ -616,7 +619,7 @@
       '<select id="bf-lvl" data-bf="lvl" aria-label="الصعوبة"><option value="">كل المستويات</option>' + LEVELS.map(function (l) { return '<option value="' + l.id + '"' + (+bankF.lvl === l.id ? " selected" : "") + ">" + l.name + "</option>"; }).join("") + "</select>" +
       '<input id="bf-q" type="search" data-bf="q" placeholder="بحث" value="' + esc(bankF.q) + '"><span class="muted">' + list.length + " من " + bank.length + "</span></div>" +
       '<div class="scroll"><div class="bank-grid">' + (items || '<p class="muted">ما فيه نتائج.</p>') + "</div></div>" +
-      '<div class="row"><button class="btn small ghost" data-ui="reset-bank">استعادة البنك الأصلي</button></div></section>';
+      '<div class="row"><button class="btn small ghost" data-ui="credits">📷 مصادر الصور</button><button class="btn small ghost" data-ui="reset-bank">استعادة البنك الأصلي</button></div></section>';
   }
 
   function vModal() {
@@ -654,6 +657,14 @@
         (ph ? '<div class="photo-prev"><img src="' + ph + '" alt="معاينة"><button type="button" class="btn small no" data-ui="photo-del">حذف الصورة</button></div>' : "") +
         (m.err ? '<p class="error">' + esc(m.err) + "</p>" : "") +
         '<div class="actions"><button class="btn go big" type="submit">حفظ</button><button class="btn big" type="button" data-ui="close">إلغاء</button></div></form>';
+    } else if (m.type === "credits") {
+      var P = window.KH_PHOTOS || {}, ids = Object.keys(P);
+      inner = "<h2>مصادر الصور 📷</h2><p class=\"muted\">الصور من ويكيميديا كومنز برخص حرة، وهذه أسماء أصحابها ورخصها كما تشترط الرخص.</p>" +
+        '<div style="text-align:start;display:grid;gap:6px;max-height:55vh;overflow:auto">' + (ids.length ? ids.map(function (id) {
+          var c = P[id], it = item(id);
+          return '<div style="padding:.3em .6em;border-radius:10px;background:var(--surface-2);font-size:.85em"><b>' + esc(it ? it.name : id) + "</b> — " + esc(c.author) + " · " + esc(c.license) + ' · <span class="muted" dir="ltr">' + esc(c.page) + "</span></div>";
+        }).join("") : '<p class="muted">لا توجد صور مرفقة.</p>') + "</div>" +
+        '<div class="actions"><button class="btn big" data-ui="close">تمام</button></div>';
     } else if (m.type === "reset") {
       inner = '<h2>استعادة البنك الأصلي؟</h2><p>تنحذف الأشياء المضافة والتعديلات (الصور تبقى للأشياء الأصلية).</p><div class="actions"><button class="btn no big" data-ui="reset-yes">استعادة</button><button class="btn big" data-ui="close">رجوع</button></div>';
     }
@@ -750,6 +761,7 @@
       case "new-item": modal = { type: "edit", isNew: true, it: { id: "", cat: bankF.cat || "surprise", name: "", emoji: "❓", syn: [], lvl: +bankF.lvl || 2 }, photo: null }; render(); break;
       case "photo-del": modal.photo = null; modal.photoDel = true; keepForm(); render(); break;
       case "reset-bank": modal = { type: "reset" }; render(); break;
+      case "credits": modal = { type: "credits" }; render(); break;
       case "reset-yes": bank = defaultBank(); saveBank(); modal = null; toast("رجع البنك الأصلي"); render(); break;
     }
   }
