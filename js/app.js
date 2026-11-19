@@ -222,7 +222,7 @@
   function revealNext() {
     var r = game.round;
     if (!r || r.done || r.revealed >= 4) return;
-    r.revealed++;
+    r.revealed++; freshClue = r.revealed - 1;
     r.locked = []; r.phase = "main";
     var pts = pointsAt(r.revealed);
     setMsg(game.settings.answerMode === "open"
@@ -237,7 +237,7 @@
     if (!canAnswer(t)) return;
     var r = game.round;
     var pts = pointsAt(r.revealed);
-    r.winner = t; r.points = pts; r.done = true;
+    r.winner = t; r.points = pts; r.done = true; freshDone = true;
     game.teams[t].score += pts;
     game.log.push({ qid: game.plan[game.idx].qid, team: t, points: pts, clue: r.revealed });
     stopTimer();
@@ -280,7 +280,7 @@
   function revealAnswer() {
     var r = game.round;
     if (!r || r.done) return;
-    r.done = true; r.winner = null; r.points = 0;
+    r.done = true; r.winner = null; r.points = 0; freshDone = true;
     game.log.push({ qid: game.plan[game.idx].qid, team: null, points: 0, clue: r.revealed });
     stopTimer();
     SFX.reveal();
@@ -310,7 +310,7 @@
   }
 
   /* ---------- render helpers ---------- */
-  var bumpTeam = null, shakeTeam = null;
+  var bumpTeam = null, shakeTeam = null, freshClue = -1, freshDone = false;
   var setupTab = "teams";
   function commit() { saveGame(); render(); }
 
@@ -470,7 +470,7 @@
 
   function topbarHTML(badges) {
     return '<div class="topbar"><div class="round-info">' + badges + "</div>" +
-      '<div class="top-actions"><button class="btn ghost" data-act="fullscreen" title="ملء الشاشة">⛶<span class="lbl"> ملء الشاشة</span></button>' +
+      '<div class="top-actions"><button class="btn ghost" data-act="scores" title="تعديل النقاط">±<span class="lbl"> النقاط</span></button><button class="btn ghost" data-act="fullscreen" title="ملء الشاشة">⛶<span class="lbl"> ملء الشاشة</span></button>' +
       '<button class="btn ghost" data-act="sound" title="الصوت">' + (settings.sound ? "🔊" : "🔇") + '<span class="lbl"> الصوت</span></button>' +
       '<button class="btn ghost" data-act="end-confirm" title="إنهاء اللعبة">✕<span class="lbl"> إنهاء</span></button></div></div>';
   }
@@ -488,7 +488,7 @@
       var award = r.winner != null
         ? '<div class="award good">' + esc(game.teams[r.winner].name) + " + " + r.points + " " + pointsWord(r.points) + " (بعد المعلومة " + r.revealed + ")</div>"
         : '<div class="award muted">لم يحصل أحد على نقاط في هذه الجولة</div>';
-      inner = '<div class="reveal-box"><div class="muted">الإجابة الصحيحة</div><div class="answer">' + esc(q.answer) + "</div>" + award +
+      inner = '<div class="reveal-box' + (freshDone ? " fresh" : "") + '"><div class="muted">الإجابة الصحيحة</div><div class="answer">' + esc(q.answer) + "</div>" + award +
         '<div class="info-grid"><div class="info"><h4>الشرح</h4><p>' + esc(q.explain) + '</p></div>' +
         '<div class="info"><h4>معلومة إضافية</h4><p>' + esc(q.extra) + '</p></div>' +
         '<div class="info"><h4>المصدر</h4><p>' + esc(q.source) + "</p></div></div>" + rankingChips(game.teams) + "</div>";
@@ -498,7 +498,7 @@
       var clues = "";
       for (var i = 0; i < 4; i++) {
         var shown = i < r.revealed, pts = pointsAt(i + 1);
-        clues += '<li class="clue ' + (shown ? "revealed" : "hidden") + (shown && i === r.revealed - 1 ? " current" : "") + '">' +
+        clues += '<li class="clue ' + (shown ? "revealed" : "hidden") + (shown && i === r.revealed - 1 ? " current" : "") + (i === freshClue ? " fresh" : "") + '">' +
           '<span class="num"><b>' + (i + 1) + "</b><small>" + pts + " " + pointsWord(pts) + "</small></span>" +
           '<span class="text">' + (shown ? esc(q.clues[i]) : "• • •") + "</span></li>";
       }
@@ -515,7 +515,7 @@
     var marks = !r.done && r.revealed > 0;
     return '<section class="screen game">' + topbarHTML(badges) +
       scoreboardHTML(game.settings.answerMode === "turn" && !r.done ? r.active : -1, r.done ? [] : r.locked, marks) +
-      '<article class="qcard' + (p.type === "golden" ? " golden" : "") + (r.done && r.winner != null ? " flash-good" : "") + '">' +
+      '<article class="qcard' + (p.type === "golden" ? " golden" : "") + (r.done && r.winner != null && freshDone ? " flash-good" : "") + '">' +
       '<div class="qcard-head"><h3>' + (r.done ? "انكشفت الهوية!" : "مين أكون؟") + "</h3>" + timer + "</div>" + inner +
       (r.done ? "" : '<div class="status ' + statusCls + '">' + esc(statusText) + "</div>") + "</article>" +
       '<div class="hostbar">' + bar + "</div></section>";
@@ -540,7 +540,7 @@
       var clues = "";
       for (var i = 0; i < 4; i++) {
         var shown = i < f.revealed;
-        clues += '<li class="clue ' + (shown ? "revealed" : "hidden") + (shown && i === f.revealed - 1 ? " current" : "") + '"><span class="num"><b>' + (i + 1) + '</b></span><span class="text">' + (shown ? esc(q.clues[i]) : "• • •") + "</span></li>";
+        clues += '<li class="clue ' + (shown ? "revealed" : "hidden") + (shown && i === f.revealed - 1 ? " current" : "") + (i === freshClue ? " fresh" : "") + '"><span class="num"><b>' + (i + 1) + '</b></span><span class="text">' + (shown ? esc(q.clues[i]) : "• • •") + "</span></li>";
       }
       return '<section class="screen">' + head + '<article class="qcard golden"><div class="qcard-head"><h3>السؤال النهائي</h3></div><ol class="clues">' + clues + '</ol><div class="status muted">تكتب كل الفرق إجاباتها على ورقة سراً، ثم يكشف المقدم الحل.</div></article>' +
         '<div class="hostbar"><button class="btn primary big" data-act="final-reveal"' + (f.revealed >= 4 ? " disabled" : "") + ">اكشف المعلومة " + (f.revealed === 0 ? "الأولى" : "التالية") + "</button>" +
@@ -631,10 +631,19 @@
         '<input type="file" id="import-file" accept=".json,application/json"><textarea class="json" id="import-text" placeholder="[ { ... } ]"></textarea>' +
         (modal.err ? '<p class="error">' + esc(modal.err) + "</p>" : "") +
         '<div class="modal-actions"><button class="btn primary" data-act="do-import">استيراد</button><button class="btn ghost" data-act="modal-close">إلغاء</button></div>';
+    } else if (modal.type === "scores") {
+      inner = '<h2 class="gold">تعديل النقاط</h2><p class="muted">صحّح نقاط أي فريق ثم اضغط حفظ.</p><div class="score-edit">' +
+        game.teams.map(function (t, i) {
+          return '<div class="score-row" style="--team:' + t.color + '"><span class="s-name">' + esc(t.name) + "</span>" +
+            '<button class="btn small" data-sc-step="' + i + ':-1" aria-label="إنقاص نقطة من ' + esc(t.name) + '">−</button>' +
+            '<input id="sc-' + i + '" type="number" inputmode="numeric" step="1" data-sc="' + i + '" value="' + modal.vals[i] + '" aria-label="نقاط ' + esc(t.name) + '">' +
+            '<button class="btn small" data-sc-step="' + i + ':1" aria-label="إضافة نقطة إلى ' + esc(t.name) + '">+</button></div>';
+        }).join("") + "</div>" +
+        '<div class="modal-actions"><button class="btn primary" data-act="scores-save">حفظ</button><button class="btn ghost" data-act="modal-close">إلغاء</button></div>';
     } else if (modal.type === "confirm") {
       inner = '<h2 class="gold">' + esc(modal.title) + "</h2><p>" + esc(modal.text) + '</p><div class="modal-actions"><button class="btn bad" data-act="' + modal.yes + '">' + esc(modal.yesLabel) + '</button><button class="btn ghost" data-act="modal-close">تراجع</button></div>';
     }
-    return '<div class="modal-back" data-act="modal-back"><div class="modal panel" role="dialog" aria-modal="true">' + inner + "</div></div>";
+    return '<div class="modal-back" data-act="modal-back"><div class="modal panel' + (modal.type === "scores" || modal.type === "confirm" ? " compact" : "") + '" role="dialog" aria-modal="true">' + inner + "</div></div>";
   }
 
   /* ---------- render ---------- */
@@ -649,7 +658,7 @@
     else if (view === "bank") html = vBank();
     else html = vHome();
     app.innerHTML = html + vModal();
-    bumpTeam = null; shakeTeam = null;
+    bumpTeam = null; shakeTeam = null; freshClue = -1; freshDone = false;
     if (view === "game" && game && game.status === "over") startConfetti();
   }
 
@@ -742,7 +751,7 @@
           game.final.wagers[i] = Math.min(max, Math.max(0, Math.floor(+inp.value || 0)));
         });
         game.final.stage = "play"; commit(); break;
-      case "final-reveal": if (game.final.revealed < 4) { game.final.revealed++; SFX.reveal(); commit(); } break;
+      case "final-reveal": if (game.final.revealed < 4) { game.final.revealed++; freshClue = game.final.revealed - 1; SFX.reveal(); commit(); } break;
       case "final-answer": game.final.stage = "mark"; SFX.reveal(); commit(); break;
       case "final-apply":
         game.final.marks.forEach(function (m, i) { game.teams[i].score += m ? game.final.wagers[i] : -game.final.wagers[i]; });
@@ -751,6 +760,14 @@
         modal = { type: "edit", isNew: true, q: { id: "", cat: bankFilter.cat || CATS[0].id, lvl: +bankFilter.lvl || 2, clues: ["", "", "", ""], answer: "", explain: "", extra: "", source: "" } };
         render(); break;
       case "modal-close": modal = null; render(); break;
+      case "scores": if (game) { modal = { type: "scores", vals: game.teams.map(function (t) { return t.score; }) }; render(); var f0 = document.getElementById("sc-0"); if (f0) f0.focus(); } break;
+      case "scores-save":
+        readScoreInputs();
+        var changed = false;
+        game.teams.forEach(function (t, i) { if (t.score !== modal.vals[i]) { t.score = modal.vals[i]; changed = true; } });
+        modal = null;
+        if (changed) { game.log.push({ manual: true }); toast("تم تعديل النقاط"); }
+        commit(); break;
       case "modal-back": modal = null; render(); break;
       case "export": modal = { type: "export" }; render(); break;
       case "import": modal = { type: "import" }; render(); break;
@@ -770,6 +787,11 @@
       case "reset-confirm": modal = { type: "confirm", title: "استعادة البنك الأصلي؟", text: "ستُحذف كل الأسئلة المضافة والتعديلات، ويعود البنك إلى " + window.DEFAULT_QUESTIONS.length + " بطاقة الأصلية.", yes: "reset", yesLabel: "استعادة" }; render(); break;
       case "reset": bank = clone(window.DEFAULT_QUESTIONS); saveBank(); modal = null; toast("تمت الاستعادة"); render(); break;
     }
+  }
+
+  function clampScore(v) { v = Math.round(+v); return isFinite(v) ? Math.max(-999, Math.min(999, v)) : 0; }
+  function readScoreInputs() {
+    document.querySelectorAll("[data-sc]").forEach(function (inp) { modal.vals[+inp.getAttribute("data-sc")] = clampScore(inp.value); });
   }
 
   function doImport() {
@@ -799,12 +821,19 @@
   }
 
   document.addEventListener("click", function (e) {
-    var el = e.target.closest("[data-act],[data-tab],[data-preset],[data-format],[data-level],[data-cat],[data-answer-mode],[data-correct],[data-wrong],[data-edit],[data-del],[data-del-yes],[data-del-no],[data-wager-set],[data-mark]");
+    var el = e.target.closest("[data-act],[data-sc-step],[data-tab],[data-preset],[data-format],[data-level],[data-cat],[data-answer-mode],[data-correct],[data-wrong],[data-edit],[data-del],[data-del-yes],[data-del-no],[data-wager-set],[data-mark]");
     if (!el) return;
     if (el.hasAttribute("data-act")) {
       var act = el.getAttribute("data-act");
       if (act === "modal-back" && e.target !== el) return;
       return handleAct(act, el);
+    }
+    if (el.hasAttribute("data-sc-step")) {
+      var sp = el.getAttribute("data-sc-step").split(":"), si = +sp[0];
+      readScoreInputs();
+      modal.vals[si] = clampScore(modal.vals[si] + (+sp[1]));
+      var sinp = document.getElementById("sc-" + si); if (sinp) sinp.value = modal.vals[si];
+      return;
     }
     if (el.hasAttribute("data-tab")) { collectNames(); setupTab = el.getAttribute("data-tab"); render(); return; }
     if (el.hasAttribute("data-preset")) {
@@ -859,6 +888,7 @@
 
   document.addEventListener("input", function (e) {
     var el = e.target;
+    if (el.hasAttribute("data-sc") && modal && modal.type === "scores") { modal.vals[+el.getAttribute("data-sc")] = clampScore(el.value); return; }
     if (el.getAttribute("data-filter") === "q") {
       bankFilter.q = el.value; render();
       var s = document.getElementById("f-q"); s.focus(); s.setSelectionRange(s.value.length, s.value.length);
@@ -884,6 +914,8 @@
   });
 
   document.addEventListener("keydown", function (e) {
+    if (modal && e.key === "Escape") { modal = null; render(); return; }
+    if (modal && modal.type === "scores" && e.key === "Enter") { e.preventDefault(); handleAct("scores-save"); return; }
     if (modal || /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ""))) return;
     if (e.key === "f" || e.key === "F") { handleAct("fullscreen"); return; }
     if (view !== "game" || !game) return;
