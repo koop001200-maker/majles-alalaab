@@ -391,7 +391,7 @@
       '<p class="subtitle">التحدي الإسلامي العائلي — أربع معلومات تنكشف تباعاً، ومن يعرف الجواب أولاً يكسب النقاط الأعلى.</p>' +
       '<div class="home-main">' +
       (resumable ? '<button class="btn primary big" data-act="resume">استئناف اللعبة (الجولة ' + (game.idx + 1) + ")</button>" : "") +
-      '<div class="home-actions"><button class="btn ' + (resumable ? "" : "primary ") + 'big" data-act="quick">ابدأ اللعب الآن</button>' +
+      '<div class="home-actions"><button class="btn ' + (resumable ? "" : "primary ") + 'big" data-act="quick">ابدأ اللعب الآن</button><button class="btn big ghost" data-act="trial">تجربة سريعة (3 جولات)</button>' +
       '<button class="btn big" data-act="setup">الإعدادات والأوضاع</button></div>' +
       '<span class="summary">' + esc(settingsSummary()) + "</span></div>" +
       '<div class="home-actions"><button class="btn ghost" data-act="howto">طريقة اللعب</button><button class="btn ghost" data-act="bank">بنك الأسئلة</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
@@ -497,6 +497,7 @@
     if (p.type === "golden") badges += '<span class="pill gold-pill">الجولة الذهبية</span>';
     if (p.double) badges += '<span class="pill double">نقاط ×2</span>';
     if (p.random) badges += '<span class="pill random">عشوائي</span>';
+    if (game.trial) badges += '<span class="pill gold-pill">تجربة</span>';
 
     var inner, bar;
     if (r.done) {
@@ -586,7 +587,8 @@
       '<div class="gold" style="font-size:1.3em;font-family:var(--font-display)">' + top + " " + pointsWord(top) + "</div>" +
       standingsHTML(game.teams) +
       '<p class="muted">عدد الجولات: ' + game.plan.length + " — عُرفت الإجابة في " + correct + " منها. أحسنتم!</p>" +
-      '<div class="home-actions"><button class="btn primary big" data-act="replay">العب مرة أخرى بأسئلة جديدة</button>' +
+      (game.trial ? '<p class="gold" style="font-size:1.2em">خلصت التجربة 👌 جاهزين للمباراة الحقيقية؟</p>' : "") +
+      '<div class="home-actions"><button class="btn primary big" data-act="replay">' + (game.trial ? "ابدأ المباراة الحقيقية" : "العب مرة أخرى بأسئلة جديدة") + "</button>" +
       '<button class="btn big" data-act="setup">تعديل الإعدادات</button><button class="btn big ghost" data-act="home-clear">الرئيسية</button></div>' +
       "</section>";
   }
@@ -737,6 +739,20 @@
     window.scrollTo(0, 0);
   }
 
+  /* quick trial: 3 easy rounds with the saved team names; the saved settings are not changed */
+  function startTrial() {
+    collectNames();
+    var saved = clone(settings);
+    settings.rounds = 3; settings.level = 1; settings.cats = CATS.map(function (c) { return c.id; });
+    settings.answerMode = "open"; settings.timer = false;
+    settings.modes = { quick: false, double: false, steal: false, golden: false, random: false, final: false };
+    stopTimer();
+    game = buildGame();
+    settings = saved;
+    game.trial = true;
+    newRound(); saveGame(); view = "game"; render();
+  }
+
   function handleAct(act, el) {
     switch (act) {
       case "home": go("home"); break;
@@ -747,6 +763,7 @@
       case "resume": view = "game"; if (game.round && !game.round.done && game.round.revealed > 0 && game.round.timeLeft != null) startTimer(); render(); break;
       case "start": startGame(); break;
       case "quick": startGame(); break;
+      case "trial": startTrial(); break;
       case "cats-none": collectNames(); settings.cats = []; saveSettings(); render(); break;
       case "replay": startGame(); break;
       case "rounds-": collectNames(); settings.rounds = Math.max(3, settings.rounds - 1); saveSettings(); render(); break;

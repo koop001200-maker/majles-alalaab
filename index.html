@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>مجلس الألعاب</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="ألعاب عائلية جماعية: مين أكون؟ وخمّن وش هو؟ ورتّبها صح">
+<meta name="description" content="ألعاب عائلية جماعية: مين أكون؟ وخمّن وش هو؟ ورتّبها صح وتحدي الحروف">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@800&family=Reem+Kufi:wght@600;700&family=Tajawal:wght@400;500;700;800&display=swap">
@@ -37,7 +37,8 @@ body {
 header { text-align: center; display: grid; gap: 4px; }
 h1 { margin: 0; font-family: "Reem Kufi", var(--font-body); font-size: clamp(32px, min(6vw, 9vh), 84px); line-height: 1.1; }
 header p { margin: 0; color: var(--muted); }
-.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 2vw, 28px); width: min(100%, 1700px); min-height: 0; }
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(10px, 1.6vw, 24px); width: min(100%, 1800px); min-height: 0; }
+@media (max-width: 1599px) and (min-width: 761px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1; grid-auto-rows: minmax(0, 1fr); } .card { justify-content: center; gap: 6px; padding-block: 10px; } .card .desc { display: none; } #hub { justify-content: flex-start; } .card .mark { font-size: clamp(30px, 6vh, 72px); } .card .star { width: clamp(44px, 8vh, 90px); } .card .letters span, .card .nums span { transform: none; } .card .name { font-size: clamp(26px, 5.6vh, 64px); } .card .tags span { font-size: .72em; } .card .play { padding: .3em 1.8em; } }
 .card {
   position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(6px, 1.6vh, 18px);
   padding: clamp(16px, 3.4vh, 40px) clamp(14px, 2vw, 32px); border-radius: 30px; text-decoration: none; color: var(--text);
@@ -61,7 +62,7 @@ header p { margin: 0; color: var(--muted); }
 .card.b::before { content: ""; position: absolute; inset: 0; opacity: .7; pointer-events: none;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M0 32 16 16 32 32 48 16 64 32' fill='none' stroke='%23ffb703' stroke-opacity='.12' stroke-width='1.4'/%3E%3C/svg%3E"); }
 .card > * { position: relative; }
-.mark { font-size: clamp(44px, 11vh, 120px); line-height: 1; }
+.mark { font-size: clamp(36px, min(4.2vw, 10vh), 110px); line-height: 1; white-space: nowrap; }
 .star { width: clamp(60px, 12vh, 130px); aspect-ratio: 1; display: grid; place-items: center; position: relative; }
 .star::before, .star::after { content: ""; position: absolute; inset: 14%; border: 2px solid var(--a-acc); border-radius: 6px; }
 .star::after { transform: rotate(45deg); }
@@ -77,6 +78,13 @@ header p { margin: 0; color: var(--muted); }
 .play { margin-top: auto; padding: .45em 2em; border-radius: 999px; font-weight: 800; font-size: 1.1em; }
 .card.a .play { background: linear-gradient(180deg, var(--a-acc2), var(--a-acc)); color: #1d1606; }
 .card.b .play { background: var(--b-acc); color: #241500; border-radius: 18px; box-shadow: 0 6px 0 #c98a00; }
+.card.d { background: radial-gradient(120% 90% at 50% 40%, #13363a 0%, #0d2629 70%); }
+.card.d:hover, .card.d:focus-visible { border-color: #f3b13c; box-shadow: 0 24px 60px rgba(243, 177, 60, .25); }
+.letters { display: flex; gap: 6px; direction: rtl; }
+.letters span { width: clamp(32px, 6.4vh, 60px); height: clamp(38px, 7.6vh, 70px); display: grid; place-items: center; padding-top: .12em; border-radius: 10px; background: #f3b13c; color: #0d2629; font-family: "Lalezar", var(--font-body); font-size: clamp(22px, 4.6vh, 44px); box-shadow: inset 0 -4px 0 #b97d14; }
+.letters span:nth-child(2) { transform: rotate(6deg); } .letters span:nth-child(3) { transform: rotate(-5deg); background: #58d1a0; box-shadow: inset 0 -4px 0 #2a9a6e; }
+.card.d .name { font-family: "Lalezar", var(--font-body); color: #f7efdf; }
+.card.d .play { background: #f3b13c; color: #0d2629; }
 .card.c .play { background: var(--c-acc); color: #04291f; border-radius: 16px; box-shadow: 0 6px 0 #1f9c78; }
 .resume { position: absolute; top: 14px; inset-inline-start: 14px; padding: .1em .8em; border-radius: 999px; font-size: .75em; font-weight: 800; background: #46c486; color: #062214; }
 .resume[hidden] { display: none; }
@@ -90,16 +98,19 @@ footer { color: var(--muted); font-size: .8em; text-align: center; }
   #hub { height: auto; min-height: 100%; justify-content: flex-start; }
   .cards { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 760px) and (min-height: 640px) {
+@media (max-width: 760px) and (min-height: 700px) {
   body { overflow: hidden; }
   #hub { height: 100%; }
-  .cards { flex: 1; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .cards { flex: 1; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .letters span { width: 30px; height: 36px; font-size: 22px; }
   .card { justify-content: center; padding-block: 8px; gap: 4px; border-radius: 22px; }
   .card .desc, .card .tags { display: none; }
   .name { font-size: clamp(28px, 5vh, 44px); }
   .nums span { width: clamp(30px, 5vh, 44px); font-size: clamp(18px, 3vh, 26px); }
-  .mark { font-size: clamp(36px, 7vh, 60px); }
-  .star { width: clamp(50px, 8vh, 80px); }
+  .mark { font-size: clamp(28px, 4.6vh, 44px); }
+  .name { font-size: clamp(24px, 4.4vh, 40px); }
+  .star { width: clamp(44px, 6.5vh, 64px); }
+  .card .play { padding: .25em 1.6em; }
   .desc { font-size: .9em; }
   .play { margin-top: 4px; }
 }
@@ -126,7 +137,15 @@ footer { color: var(--muted); font-size: .8em; text-align: center; }
       <div class="mark" aria-hidden="true">🐪☕🎲</div>
       <h2 class="name">خمّن وش هو؟</h2>
       <p class="desc">واحد ما يشوف الشاشة، يسأل أسئلة جوابها «إيه» أو «لا»، ويخمّن الشيء قبل لا يخلص الوقت.</p>
-      <div class="tags"><span>2 حتى 16 لاعب</span><span>بدون مقدّم</span><span>329 شيء في 10 تصنيفات</span></div>
+      <div class="tags"><span>2 حتى 16 لاعب</span><span>بدون مقدّم</span><span>362 شيء في 10 تصنيفات</span></div>
+      <span class="play">العب</span>
+    </a>
+    <a class="card d" href="huruf.html">
+      <span class="resume" id="resume-d" hidden>مسابقة جارية</span>
+      <div class="letters" aria-hidden="true"><span>ح</span><span>ر</span><span>ف</span></div>
+      <h2 class="name">تحدي الحروف</h2>
+      <p class="desc">حروف كلمة مبعثرة على الشاشة، وأول من ينطق الكلمة الصحيحة يكسب النقطة.</p>
+      <div class="tags"><span>بلا حد للمتسابقين</span><span>مع منظّم</span><span>300 كلمة</span></div>
       <span class="play">العب</span>
     </a>
     <a class="card c" href="rattebha.html">
@@ -134,7 +153,7 @@ footer { color: var(--muted); font-size: .8em; text-align: center; }
       <div class="nums" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
       <h2 class="name">رتّبها <em>صح</em></h2>
       <p class="desc">بطاقات مبعثرة وعليكم ترتيبها: من الأقدم للأحدث، من الأصغر للأكبر. ناقشوا واختلفوا واعتمدوا!</p>
-      <div class="tags"><span>لاعبان حتى 6 فرق</span><span>مع مضيف أو تلقائي</span><span>111 سؤال</span></div>
+      <div class="tags"><span>لاعبان حتى 6 فرق</span><span>مع مضيف أو تلقائي</span><span>136 سؤالاً</span></div>
       <span class="play">العب</span>
     </a>
   </div>
@@ -148,6 +167,7 @@ footer { color: var(--muted); font-size: .8em; text-align: center; }
   if (saved("mak_game_v1", "status", "over")) document.getElementById("resume-a").hidden = false;
   if (saved("kh_game_v1", "phase", "over")) document.getElementById("resume-b").hidden = false;
   if (saved("rt_game_v1", "phase", "over")) document.getElementById("resume-c").hidden = false;
+  try { var h = JSON.parse(localStorage.getItem("tahaddi-alhuruf-v1") || "null"); if (h && h.game && ["playing", "paused", "won", "timeout", "revealed"].indexOf(h.game.status) >= 0) document.getElementById("resume-d").hidden = false; } catch (e) {}
 })();
 </script>
 </body>

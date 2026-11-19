@@ -34,6 +34,13 @@
   var bank = Store.get(K.bank, null);
   if (Array.isArray(bank)) bank = bank.filter(function (it) { return it && typeof it.id === "string" && typeof it.name === "string" && it.name.trim() && CATS.some(function (c) { return c.id === it.cat; }); }).map(function (it) { it.syn = Array.isArray(it.syn) ? it.syn.map(String) : []; it.lvl = [1, 2, 3, 4].indexOf(+it.lvl) >= 0 ? +it.lvl : 2; it.emoji = String(it.emoji || "❓"); return it; });
   if (!Array.isArray(bank) || !bank.length) bank = defaultBank();
+  /* bank v2 added new «تحدي العائلة» items (saudi-44 onward): give them to families who saved their own bank, once */
+  if (Store.get("kh_bank_ver", 1) < 2) {
+    var have = {}; bank.forEach(function (it) { have[it.id] = 1; });
+    defaultBank().forEach(function (it) { var m = /^saudi-(\d+)$/.exec(it.id); if (m && +m[1] >= 44 && !have[it.id]) bank.push(it); });
+    if (Store.raw(K.bank)) Store.set(K.bank, bank);
+    Store.set("kh_bank_ver", 2);
+  }
   function saveBank() { Store.set(K.bank, bank); }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
   function photo(id) { return Store.raw(K.img + id); }
@@ -437,6 +444,7 @@
     if (c && c.double) info += '<span class="pill hot">🔥 الجولة دبل ×2</span>';
     if (c && c.surprise) info += '<span class="pill surprise">🎉 جولة المفاجأة</span>';
     if (s.random) info += '<span class="pill">🎲 عشوائي</span>';
+    if (game.trial) info += '<span class="pill gold">تجربة</span>';
     if (it && (game.phase === "guess" || game.phase === "ready" || game.phase === "result")) info += '<span class="pill">' + cat(it.cat).icon + " " + esc(cat(it.cat).name) + "</span>";
     return '<div class="topbar"><div class="info">' + info + "</div>" +
       '<div class="top-actions"><button class="btn ghost" data-act="board" title="الترتيب">🏆<span class="lbl"> الترتيب</span></button>' +
@@ -518,7 +526,8 @@
       '<div class="champ">' + champs.map(function (x) { return esc(x.p.name); }).join(" و ") + "</div>" +
       '<div class="pts"><span class="total">' + top + " " + ptsWord(top) + "</span><span>✓ " + champs[0].p.wins + " تخمينات صح</span></div>" + teamLine +
       '<div class="board panel">' + boardHTML(false) + "</div>" +
-      '<div class="row"><button class="btn go big" data-ui="replay">نلعب مرة ثانية 🔁</button><button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الرئيسية</button></div></section>';
+      (game.trial ? '<p class="banner surprise">خلصت التجربة 👌 جاهزين للعب الجد؟</p>' : "") +
+      '<div class="row"><button class="btn go big" data-ui="replay">' + (game.trial ? "نلعب جد! 🎮" : "نلعب مرة ثانية 🔁") + "</button>" + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الرئيسية</button></div></section>';
   }
 
   function summary() {
@@ -533,7 +542,7 @@
       '<h1 class="title">خمّن وش هو؟</h1><div class="sadu" aria-hidden="true"></div>' +
       '<p class="subtitle">واحد ما يشوف الشاشة، والباقين يشوفون الشيء. يسأل أسئلة جوابها «إيه» أو «لا» ويخمّن قبل لا يخلص الوقت!</p>' +
       (resumable ? '<button class="btn go big" data-ui="resume">كمّل اللعبة (الجولة ' + game.round + ")</button>" : "") +
-      '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">يلا نلعب 🎮</button><button class="btn big" data-ui="setup">اللاعبين والإعدادات</button></div>' +
+      '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">يلا نلعب 🎮</button><button class="btn big" data-ui="setup">اللاعبين والإعدادات</button><button class="btn big ghost" data-ui="trial">تجربة سريعة</button></div>' +
       '<p class="summary">' + esc(summary()) + "</p>" +
       '<div class="row"><button class="btn ghost" data-ui="howto">كيف نلعب؟</button><button class="btn ghost" data-ui="bank">بنك الأشياء</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
       '<p class="stats">في البنك <b>' + bank.length + "</b> شيء في <b>" + CATS.length + "</b> تصنيفات</p></section>";
@@ -723,6 +732,14 @@
       case "howto": go("howto"); break;
       case "bank": go("bank"); break;
       case "quick": case "start": case "replay": startGame(); break;
+      case "trial":
+        setupErr = validate();
+        if (setupErr) { view = "setup"; setupTab = "players"; render(); break; }
+        var saved = clone(settings);
+        settings.rounds = 1; settings.level = 1; settings.cats = []; settings.turnTime = 60; settings.memTime = 6;
+        settings.double = false; settings.surprise = false; settings.random = false;
+        newGame(); settings = saved; game.trial = true; view = "game"; ensureTimer(); commit();
+        break;
       case "resume": view = "game"; ensureTimer(); render(); break;
       case "rounds-": settings.rounds = Math.max(1, settings.rounds - 1); saveSettings(); render(); break;
       case "rounds+": settings.rounds = Math.min(10, settings.rounds + 1); saveSettings(); render(); break;

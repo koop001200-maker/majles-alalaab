@@ -335,6 +335,7 @@
     }).join("") + "</div>";
   }
   function topbar(info) {
+    if (game && game.trial) info = '<span class="pill sp">تجربة</span>' + info;
     return '<div class="topbar"><div class="info">' + info + '</div><div class="top-actions">' +
       '<button class="btn ghost" data-ui="scores" title="تعديل النقاط">±<span class="lbl"> النقاط</span></button>' +
       '<button class="btn ghost" data-ui="music" title="الموسيقى (M)">' + (settings.music ? "🎵" : "🔕") + '<span class="lbl"> موسيقى</span></button>' +
@@ -461,7 +462,8 @@
       '<div class="muted" style="font-size:1.3em">' + (L.length > 1 ? "تعادل بعد الجولات الفاصلة — الفوز مشترك" : "الفريق الفائز") + "</div>" +
       '<div class="champ">' + L.map(function (i) { return esc(game.teams[i].name); }).join(" و ") + "</div>" +
       '<div class="pts"><span class="tot">' + top + " " + ptsWord(top) + "</span><span>🎯 " + game.teams[L[0]].perfect + " ترتيب كامل</span></div>" + barsHTML() +
-      '<div class="row"><button class="btn go big" data-ui="rematch">مباراة جديدة بنفس الفرق 🔁</button><button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الرئيسية</button></div></section>';
+      (game.trial ? '<p class="special"><b>خلصت التجربة 👌</b><span>جاهزين للمباراة الحقيقية؟</span></p>' : "") +
+      '<div class="row">' + (game.trial ? '<button class="btn go big" data-ui="quick">ابدأ المباراة الحقيقية ▶</button>' : '<button class="btn go big" data-ui="rematch">مباراة جديدة بنفس الفرق 🔁</button>') + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الرئيسية</button></div></section>';
   }
 
   function summary() {
@@ -475,7 +477,7 @@
       '<h1 class="title">رتّبها <em>صح</em></h1>' +
       '<p class="subtitle">بطاقات مبعثرة… وعليكم ترتيبها: من الأقدم للأحدث، من الأصغر للأكبر، من البداية للنهاية. ناقشوا، اختلفوا، واعتمدوا!</p>' +
       (resumable ? '<button class="btn hot big" data-ui="resume">كمّل المباراة</button>' : "") +
-      '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">ابدأ ▶</button><button class="btn big" data-ui="setup">إعداد المباراة</button></div>' +
+      '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">ابدأ ▶</button><button class="btn big" data-ui="setup">إعداد المباراة</button><button class="btn big ghost" data-ui="trial">تجربة سريعة</button></div>' +
       '<p class="summary">' + esc(summary()) + "</p>" +
       '<div class="row"><button class="btn ghost" data-ui="howto">طريقة اللعب</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
       '<p class="stats">في البنك <b>' + BANK.length + "</b> سؤال في <b>" + CATS.length + "</b> مجالات</p></section>";
@@ -635,6 +637,14 @@
       case "setup": go("setup"); break;
       case "howto": go("howto"); break;
       case "quick": case "start": startMatch(); break;
+      case "trial": {
+        keepNames(); saveSettings();
+        var saved = clone(settings);
+        settings.perTeam = Math.max(1, Math.ceil(3 / teamCount())); settings.level = 1; settings.timer = 60;
+        settings.specials = false; settings.speedBonus = false; settings.host = "auto";
+        newGame(); settings = saved; game.trial = true; view = "game"; ensureTicker(); commit();
+        break;
+      }
       case "rematch": startMatch(game.teams); break;
       case "resume": view = "game"; ensureTicker(); if (game.phase === "intro") { introLeft = 3; runIntro(); } if (game.phase === "reveal" && !game.cur.revealed && game.settings.host !== "host") doRevealSoon(); if (settings.music) setMusic(true); render(); break;
       case "per-": settings.perTeam = Math.max(1, settings.perTeam - 1); saveSettings(); render(); break;
