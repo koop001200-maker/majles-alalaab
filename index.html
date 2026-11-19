@@ -3,16 +3,125 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>مين أكون؟</title>
-<meta name="description" content="لعبة تخمين إسلامية عائلية: أربع معلومات متدرجة، ومن يعرف الإجابة أولاً يكسب أعلى النقاط.">
+<title>مجلس الألعاب</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="ألعاب عائلية جماعية: مين أكون؟ وخمّن وش هو؟">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@400;500;700;800&display=swap">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Reem+Kufi:wght@600;700&family=Tajawal:wght@400;500;700;800&display=swap">
+<style>
+/* Hub: neutral night majlis; each game card keeps its own game's identity. Two cards side by side, stacked on phones. */
+:root {
+  --bg: #120f1f;
+  --text: #fbf5ea;
+  --muted: #bdb5cf;
+  --line: rgba(255, 245, 230, .14);
+  --a-bg: #0c2729; --a-acc: #d6b25e; --a-acc2: #f2d68e;
+  --b-bg: #251a55; --b-acc: #ffb703; --b-acc2: #ff5d73;
+  --font-body: "Tajawal", "Segoe UI", Tahoma, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font-body);
+  font-size: clamp(14px, min(1.1vw, 1.9vh) + 4px, 24px); line-height: 1.5;
+  background-image: radial-gradient(ellipse at 50% -20%, rgba(214, 178, 94, .18), transparent 60%), radial-gradient(ellipse at 50% 130%, rgba(255, 93, 115, .14), transparent 60%);
+}
+#hub {
+  height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 3vh, 36px);
+  padding-block: clamp(10px, 2vh, 24px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header { text-align: center; display: grid; gap: 4px; }
+h1 { margin: 0; font-family: "Reem Kufi", var(--font-body); font-size: clamp(32px, min(6vw, 9vh), 84px); line-height: 1.1; }
+header p { margin: 0; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 2.4vw, 32px); width: min(100%, 1300px); min-height: 0; }
+.card {
+  position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(6px, 1.6vh, 18px);
+  padding: clamp(16px, 3.4vh, 40px) clamp(14px, 2vw, 32px); border-radius: 30px; text-decoration: none; color: var(--text);
+  border: 2px solid var(--line); box-shadow: 0 20px 50px rgba(0, 0, 0, .45); overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.card:hover, .card:focus-visible { transform: translateY(-6px); outline: none; }
+.card.a { background: linear-gradient(180deg, #123437, var(--a-bg)); }
+.card.a:hover, .card.a:focus-visible { border-color: var(--a-acc); box-shadow: 0 24px 60px rgba(214, 178, 94, .25); }
+.card.b { background: linear-gradient(180deg, #31246c, var(--b-bg)); }
+.card.b:hover, .card.b:focus-visible { border-color: var(--b-acc); box-shadow: 0 24px 60px rgba(255, 183, 3, .25); }
+.card.a::before { content: ""; position: absolute; inset: 0; opacity: .5; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23d6b25e' stroke-opacity='0.12' stroke-width='1.2'%3E%3Crect x='28' y='28' width='40' height='40'/%3E%3Crect x='28' y='28' width='40' height='40' transform='rotate(45 48 48)'/%3E%3C/g%3E%3C/svg%3E"); }
+.card.b::before { content: ""; position: absolute; inset: 0; opacity: .7; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M0 32 16 16 32 32 48 16 64 32' fill='none' stroke='%23ffb703' stroke-opacity='.12' stroke-width='1.4'/%3E%3C/svg%3E"); }
+.card > * { position: relative; }
+.mark { font-size: clamp(44px, 11vh, 120px); line-height: 1; }
+.star { width: clamp(60px, 12vh, 130px); aspect-ratio: 1; display: grid; place-items: center; position: relative; }
+.star::before, .star::after { content: ""; position: absolute; inset: 14%; border: 2px solid var(--a-acc); border-radius: 6px; }
+.star::after { transform: rotate(45deg); }
+.star span { font-family: "Reem Kufi", var(--font-body); font-size: clamp(26px, 5.4vh, 56px); color: var(--a-acc2); }
+.name { margin: 0; font-size: clamp(34px, min(5vw, 8vh), 90px); line-height: 1.05; font-weight: 400; }
+.card.a .name { font-family: "Reem Kufi", var(--font-body); font-weight: 700; color: var(--a-acc2); }
+.card.b .name { font-family: "Lalezar", var(--font-body); color: var(--b-acc); text-shadow: 0 5px 0 #9a3b1f; }
+.desc { margin: 0; color: var(--muted); max-width: 34ch; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tags span { padding: .05em .8em; border-radius: 999px; border: 1px solid var(--line); background: rgba(0, 0, 0, .2); font-size: .8em; font-weight: 700; }
+.play { margin-top: auto; padding: .45em 2em; border-radius: 999px; font-weight: 800; font-size: 1.1em; }
+.card.a .play { background: linear-gradient(180deg, var(--a-acc2), var(--a-acc)); color: #1d1606; }
+.card.b .play { background: var(--b-acc); color: #241500; border-radius: 18px; box-shadow: 0 6px 0 #c98a00; }
+.resume { position: absolute; top: 14px; inset-inline-start: 14px; padding: .1em .8em; border-radius: 999px; font-size: .75em; font-weight: 800; background: #46c486; color: #062214; }
+.resume[hidden] { display: none; }
+footer { color: var(--muted); font-size: .8em; text-align: center; }
+@media (max-width: 760px) {
+  body { overflow-y: auto; }
+  #hub { height: auto; min-height: 100%; justify-content: flex-start; }
+  .cards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) and (min-height: 640px) {
+  body { overflow: hidden; }
+  #hub { height: 100%; }
+  .cards { flex: 1; grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .card { justify-content: center; padding-block: 12px; gap: 6px; }
+  .mark { font-size: clamp(36px, 7vh, 60px); }
+  .star { width: clamp(50px, 8vh, 80px); }
+  .desc { font-size: .9em; }
+  .play { margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
 </head>
 <body>
-<main id="app" aria-live="polite"></main>
-<script src="js/questions.js"></script>
-<script src="js/app.js"></script>
+<main id="hub">
+  <header>
+    <h1>مجلس الألعاب</h1>
+    <p>اختاروا لعبة واجتمعوا حول الشاشة</p>
+  </header>
+  <div class="cards">
+    <a class="card a" href="min-akoon.html">
+      <span class="resume" id="resume-a" hidden>لعبة محفوظة</span>
+      <div class="star" aria-hidden="true"><span>؟</span></div>
+      <h2 class="name">مين أكون؟</h2>
+      <p class="desc">التحدي الإسلامي العائلي: أربع معلومات تنكشف تباعاً، ومن يعرف الشخصية أو الحدث أولاً يكسب أعلى النقاط.</p>
+      <div class="tags"><span>لاعبان حتى 6 فرق</span><span>مقدّم يكشف المعلومات</span><span>72 بطاقة بمصادرها</span></div>
+      <span class="play">العب</span>
+    </a>
+    <a class="card b" href="khammen.html">
+      <span class="resume" id="resume-b" hidden>لعبة محفوظة</span>
+      <div class="mark" aria-hidden="true">🐪☕🎲</div>
+      <h2 class="name">خمّن وش هو؟</h2>
+      <p class="desc">واحد ما يشوف الشاشة، يسأل أسئلة جوابها «إيه» أو «لا»، ويخمّن الشيء قبل لا يخلص الوقت.</p>
+      <div class="tags"><span>2 حتى 16 لاعب</span><span>بدون مقدّم</span><span>329 شيء في 10 تصنيفات</span></div>
+      <span class="play">العب</span>
+    </a>
+  </div>
+  <footer>تعمل بدون تسجيل وبدون إنترنت بعد التحميل · النتائج تنحفظ على هذا الجهاز</footer>
+</main>
+<script>
+(function () {
+  function saved(key, doneField, doneVal) {
+    try { var g = JSON.parse(localStorage.getItem(key) || "null"); return g && g[doneField] !== doneVal; } catch (e) { return false; }
+  }
+  if (saved("mak_game_v1", "status", "over")) document.getElementById("resume-a").hidden = false;
+  if (saved("kh_game_v1", "phase", "over")) document.getElementById("resume-b").hidden = false;
+})();
+</script>
 </body>
 </html>

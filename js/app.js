@@ -379,7 +379,7 @@
       '<div class="home-actions"><button class="btn ' + (resumable ? "" : "primary ") + 'big" data-act="quick">ابدأ اللعب الآن</button>' +
       '<button class="btn big" data-act="setup">الإعدادات والأوضاع</button></div>' +
       '<span class="summary">' + esc(settingsSummary()) + "</span></div>" +
-      '<div class="home-actions"><button class="btn ghost" data-act="howto">طريقة اللعب</button><button class="btn ghost" data-act="bank">بنك الأسئلة</button></div>' +
+      '<div class="home-actions"><button class="btn ghost" data-act="howto">طريقة اللعب</button><button class="btn ghost" data-act="bank">بنك الأسئلة</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
       '<div class="home-stats"><span>البطاقات: <b>' + bank.length + '</b></span><span>الأقسام: <b>' + CATS.length + '</b></span>' +
       '<span>عائلي <b>' + lvlCount[0] + '</b> · تحدي <b>' + lvlCount[1] + '</b> · خبراء <b>' + lvlCount[2] + "</b></span></div>" +
       "</section>";
