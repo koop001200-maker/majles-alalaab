@@ -41,6 +41,14 @@
     if (Store.raw(K.bank)) Store.set(K.bank, bank);
     Store.set("kh_bank_ver", 2);
   }
+  /* bank v3 appended new items to every category: add them once for families with a saved bank */
+  if (Store.get("kh_bank_ver", 1) < 3) {
+    var OLDN = { home: 28, kitchen: 18, food: 48, animals: 46, clothes: 27, transport: 27, tech: 27, tools: 29, saudi: 76, surprise: 36 };
+    var have3 = {}; bank.forEach(function (it) { have3[it.id] = 1; });
+    defaultBank().forEach(function (it) { var m = /^([a-z]+)-(\d+)$/.exec(it.id); if (m && OLDN[m[1]] && +m[2] > OLDN[m[1]] && !have3[it.id]) bank.push(it); });
+    if (Store.raw(K.bank)) Store.set(K.bank, bank);
+    Store.set("kh_bank_ver", 3);
+  }
   function saveBank() { Store.set(K.bank, bank); }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
   function photo(id) { return Store.raw(K.img + id); }
@@ -660,10 +668,10 @@
     } else if (m.type === "credits") {
       var P = window.KH_PHOTOS || {}, ids = Object.keys(P);
       inner = "<h2>مصادر الصور 📷</h2><p class=\"muted\">الصور من ويكيميديا كومنز برخص حرة، وهذه أسماء أصحابها ورخصها كما تشترط الرخص.</p>" +
-        '<div style="text-align:start;display:grid;gap:6px;max-height:55vh;overflow:auto">' + (ids.length ? ids.map(function (id) {
+        '<div style="text-align:start;display:grid;gap:6px;' + (ids.length ? "max-height:55vh;overflow:auto" : "") + '">' + (ids.length ? ids.map(function (id) {
           var c = P[id], it = item(id);
           return '<div style="padding:.3em .6em;border-radius:10px;background:var(--surface-2);font-size:.85em"><b>' + esc(it ? it.name : id) + "</b> — " + esc(c.author) + " · " + esc(c.license) + ' · <span class="muted" dir="ltr">' + esc(c.page) + "</span></div>";
-        }).join("") : '<p class="muted">لا توجد صور مرفقة.</p>') + "</div>" +
+        }).join("") : '<p class="muted" style="margin:0">لا توجد صور مرفقة.</p>') + "</div>" +
         '<div class="actions"><button class="btn big" data-ui="close">تمام</button></div>';
     } else if (m.type === "reset") {
       inner = '<h2>استعادة البنك الأصلي؟</h2><p>تنحذف الأشياء المضافة والتعديلات (الصور تبقى للأشياء الأصلية).</p><div class="actions"><button class="btn no big" data-ui="reset-yes">استعادة</button><button class="btn big" data-ui="close">رجوع</button></div>';

@@ -260,3 +260,14 @@ body.g-mak, body.g-kh, body.g-rt { --muted: #1e1b4b; }
 .g-rt .rule { color: var(--m-ink); }
 .g-rt .rule.hidden { color: var(--m-ink); }
 .g-rt .round-no, .g-rt .cover .muted, .g-rt .spot .muted { color: #1e1b4b; }
+
+/* the add/edit question form: two columns on wide screens so it fits without scrolling */
+@media (min-width: 900px) {
+  .g-mak .modal:has(#q-form) { width: min(100%, 1280px); }
+  .g-mak #q-form { grid-template-columns: 1fr 1fr; column-gap: 18px; }
+  .g-mak #q-form > :first-child, .g-mak #q-form > :last-child { grid-column: 1 / -1; }
+  .g-mak #q-form textarea { min-height: 2.6em; }
+}
+
+/* very short screens: tighten the home screens a little */
+@media (max-height: 660px) { body .home { gap: clamp(6px, 1.6vh, 14px) !important; } }

@@ -76,10 +76,16 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 @media (max-width: 1000px) and (max-height: 520px) {
   .games { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); }
 }
+.fs { position: fixed; top: clamp(10px, 1.6vh, 20px); left: max(12px, env(safe-area-inset-left, 0px)); z-index: 5; font: 800 clamp(13px, min(1vw, 1.9vh), 20px)/1 var(--body); color: var(--ink); background: #fff; border: var(--line); border-radius: 999px; padding: .55em 1em; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
+.fs:hover { background: var(--yellow); }
+#play { position: fixed; inset: 0; z-index: 10; background: var(--violet); }
+#play[hidden] { display: none; }
+#play iframe { width: 100%; height: 100%; border: 0; display: block; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
+<button class="fs" id="fs" type="button">⛶ شاشة كاملة</button>
 <main>
   <h1>مجلس<span>الألعاب!</span></h1>
   <nav class="games" aria-label="الألعاب">
@@ -109,15 +115,70 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
     </a>
   </nav>
 </main>
+<div id="play" hidden></div>
 <script>
 (function () {
   function saved(key, field, done) {
     try { var g = JSON.parse(localStorage.getItem(key) || "null"); return g && g[field] !== done; } catch (e) { return false; }
   }
-  if (saved("mak_game_v1", "status", "over")) document.getElementById("resume-a").hidden = false;
-  if (saved("kh_game_v1", "phase", "over")) document.getElementById("resume-b").hidden = false;
-  if (saved("rt_game_v1", "phase", "over")) document.getElementById("resume-c").hidden = false;
-  try { var h = JSON.parse(localStorage.getItem("tahaddi-alhuruf-v1") || "null"); if (h && h.game && ["playing", "paused", "won", "timeout", "revealed"].indexOf(h.game.status) >= 0) document.getElementById("resume-d").hidden = false; } catch (e) {}
+  function refresh() {
+    document.getElementById("resume-a").hidden = !saved("mak_game_v1", "status", "over");
+    document.getElementById("resume-b").hidden = !saved("kh_game_v1", "phase", "over");
+    document.getElementById("resume-c").hidden = !saved("rt_game_v1", "phase", "over");
+    var on = false;
+    try { var h = JSON.parse(localStorage.getItem("tahaddi-alhuruf-v1") || "null"); on = !!(h && h.game && ["playing", "paused", "won", "timeout", "revealed"].indexOf(h.game.status) >= 0); } catch (e) {}
+    document.getElementById("resume-d").hidden = !on;
+  }
+  refresh();
+
+  /* One continuous full screen: games open inside this page, so full screen never drops between games. */
+  var play = document.getElementById("play"), frame = null, fsBtn = document.getElementById("fs");
+  function isFs() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function enterFs() {
+    var el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!f) return;
+    try { var pr = f.call(el); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+  }
+  function exitFs() { var f = document.exitFullscreen || document.webkitExitFullscreen; if (f && isFs()) { try { var pr = f.call(document); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} } }
+  function tellFrame() { try { if (frame) frame.contentWindow.postMessage({ majlisFs: isFs() }, "*"); } catch (e) {} }
+  function paintFs() { fsBtn.textContent = isFs() ? "✕ خروج من الشاشة الكاملة" : "⛶ شاشة كاملة"; tellFrame(); }
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(function (ev) { document.addEventListener(ev, paintFs); });
+  fsBtn.addEventListener("click", function () { if (isFs()) exitFs(); else enterFs(); });
+
+  function open(href, push) {
+    // a new frame each time: its first load adds no browser-history entry of its own
+    if (!frame || frame.getAttribute("src") !== href) {
+      if (frame) frame.remove();
+      frame = document.createElement("iframe");
+      frame.name = "majlis-play"; frame.title = "اللعبة"; frame.setAttribute("allow", "fullscreen; autoplay"); frame.setAttribute("allowfullscreen", "");
+      frame.setAttribute("src", href); frame.addEventListener("load", tellFrame);
+      play.appendChild(frame);
+    }
+    play.hidden = false;
+    if (push) try { history.pushState({ play: href }, "", "#play=" + href); } catch (e) {}
+    setTimeout(function () { try { frame.contentWindow.focus(); } catch (e) {} }, 300);
+  }
+  function close() {
+    play.hidden = true; if (frame) { frame.remove(); frame = null; } refresh();
+    var first = document.querySelector(".game"); if (first) first.focus();
+  }
+  document.querySelector(".games").addEventListener("click", function (e) {
+    var a = e.target.closest("a.game"); if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+    e.preventDefault(); open(a.getAttribute("href"), true);
+  });
+  window.addEventListener("message", function (e) {
+    if (!frame || e.source !== frame.contentWindow || !e.data || !e.data.majlis) return;
+    var m = e.data.majlis;
+    if (m === "home") { close(); try { history.replaceState(null, "", location.pathname + location.search); } catch (err) {} }
+    else if (m === "fs-on") { enterFs(); setTimeout(tellFrame, 400); }
+    else if (m === "fs-off") { exitFs(); setTimeout(tellFrame, 400); }
+    else if (m === "hello") tellFrame();
+  });
+  window.addEventListener("popstate", function (e) {
+    if (e.state && e.state.play) open(e.state.play, false); else if (!play.hidden) close();
+  });
+  var m = /^#play=([\w.-]+\.html)$/.exec(location.hash);
+  if (m && document.querySelector('a.game[href="' + m[1] + '"]')) { try { history.replaceState({ play: m[1] }, "", location.hash); } catch (e) {} open(m[1], false); }
 })();
 </script>
 </body>

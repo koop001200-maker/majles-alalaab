@@ -34,6 +34,13 @@
   var bank = Store.get(K.bank, null);
   if (Array.isArray(bank)) bank = bank.filter(function (q) { return q && typeof q.id === "string" && Array.isArray(q.clues) && q.clues.length === 4 && q.answer; });
   if (!Array.isArray(bank) || !bank.length) bank = clone(window.DEFAULT_QUESTIONS);
+  /* bank v2 added cards n1–n24: give them once to families who saved their own bank */
+  if (Store.get("mak_bank_ver", 1) < 2) {
+    var haveQ = {}; bank.forEach(function (q) { haveQ[q.id] = 1; });
+    clone(window.DEFAULT_QUESTIONS).forEach(function (q) { if (/^n\d+$/.test(q.id) && !haveQ[q.id]) bank.push(q); });
+    if (Store.get(K.bank, null)) Store.set(K.bank, bank);
+    Store.set("mak_bank_ver", 2);
+  }
   function saveBank() { Store.set(K.bank, bank); }
   function findQ(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
 
