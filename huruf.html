@@ -90,6 +90,14 @@ button{cursor:pointer}
 /* the right answer is shown as one complete, joined-up word */
 .answer-word{margin:0;max-width:100%;font-family:var(--display);font-weight:400;line-height:1.25;font-size:clamp(3.4rem,15vmin,13rem);text-align:center;white-space:nowrap;background:#fff;color:var(--ink);border:clamp(3px,.3vw,6px) solid #111827;border-radius:.22em;box-shadow:.06em .06em 0 #111827;padding:.12em .55em 0}
 .answer-word.ok{background:var(--mint)}
+.tiles .tw{display:flex;gap:calc(var(--fs) * .16)}
+.tiles.multi{column-gap:calc(var(--fs) * .75);row-gap:calc(var(--fs) * .3)}
+.board li.tie-sep,.rank li.tie-sep{list-style:none;height:0;min-height:0;border:0!important;border-top:3px dashed rgba(17,24,39,.5)!important;margin:3px 8px!important;padding:0!important;background:none!important;box-shadow:none!important}
+.d-add{display:flex;gap:6px;margin-top:8px}
+@media (max-height:760px) and (max-width:900px){.board.has-players .d-add{display:none}.tiles{--fs:min(11vmin,calc(64vw / (var(--n) * 1.32)))!important}}
+.d-add input{flex:1;min-width:0;border:2px solid #111827;border-radius:12px;padding:.35em .6em;font:inherit;font-size:clamp(.9rem,2vmin,1.2rem);background:#fff;color:#111827}
+.d-add .btn{padding:.2em .8em;font-size:clamp(1rem,2.4vmin,1.5rem)}
+.answer-word{white-space:normal!important}
 .plus{font-family:var(--display);font-size:clamp(1.2rem,4vmin,3rem);color:var(--ink);background:var(--mint);border-radius:999px;padding:.1em .8em 0}
 .pop{animation:pop .55s cubic-bezier(.2,1.5,.4,1) both}
 @keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
@@ -308,6 +316,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <a class="btn ghost" href="index.html" style="text-decoration:none">🏠 كل الألعاب</a>
     </div>
     <p class="stats" id="h-stats"></p>
+    <p class="reset-line"><button class="btn ghost tiny" id="h-reset" type="button">↺ تصفير السجل</button><span id="h-seen"></span></p>
   </section>
 
   <!-- ========== طريقة اللعب ========== -->
@@ -344,6 +353,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
         <h2>لوحة الترتيب</h2>
         <p class="tap" id="d-tap" hidden>اضغط اسم أول من أجاب صحيحًا</p>
         <ol id="d-board"></ol>
+        <form class="d-add" id="d-add" autocomplete="off"><input id="d-add-name" maxlength="24" placeholder="أضف متسابقًا…" aria-label="اسم متسابق جديد"><button class="btn" type="submit" aria-label="إضافة">+</button></form>
       </aside>
     </div>
     <footer class="d-foot">
@@ -403,7 +413,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
           <h2 id="h-who">من أجاب أولًا؟</h2>
           <div id="c-who-banner"></div>
           <div class="who" id="c-who"></div>
-          <p class="note">اضغط اسم أول من نطق الكلمة الصحيحة. تُحتسب نقطة واحدة فقط لكل جولة. أرقام الأزرار اختصارات من لوحة المفاتيح.</p>
+          <p class="note">اضغط اسم أول من نطق الكلمة الصحيحة. السهل والمتوسط بنقطة، والصعب بنقطتين. أرقام الأزرار اختصارات من لوحة المفاتيح.</p>
         </section>
       </div>
       <div class="col" data-col="people">
@@ -426,7 +436,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
               <select id="s-timer"><option value="0">بلا مؤقت</option><option value="15">15 ثانية</option><option value="30">30 ثانية</option><option value="45">45 ثانية</option><option value="60">60 ثانية</option><option value="90">90 ثانية</option><option value="120">دقيقتان</option></select>
             </label>
             <label>عدد الجولات
-              <select id="s-rounds"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="30">30</option><option value="0">حتى نفاد الكلمات</option></select>
+              <select id="s-rounds"><option value="5">5</option><option value="10">10</option><option value="15">15 (افتراضي)</option><option value="20">20</option><option value="30">30</option><option value="0">حتى نفاد الكلمات</option></select>
             </label>
             <label class="switch"><input type="checkbox" id="s-sound">صوت التصفيق والمؤثرات</label>
           </div>
@@ -498,9 +508,12 @@ textarea{width:100%;min-height:90px;resize:vertical}
     easy: 'قمر شمس بحر باب قلم جبل نهر بيت موز عسل أسد فيل نمر قطة كلب جمل بطة ديك سمك حوت فأر ذئب عنب تمر خبز جبن بيض لحم أرز ملح سكر شاي ماء خوخ تين كرز جزر بصل ثوم فجل لوح ورق حبر عين أنف أذن شعر قدم رأس قلب مطر ثلج ريح نار رمل بئر غصن جذر طبل كرة عيد قمح ذرة زيت غيم برق نسر بوم صقر قرد دب فهد ظبي نخل كوخ قصر برج سور جسر سوق نجم لبن زبد كعك فول عدس حمص سلة صحن كوب مقص مشط ثوب شال عقد ليل فجر صيف دلة بشت قوس كهف رجل ظهر بطن كتف شفة صدر ضرس رمش عظم جلد ظفر سقف درج قفل فرن كأس طبق حبل كيس برد شجر عشب حجر طين موج سهل نبع نور ثور عجل جدي تيس كبش فرس مهر بغل ضبع قرش حية بلح رطب توت جوز لوز هيل مرق خيط مفك جرس ناي علم كنز درع سيف رمح سهم يوم شهر سنة بني جدة أخت عمة خال ابن بنت وجه رعد ذهب فضة صوت لون شكل رسم قصة فرح ضحك لعب',
     medium: 'نجمة كتاب وردة تفاح حليب شجرة حصان دجاج نحلة نملة أرنب ثعلب غزال بقرة خروف زهرة قهوة رمان كرسي سرير مكتب شمعة ساعة هاتف سماء غيمة صخرة نخلة ورقة قارب قطار دمية لعبة هدية مسجد خيمة حمام طريق شارع كوكب مشمش حذاء خاتم سوار نهار شتاء ربيع خريف واحة شاطئ مطار طيار بحار صياد نجار حداد خياط معلم طبيب ممرض شرطي رسام كاتب شاعر فلاح جندي موقد مرآة شماغ عقال كبسة مندي جريش هريس تميس غراب هدهد بلبل ضفدع قنفذ كنغر شلال ملعب مسبح متحف ركبة إصبع لسان جبين رقبة ذراع حاجب غرفة مطبخ صالة جدار كنبة سكين شوكة فوطة مخدة لحاف بساط علبة سحاب ضباب تراب غابة قطرة شروق غروب ماعز نعجة حمار فقمة نورس بجعة دودة عقرب خفاش بندق فستق زبدة قشطة لبنة شعير فلفل كمون قرفة عصير كرنب قميص معطف حزام جورب نعال قبعة وشاح شنطة قرية مخبز مصنع فندق دكان مركب عربة دفتر إبرة صباح مساء أحمر أزرق أخضر أصفر أسود أبيض وردي خالة حفيد عروس خباز طباخ راعي سائق حارس بائع شباك موزة عنبة حديد نحاس لؤلؤ صورة فيلم سدرة بذرة ثمرة بومة',
     hard: 'مدرسة سيارة حديقة طائرة مكتبة فراشة برتقال صندوق زرافة مفتاح دراجة بطاطس سلحفاة عنكبوت مثلجات ملعقة نافذة سفينة مصباح ليمون حمامة مدينة بطيخة ثلاجة غسالة كاميرا فراولة أناناس بروكلي حاسوب تلسكوب أخطبوط مكرونة بسكويت كهرباء جوائز بطولات ملاعب لاعبون طباشير مسطرة ممحاة مبراة دفاتر حقائب مقلمة بوصلة منظار خريطة كيمياء فيزياء قراصنة جزيرة محيطات شلالات براكين أعاصير عواصف قفازات معاطف فساتين نظارات مراوح مصابيح ستائر سجادات وسادات مزرعة فلاحون جرارات محاصيل فواكه بقدونس قرنبيط ملفوف سبانخ زنجبيل زعفران بهارات بيتزا فطائر بقلاوة كنافة قطايف معمول حلويات عصائر بسبوسة مهلبية لقيمات مكسرات طابعات هواتف نجارون خبازون طباخون ممرضات مهندس معلمون رسامون صحراء ميناء منارة صيدلي بستان حظيرة إسطبل مدفأة مروحة مكنسة ستارة وسادة بطانية سجادة فانوس قنديل فنجان مبخرة مسبحة عباءة طاقية مرقوق سمبوسة كليجا عصفور طاووس نعامة حرباء سحلية جرادة يمامة سنجاب دلفين بطريق بركان زلزال إعصار مغارة نافورة جامعة خزانة طاولة إبريق صابون منشفة ببغاء ذبابة سروال نظارة حقيبة حافلة شاحنة صاروخ مجداف فرشاة مطرقة منشار مسمار مجرفة ظهيرة أسبوع دقيقة ثانية رمادي مزارع بحيرة تفاحة رمانة ألماس'
+,
+    phrases: 'كأس العالم|كرة القدم|كرة السلة|كرة اليد|شهر رمضان|عيد الفطر|عيد الأضحى|يوم الجمعة|صلاة الفجر|قهوة عربية|دلة قهوة|فنجان قهوة|شاي حليب|ماء بارد|عصير برتقال|آيس كريم|خبز تميس|طبق كبسة|سيارة أجرة|سيارة إسعاف|دراجة نارية|طائرة ورقية|ساعة يد|ساعة رملية|نظارة شمسية|فرشاة أسنان|معجون أسنان|قلم رصاص|حقيبة مدرسية|جرس الباب|سلة مهملات|مكيف هواء|البحر الأحمر|الخليج العربي|جزيرة العرب|جبل طويق|وادي حنيفة|ضوء القمر|شروق الشمس|غروب الشمس|قوس قزح|غيمة بيضاء|مطر غزير|ألعاب نارية|حديقة عامة|مدينة ملاهي|حمام سباحة|هدية العيد|ثوب العيد|شماغ أحمر|بشت أسود|قطة صغيرة|نحلة عسل|نجم ساطع|فلم كرتون'
   };
-  const DEFAULT_WORDS = Object.values(WORD_BANK).join(' ').split(' ');
-  const BANK_VERSION = 4;
+  // single words are separated by spaces; two-word entries (like «كأس العالم») by |
+  const DEFAULT_WORDS = [WORD_BANK.easy, WORD_BANK.medium, WORD_BANK.hard].join(' ').split(' ').concat(WORD_BANK.phrases.split('|'));
+  const BANK_VERSION = 5;
   const MAX_LETTERS = 6; // no long words: the longest word has 6 letters
 
   /* ---------- الحروف والخلط ---------- */
@@ -512,6 +525,11 @@ textarea{width:100%;min-height:90px;resize:vertical}
   }
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function scramble(w) {
+    const words = clean(w).split(' ');
+    if (words.length > 1) return words.reduce((out, word, i) => out.concat(i ? [' '] : [], scrambleOne(word)), []);
+    return scrambleOne(w);
+  }
+  function scrambleOne(w) {
     const L = letters(w);
     if (new Set(L).size < 2) return L;
     let best = L;
@@ -528,7 +546,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     return {
       v: 1, bank: BANK_VERSION, t: 0, players: [],
       words: DEFAULT_WORDS.map((w) => ({ id: uid(), text: w, level: autoLevel(w) })),
-      settings: { level: 'all', timer: 60, rounds: 10, sound: true },
+      settings: { level: 'all', timer: 60, rounds: 15, sound: true }, seen: [],
       game: { status: 'idle', round: 0, seq: 0, wordId: null, word: '', tiles: [], winnerId: null, timed: false, endsAt: 0, remaining: 0, used: [], reason: '' }
     };
   }
@@ -542,6 +560,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
       m.words = m.words.filter((w) => w && typeof w.text === 'string' && letters(w.text).length <= MAX_LETTERS);
       m.words.forEach((w) => { if (defs.has(w.text)) w.level = autoLevel(w.text); });
     }
+    if ((s.bank || 1) < 5 && m.settings.rounds === 10) m.settings.rounds = 15; // new default
+    if (!Array.isArray(m.seen)) m.seen = [];
     if ((s.bank || 1) < BANK_VERSION) {
       const have = new Set(m.words.map((w) => w.text));
       DEFAULT_WORDS.forEach((w) => { if (!have.has(w)) m.words.push({ id: uid(), text: w, level: autoLevel(w) }); });
@@ -570,7 +590,17 @@ textarea{width:100%;min-height:90px;resize:vertical}
   const player = (id) => S.players.find((p) => p.id === id);
   const live = (st) => st === 'playing' || st === 'paused';
   const inRound = (st) => ['playing', 'paused', 'won', 'timeout', 'revealed'].includes(st);
-  function pool() { const lv = S.settings.level; return S.words.filter((w) => (lv === 'all' || w.level === lv) && !G().used.includes(w.id)); }
+  function pool(s) {
+    s = s || S;
+    const lv = s.settings.level, inLevel = s.words.filter((w) => (lv === 'all' || w.level === lv) && !s.game.used.includes(w.id));
+    const fresh = inLevel.filter((w) => !s.seen.includes(w.id));
+    if (fresh.length || !inLevel.length) return fresh;
+    // every word here has appeared before: start a new cycle (still no repeats inside this contest)
+    s.seen = s.seen.filter((id) => !inLevel.some((w) => w.id === id));
+    return inLevel;
+  }
+  const pointsFor = (w) => ((w && w.level) || autoLevel(w ? w.text : '')) === 'hard' ? 2 : 1;
+  const ptsWord = (n) => n === 2 ? 'نقطتان' : 'نقطة';
   function remainingNow(g) { if (!g.timed) return 0; if (g.status === 'playing') return Math.max(0, g.endsAt - Date.now()); return g.remaining; }
   function beginRound(g, text) {
     g.word = text; g.tiles = scramble(text); g.winnerId = null; g.seq++; g.status = 'playing';
@@ -579,14 +609,13 @@ textarea{width:100%;min-height:90px;resize:vertical}
   function advance(s) {
     const g = s.game, R = +s.settings.rounds || 0;
     if (R && g.round >= R) { g.status = 'finished'; g.reason = 'rounds'; return; }
-    const p = pool();
+    const p = pool(s);
     if (!p.length) { g.status = 'finished'; g.reason = 'words'; return; }
     const w = p[Math.floor(Math.random() * p.length)];
-    g.round++; g.used.push(w.id); g.wordId = w.id; beginRound(g, w.text);
+    g.round++; g.used.push(w.id); s.seen.push(w.id); g.wordId = w.id; beginRound(g, w.text); g.pts = pointsFor(w);
   }
   const A = {
     start(after) {
-      if (!S.players.length) { if (after) { location.hash = 'control'; selectTab('people'); setTimeout(() => $('#in-player').focus(), 50); } return toast('أضف متسابقًا واحدًا على الأقل أولًا'); }
       const lv = S.settings.level;
       if (!S.words.some((w) => lv === 'all' || w.level === lv)) return toast('لا توجد كلمات في المستوى المختار');
       const go = () => { commit((s) => { s.players.forEach((p) => (p.score = 0)); Object.assign(s.game, { used: [], round: 0, reason: '' }); advance(s); }); if (typeof after === 'function') after(); };
@@ -600,7 +629,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     },
     redo() {
       if (!inRound(G().status)) return;
-      commit((s) => { const g = s.game, p = player(g.winnerId); if (p) p.score = Math.max(0, p.score - 1); beginRound(g, g.word); });
+      commit((s) => { const g = s.game, p = player(g.winnerId); if (p) p.score = Math.max(0, p.score - (g.pts || 1)); beginRound(g, g.word); });
       toast('أُعيدت الجولة بخلطة جديدة');
     },
     pause() {
@@ -614,11 +643,11 @@ textarea{width:100%;min-height:90px;resize:vertical}
       if (g.winnerId) return toast('سُجّل فائز لهذه الجولة بالفعل');
       if (!['playing', 'paused', 'timeout'].includes(g.status)) return toast('لا توجد جولة جارية');
       const p = player(id); if (!p) return;
-      commit(() => { g.remaining = remainingNow(g); p.score = (p.score || 0) + 1; g.winnerId = id; g.status = 'won'; });
+      commit(() => { g.remaining = remainingNow(g); p.score = (p.score || 0) + (g.pts || 1); g.winnerId = id; g.status = 'won'; });
     },
     undo() {
       const g = G(); if (g.status !== 'won') return;
-      commit(() => { const p = player(g.winnerId); if (p) p.score = Math.max(0, p.score - 1); g.winnerId = null; g.status = 'paused'; });
+      commit(() => { const p = player(g.winnerId); if (p) p.score = Math.max(0, p.score - (g.pts || 1)); g.winnerId = null; g.status = 'paused'; });
       toast('أُلغي تسجيل الفائز. الجولة متوقفة، اضغط «استئناف».');
     },
     end() {
@@ -715,8 +744,13 @@ textarea{width:100%;min-height:90px;resize:vertical}
 
   /* ---------- العرض ---------- */
   let view = 'control';
-  const tilesHTML = (arr, cls, anim) => `<div class="tiles${anim ? ' anim' : ''}" style="--n:${Math.max(arr.length, 3)}">` +
-    arr.map((ch, i) => `<span class="tile ${cls}" style="--i:${i};--rot:${(i % 2 ? 1 : -1) * (8 + (i * 7) % 14)}">${esc(ch)}</span>`).join('') + '</div>';
+  const tilesHTML = (arr, cls, anim) => {
+    const groups = [[]]; let k = 0;
+    arr.forEach((ch) => { if (ch === ' ') groups.push([]); else groups[groups.length - 1].push(ch); });
+    const n = Math.max(arr.filter((c) => c !== ' ').length + (groups.length - 1) * 0.7, 3);
+    return `<div class="tiles${anim ? ' anim' : ''}${groups.length > 1 ? ' multi' : ''}" style="--n:${n}">` + groups.map((g) => '<span class="tw">' +
+      g.map((ch) => { const i = k++; return `<span class="tile ${cls}" style="--i:${i};--rot:${(i % 2 ? 1 : -1) * (8 + (i * 7) % 14)}">${esc(ch)}</span>`; }).join('') + '</span>').join('') + '</div>';
+  };
   function ranked() {
     const arr = S.players.map((p, i) => ({ ...p, score: p.score || 0, i })).sort((a, b) => b.score - a.score || a.i - b.i);
     let rank = 0, prev = null;
@@ -737,11 +771,12 @@ textarea{width:100%;min-height:90px;resize:vertical}
     $('#d-undo').hidden = g.status !== 'won';
     const armed = ['playing', 'paused', 'timeout'].includes(g.status) && !g.winnerId && S.players.length > 0;
     $('#d-board').parentElement.classList.toggle('armed', armed);
+    $('#d-board').parentElement.classList.toggle('has-players', S.players.length > 0);
     $('#d-tap').hidden = !armed;
 
     const board = ranked(), top = board.length && board[0].score > 0 ? board[0].score : -1;
     $('#d-board').innerHTML = board.length
-      ? board.map((p) => `<li class="${p.score === top ? 'lead' : ''}${g.status === 'won' && p.id === g.winnerId ? ' just' : ''}"><button type="button" class="pick" data-award="${p.id}" ${armed ? `aria-label="تسجيل ${esc(p.name)} فائزًا"` : 'disabled'}><span class="rk">${p.rank}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></button></li>`).join('')
+      ? board.map((p, k) => (k && p.score !== board[k - 1].score ? '<li class="tie-sep" aria-hidden="true"></li>' : '') + `<li class="${p.score === top ? 'lead' : ''}${g.status === 'won' && p.id === g.winnerId ? ' just' : ''}"><button type="button" class="pick" data-award="${p.id}" ${armed ? `aria-label="تسجيل ${esc(p.name)} فائزًا"` : 'disabled'}><span class="rk">${p.rank}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></button></li>`).join('')
       : '<li class="empty" style="background:none">لم يُضف متسابقون بعد</li>';
 
     const win = player(g.winnerId);
@@ -749,18 +784,19 @@ textarea{width:100%;min-height:90px;resize:vertical}
     if (key !== stageKey) {
       stageKey = key;
       const st = $('#stage'), lvl = (S.words.find((w) => w.id === g.wordId) || {}).level;
-      const meta = `<div class="meta"><span class="chip">${g.tiles.length} حروف</span>${lvl ? `<span class="chip ${lvl}">${LEVELS[lvl]}</span>` : ''}</div>`;
+      const nWords = g.tiles.filter((c) => c === ' ').length + 1, nLetters = g.tiles.filter((c) => c !== ' ').length;
+      const meta = `<div class="meta">${nWords > 1 ? `<span class="chip">كلمتان</span>` : ''}<span class="chip">${nLetters} حروف</span>${lvl ? `<span class="chip ${lvl}">${LEVELS[lvl]} · ${g.pts || 1} ${ptsWord(g.pts || 1)}</span>` : ''}</div>`;
       if (g.status === 'idle') {
         st.innerHTML = `${tilesHTML(['ت', 'ح', 'د', 'ي'], 'plain', true)}
           <p class="big-msg rise">استعدّوا!</p>
-          <p class="kicker rise">${S.players.length ? `${S.players.length} متسابقين بانتظار الجولة الأولى` : 'أضيفوا أسماء المتسابقين من لوحة المنظّم'}</p>`;
+          <p class="kicker rise">${S.players.length ? `${S.players.length} متسابقين بانتظار الجولة الأولى` : 'أضيفوا أسماءكم في لوحة الترتيب ✍️'}</p>`;
       } else if (g.status === 'playing' || g.status === 'paused') {
         st.innerHTML = `<p class="kicker">رتّبوا الحروف… من يعرفها يقولها بصوت عالٍ!</p>
           <div style="position:relative;width:100%">${tilesHTML(g.tiles, '', true)}${g.status === 'paused' ? '<div class="paused-veil"><p class="big-msg">متوقف مؤقتًا</p></div>' : ''}</div>${meta}`;
       } else if (g.status === 'won') {
         st.innerHTML = `<p class="big-msg ok pop">إجابة صحيحة!</p>
           <p class="winner-name pop" style="animation-delay:.12s">${esc(win ? win.name : '')}</p>
-          <p class="answer-word ok pop" style="animation-delay:.2s">${esc(g.word)}</p><span class="plus rise" style="animation-delay:.5s">+1 نقطة</span>`;
+          <p class="answer-word ok pop" style="animation-delay:.2s">${esc(g.word)}</p><span class="plus rise" style="animation-delay:.5s">+${g.pts || 1} ${ptsWord(g.pts || 1)}</span>`;
       } else if (g.status === 'timeout' || g.status === 'revealed') {
         st.innerHTML = `<p class="big-msg bad pop">${g.status === 'timeout' ? 'انتهى الوقت!' : 'لم يعرفها أحد'}</p>
           <p class="kicker">الكلمة الصحيحة</p><p class="answer-word pop">${esc(g.word)}</p>
@@ -773,7 +809,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
             <p class="title">${champs.length > 1 ? 'أبطال تحدي الحروف' : 'بطل تحدي الحروف'}</p>
             <p class="names">${champs.map((c) => esc(c.name)).join(' و')}</p>
             <span class="pts">${champs[0].score} نقطة</span></div>` : '<p class="big-msg">لم يسجّل أحد نقاطًا</p>'}
-          <ol class="rank">${board.map((p) => `<li class="${p.rank === 1 && p.score > 0 ? 'first' : ''} rise"><span class="rk">${p.rank}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></li>`).join('')}</ol>
+          <ol class="rank">${board.map((p, k) => (k && p.score !== board[k - 1].score ? '<li class="tie-sep" aria-hidden="true"></li>' : '') + `<li class="${p.rank === 1 && p.score > 0 ? 'first' : ''} rise"><span class="rk">${p.rank}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></li>`).join('')}</ol>
           <button class="btn primary" type="button" data-act="start" style="font-size:clamp(1rem,2.4vmin,1.5rem)">إعادة المسابقة من البداية</button>
         </div>`;
       }
@@ -799,7 +835,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     $('#c-round').textContent = g.round;
     $('#c-round-of').textContent = R ? 'من ' + R : '';
     $('#c-word').textContent = inRound(st) ? g.word : st === 'finished' ? 'انتهت' : '—';
-    $('#c-scr').textContent = inRound(st) ? 'على الشاشة: ' + g.tiles.join(' ') : '';
+    $('#c-scr').textContent = inRound(st) ? 'على الشاشة: ' + g.tiles.join(' ').replace(/   /g, '  ·  ') + ' · قيمتها ' + (g.pts || 1) + ' ' + ptsWord(g.pts || 1) : '';
     $('#a-start').textContent = st === 'idle' ? 'بدء المسابقة' : 'مسابقة جديدة';
     $('#a-next').disabled = st === 'finished';
     $('#a-next').textContent = st === 'idle' ? 'الجولة الأولى' : live(st) && !g.winnerId ? 'التالية بلا نقاط' : 'الجولة التالية';
@@ -850,7 +886,10 @@ textarea{width:100%;min-height:90px;resize:vertical}
     $('#h-start').textContent = inRound(g.status) ? 'مسابقة جديدة ▶' : 'ابدأ ▶';
     $('#h-summary').textContent = (n ? n + ' متسابقين' : 'لا يوجد متسابقون بعد') + ' · ' + (R ? R + ' جولات' : 'حتى نفاد الكلمات') +
       ' · ' + (T ? T + ' ثانية' : 'بدون مؤقت') + ' · ' + (S.settings.level === 'all' ? 'كل المستويات' : 'مستوى ' + LEVELS[S.settings.level]);
-    $('#h-stats').innerHTML = `في البنك <b>${S.words.length}</b> كلمة`;
+    $('#h-stats').innerHTML = `في البنك <b>${S.words.length}</b> كلمة · السهل والمتوسط بنقطة، والصعب بنقطتين`;
+    const seenN = S.words.filter((w) => S.seen.includes(w.id)).length;
+    $('#h-seen').textContent = `طلعت ${seenN} من ${S.words.length} كلمة، وما تتكرر كلمة حتى تخلص`;
+    $('#h-reset').textContent = Date.now() - resetArm < 4000 ? 'اضغط مرة ثانية للتأكيد' : '↺ تصفير السجل';
   }
   function render() {
     if (view === 'display') renderDisplay(); else if (view === 'control') renderControl(); else if (view === 'home') renderHome();
@@ -904,6 +943,11 @@ textarea{width:100%;min-height:90px;resize:vertical}
   $('#h-resume').onclick = showGame;
   $('#h-setup').onclick = () => { location.hash = 'control'; selectTab(S.players.length ? 'round' : 'people'); };
   $('#h-howto').onclick = () => { location.hash = 'howto'; };
+  let resetArm = 0;
+  $('#h-reset').onclick = () => {
+    if (Date.now() - resetArm < 4000) { resetArm = 0; commit((s) => { s.seen = []; }); toast('تم التصفير — كل الكلمات صارت جديدة'); }
+    else { resetArm = Date.now(); render(); setTimeout(() => { if (view === 'home') render(); }, 4100); }
+  };
   $('#h-screen').onclick = () => $('#c-open-display').click();
   function selectTab(name) {
     document.querySelectorAll('[data-ctab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.ctab === name)));
@@ -956,6 +1000,14 @@ textarea{width:100%;min-height:90px;resize:vertical}
     else if (k === ' ' && view === 'display') { e.preventDefault(); A.pause(); }
   });
 
+  $('#d-add').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const inp = $('#d-add-name'), n = clean(inp.value);
+    if (!n) return;
+    if (S.players.some((p) => p.name === n)) return toast('هذا الاسم موجود');
+    commit((s) => s.players.push({ id: uid(), name: n, score: 0 }));
+    inp.value = ''; inp.focus();
+  });
   $('#f-player').addEventListener('submit', (e) => {
     e.preventDefault();
     const inp = $('#in-player'), n = clean(inp.value);
@@ -969,7 +1021,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
     commit((s) => {
       for (const raw of list) {
         const t = clean(raw); if (!t) continue;
-        if (letters(t).length < 2 || letters(t).length > MAX_LETTERS || s.words.some((w) => w.text === t)) { skipped++; continue; }
+        const parts = t.split(' '); // up to 3 words, each at most MAX_LETTERS letters
+        if (letters(t).length < 2 || parts.length > 3 || parts.some((x) => letters(x).length > MAX_LETTERS) || s.words.some((w) => w.text === t)) { skipped++; continue; }
         s.words.push({ id: uid(), text: t, level: lv === 'auto' ? autoLevel(t) : lv }); added++;
       }
     });

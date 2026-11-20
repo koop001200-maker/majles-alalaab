@@ -153,6 +153,8 @@
     return pick(opts);
   }
 
+  var resetArm = 0;
+  function usedCount() { var u = Store.get(K.used, []); if (!Array.isArray(u)) return 0; return BANK.filter(function (x) { return u.indexOf(x.id) >= 0; }).length; }
   function pickQuestion(special, levelOverride) {
     var s = game.settings, hist = Store.get(K.used, []); if (!Array.isArray(hist)) hist = [];
     var level = levelOverride || (special === "decider" ? Math.min(3, s.level + 1) : s.level);
@@ -165,16 +167,20 @@
       function (x) { return free(x); },
       function () { return true; }
     ];
-    for (var i = 0; i < tries.length; i++) {
-      var pool = BANK.filter(tries[i]); if (!pool.length) continue;
-      var fresh = pool.filter(function (x) { return hist.indexOf(x.id) < 0; });
-      var c = pick(fresh.length ? fresh : pool);
-      game.used.push(c.id); hist.push(c.id);
-      if (hist.length > BANK.length * .85) hist = hist.slice(-Math.floor(BANK.length / 2));
-      Store.set(K.used, hist);
-      return c.id;
-    }
-    return null;
+    // never repeat a question that was ever played, until the whole bank has been used; then start a new cycle
+    var choose = function (onlyFresh) {
+      for (var i = 0; i < tries.length; i++) {
+        var pool = BANK.filter(tries[i]);
+        if (onlyFresh) pool = pool.filter(function (x) { return hist.indexOf(x.id) < 0; });
+        if (pool.length) return pick(pool);
+      }
+      return null;
+    };
+    var c = choose(true);
+    if (!c) { hist = []; c = choose(false); }
+    if (!c) return null;
+    game.used.push(c.id); hist.push(c.id); Store.set(K.used, hist);
+    return c.id;
   }
 
   function scrambled(n) {
@@ -480,7 +486,8 @@
       '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">ابدأ ▶</button><button class="btn big" data-ui="setup">إعداد المباراة</button><button class="btn big ghost" data-ui="trial">تجربة سريعة</button></div>' +
       '<p class="summary">' + esc(summary()) + "</p>" +
       '<div class="row"><button class="btn ghost" data-ui="howto">طريقة اللعب</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
-      '<p class="stats">في البنك <b>' + BANK.length + "</b> سؤال في <b>" + CATS.length + "</b> مجالات</p></section>";
+      '<p class="stats">في البنك <b>' + BANK.length + "</b> سؤال في <b>" + CATS.length + "</b> مجالات</p>" +
+      '<p class="reset-line"><button class="btn ghost tiny" data-ui="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + usedCount() + " من " + BANK.length + " سؤال، وما يتكرر شيء حتى تخلص</span></p>" + "</section>";
   }
 
   function vSetup() {
@@ -636,6 +643,10 @@
       case "home-clear": game = null; saveGame(); stopAll(); go("home"); break;
       case "setup": go("setup"); break;
       case "howto": go("howto"); break;
+      case "reset-used":
+        if (Date.now() - resetArm < 4000) { Store.set(K.used, []); resetArm = 0; toast("تم التصفير — كل الأسئلة صارت جديدة"); }
+        else { resetArm = Date.now(); setTimeout(function () { if (view === "home") render(); }, 4100); }
+        render(); break;
       case "quick": case "start": startMatch(); break;
       case "trial": {
         keepNames(); saveSettings();

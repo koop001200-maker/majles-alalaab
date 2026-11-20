@@ -118,16 +118,22 @@
       function (q) { return cats.indexOf(q.cat) >= 0; },
       function () { return true; }
     ];
-    for (var i = 0; i < tries.length; i++) {
-      var p = pool(tries[i]);
-      if (!p.length) continue;
-      var fresh = p.filter(function (q) { return used.indexOf(q.id) < 0; });
-      var src = fresh.length ? fresh : p;
-      return src[Math.floor(Math.random() * src.length)];
-    }
-    return null;
+    // never repeat a card that was ever played, until the whole bank has been used; then start a new cycle
+    var choose = function (onlyFresh) {
+      for (var i = 0; i < tries.length; i++) {
+        var p = pool(tries[i]);
+        if (onlyFresh) p = p.filter(function (q) { return used.indexOf(q.id) < 0; });
+        if (p.length) return p[Math.floor(Math.random() * p.length)];
+      }
+      return null;
+    };
+    var q = choose(true);
+    if (!q) { Store.set(K.used, []); used = []; q = choose(false); }
+    return q;
   }
 
+  var resetArm = 0;
+  function usedCount() { var u = Store.get(K.used, []); if (!Array.isArray(u)) return 0; return bank.filter(function (q) { return u.indexOf(q.id) >= 0; }).length; }
   function markUsed(id) {
     var used = Store.get(K.used, []); if (!Array.isArray(used)) used = [];
     if (used.indexOf(id) < 0) used.push(id);
@@ -186,11 +192,27 @@
     var p = game.plan[game.idx];
     markUsed(p.qid);
     game.round = {
-      revealed: 0, phase: "main", locked: [], winner: null, points: 0, done: false,
+      revealed: 1, phase: "main", locked: [], winner: null, points: 0, done: false, hint: false, startedAt: Date.now(),
       active: game.idx % game.teams.length, timeLeft: null, timedOut: false, msg: "", msgType: ""
     };
+    // the first clue opens by itself
+    freshClue = 0;
+    var pts1 = pointsAt(1);
+    setMsg(game.settings.answerMode === "open"
+      ? "المعلومة 1 — الإجابة الآن بـ " + pts1 + " " + pointsWord(pts1) + " لأي فريق"
+      : "دور " + game.teams[game.round.active].name + " — الإجابة الآن بـ " + pts1 + " " + pointsWord(pts1), "");
+    startTimer();
   }
 
+  // hint = the answer's shape: first letter of each word shown, the rest as empty boxes (titles like «عليه السلام» left out)
+  function hintHTML(answer) {
+    var a = String(answer).replace(/\(.*?\)/g, " ").replace(/(عليه|عليها) السلام|رضي الله (عنهما|عنهم|عنها|عنه)|ﷺ/g, " ").replace(/\s+/g, " ").trim();
+    return '<span class="hint-words">' + a.split(" ").map(function (w) {
+      var L = Array.from(w);
+      var show = (L.length > 3 && L[0] === "ا" && L[1] === "ل") ? 3 : 1; // «ال» says nothing on its own: show the letter after it too
+      return '<span class="hw">' + L.map(function (c, i) { return '<i' + (i < show ? ' class="on"' : "") + ">" + (i < show ? esc(c) : "") + "</i>"; }).join("") + "</span>";
+    }).join("") + "</span>";
+  }
   function pointsAt(revealed) {
     var p = game.plan[game.idx];
     var table = p.type === "golden" ? GOLD_POINTS : BASE_POINTS;
@@ -259,7 +281,7 @@
     if (!canAnswer(t)) return;
     var r = game.round;
     var pts = pointsAt(r.revealed);
-    r.winner = t; r.points = pts; r.done = true; freshDone = true;
+    r.winner = t; r.points = pts; r.done = true; r.doneAt = Date.now(); freshDone = true;
     game.teams[t].score += pts;
     game.log.push({ qid: game.plan[game.idx].qid, team: t, points: pts, clue: r.revealed });
     stopTimer();
@@ -302,7 +324,7 @@
   function revealAnswer() {
     var r = game.round;
     if (!r || r.done) return;
-    r.done = true; r.winner = null; r.points = 0; freshDone = true;
+    r.done = true; r.doneAt = Date.now(); r.winner = null; r.points = 0; freshDone = true;
     game.log.push({ qid: game.plan[game.idx].qid, team: null, points: 0, clue: r.revealed });
     stopTimer();
     SFX.reveal();
@@ -367,7 +389,8 @@
         btns = '<span class="btns"><button class="mark ok" data-correct="' + i + '"' + (ok ? "" : " disabled") + ' title="إجابة صحيحة" aria-label="إجابة صحيحة من ' + esc(t.name) + '">✓</button>' +
           '<button class="mark no" data-wrong="' + i + '"' + (ok ? "" : " disabled") + ' title="إجابة خاطئة" aria-label="إجابة خاطئة من ' + esc(t.name) + '">✗</button></span>';
       }
-      return '<div class="' + cls + '" style="--team:' + t.color + '"><span class="name" title="' + esc(t.name) + '">' + esc(t.name) + '</span><span class="score">' + t.score + "</span>" + btns + "</div>";
+      var adj = '<span class="adj"><button data-act="adj" data-t="' + i + '" data-d="1" title="زيادة نقطة" aria-label="زيادة نقطة لـ ' + esc(t.name) + '">+</button><button data-act="adj" data-t="' + i + '" data-d="-1" title="إنقاص نقطة" aria-label="إنقاص نقطة من ' + esc(t.name) + '">−</button></span>';
+      return '<div class="' + cls + '" style="--team:' + t.color + '"><span class="name" title="' + esc(t.name) + '">' + esc(t.name) + '</span><span class="scorewrap"><span class="score">' + t.score + "</span>" + adj + "</span>" + btns + "</div>";
     }).join("") + "</div>";
   }
 
@@ -404,6 +427,7 @@
       '<div class="home-actions"><button class="btn ghost" data-act="howto">طريقة اللعب</button><button class="btn ghost" data-act="bank">بنك الأسئلة</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
       '<div class="home-stats"><span>البطاقات: <b>' + bank.length + '</b></span><span>الأقسام: <b>' + CATS.length + '</b></span>' +
       '<span>عائلي <b>' + lvlCount[0] + '</b> · تحدي <b>' + lvlCount[1] + '</b> · خبراء <b>' + lvlCount[2] + "</b></span></div>" +
+      '<p class="reset-line"><button class="btn ghost tiny" data-act="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + usedCount() + " من " + bank.length + " بطاقة، وما يتكرر شيء حتى تخلص</span></p>" +
       "</section>";
   }
 
@@ -525,8 +549,9 @@
           '<span class="num"><b>' + (i + 1) + "</b><small>" + pts + " " + pointsWord(pts) + "</small></span>" +
           '<span class="text">' + (shown ? esc(q.clues[i]) : "• • •") + "</span></li>";
       }
-      inner = '<ol class="clues">' + clues + "</ol>";
+      inner = '<ol class="clues">' + clues + "</ol>" + (r.hint ? '<div class="hint-box"><b>💡 تلميح:</b>' + hintHTML(q.answer) + "</div>" : "");
       bar = '<button class="btn primary big" data-act="reveal"' + (r.revealed >= 4 ? " disabled" : "") + ">" + (r.revealed === 0 ? "اكشف المعلومة الأولى" : "اكشف المعلومة التالية") + "</button>" +
+        '<button class="btn big hint-btn" data-act="hint"' + (r.hint ? " disabled" : "") + ">💡 تلميح" + (r.timeLeft != null ? " (يروح نص الوقت)" : "") + "</button>" +
         '<button class="btn big" data-act="answer"' + (r.revealed === 0 ? " disabled" : "") + ">اكشف الحل</button>";
     }
     var timer = (!r.done && r.timeLeft != null) ? '<span id="timer" class="timer' + (r.timeLeft <= 5 ? " warn" : "") + '">' + r.timeLeft + "</span>" : "";
@@ -766,6 +791,20 @@
       case "home-clear": game = null; saveGame(); go("home"); break;
       case "setup": stopTimer(); go("setup"); break;
       case "howto": go("howto"); break;
+      case "hint":
+        if (game && game.status === "playing" && game.round && !game.round.done && !game.round.hint) {
+          var hr = game.round; hr.hint = true;
+          if (hr.timeLeft != null && hr.timeLeft > 0) hr.timeLeft = Math.max(1, Math.ceil(hr.timeLeft / 2));
+          SFX.reveal(); commit();
+        }
+        break;
+      case "adj":
+        if (game && el) { var at = +el.getAttribute("data-t"), ad = +el.getAttribute("data-d"); if (game.teams[at]) { game.teams[at].score += ad; game.log.push({ manual: true }); bumpTeam = ad > 0 ? at : null; commit(); bumpTeam = null; } }
+        break;
+      case "reset-used":
+        if (Date.now() - resetArm < 4000) { Store.set(K.used, []); resetArm = 0; toast("تم التصفير — كل البطاقات صارت جديدة"); }
+        else { resetArm = Date.now(); setTimeout(function () { if (view === "home") render(); }, 4100); }
+        render(); break;
       case "bank": go("bank"); break;
       case "resume": view = "game"; if (game.round && !game.round.done && game.round.revealed > 0 && game.round.timeLeft != null) startTimer(); render(); break;
       case "start": startGame(); break;
@@ -796,7 +835,7 @@
           var i = +inp.getAttribute("data-wager"), max = Math.max(0, game.teams[i].score);
           game.final.wagers[i] = Math.min(max, Math.max(0, Math.floor(+inp.value || 0)));
         });
-        game.final.stage = "play"; commit(); break;
+        game.final.stage = "play"; game.final.revealed = Math.max(1, game.final.revealed); freshClue = 0; SFX.reveal(); commit(); break;
       case "final-reveal": if (game && game.status === "final" && game.final.stage === "play" && game.final.revealed < 4) { game.final.revealed++; freshClue = game.final.revealed - 1; SFX.reveal(); commit(); } break;
       case "final-answer": if (!game || game.status !== "final" || game.final.stage !== "play" || game.final.revealed < 1) break; game.final.stage = "mark"; SFX.reveal(); commit(); break;
       case "final-apply":
@@ -972,7 +1011,13 @@
     if (view !== "game" || !game) return;
     if (game.status === "playing") {
       if (e.key === " ") { e.preventDefault(); revealNext(); }
-      else if (e.key === "Enter") { e.preventDefault(); if (game.round.done) nextRound(); else if (game.round.revealed > 0) revealAnswer(); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        // guard against a stuck or repeated Enter: a new round needs 1.5s before its answer can be revealed, and a revealed answer 0.6s before moving on
+        var rr = game.round, now = Date.now();
+        if (rr.done) { if (now - (rr.doneAt || 0) > 600) nextRound(); }
+        else if (rr.revealed > 0 && now - (rr.startedAt || 0) > 1500) revealAnswer();
+      }
     } else if (game.status === "final" && game.final.stage === "play") {
       if (e.key === " ") { e.preventDefault(); handleAct("final-reveal"); }
     }

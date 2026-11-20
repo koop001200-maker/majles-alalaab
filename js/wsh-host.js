@@ -408,6 +408,7 @@
         '<div class="modes">' + Object.keys(MODES).map(function (k) { return '<button class="mode' + (st.mode === k ? " on" : "") + '" data-a="mode" data-v="' + k + '"><span>' + MODES[k].icon + "</span><b>" + MODES[k].name + "</b><small>" + MODES[k].hint + "</small></button>"; }).join("") + "</div>" +
         '<div class="plist"><h2>اللاعبون <span>' + n + "</span></h2><div class=\"pgrid\">" + playersHtml + "</div>" + tip + "</div>" +
         '<div class="lfoot"><span class="summary">' + esc(MODES[st.mode].name) + " · " + (st.mode === "quick" ? Math.min(st.rounds, 6) : st.rounds) + " جولات · " + (st.level ? LEVELS[st.level - 1].name : "صعوبة منوّعة") + " · " + cats + " · كتابة " + (st.mode === "quick" ? Math.min(st.writeSec, 40) : st.writeSec) + "ث · تصويت " + (st.mode === "quick" ? Math.min(st.voteSec, 20) : st.voteSec) + "ث" + (st.mode === "teams" ? " · " + st.teamsN + " فرق" : "") + "</span>" +
+        '<p class="reset-line"><button class="btn sm ghost" data-a="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + BANK.filter(function (q) { return S.used.indexOf(q.id) >= 0; }).length + " من " + BANK.length + " سؤال، وما يتكرر سؤال حتى تخلص</span></p>" +
         '<div class="row"><button class="btn" data-a="settings">⚙️ الإعدادات</button><button class="btn" data-a="howto">❓ طريقة اللعب</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn go big" data-a="start"' + (n < 2 ? " disabled" : "") + ">ابدأ اللعب ▶</button></div></div>" +
       "</div></section>";
   }
@@ -509,7 +510,7 @@
       '<div class="row"><button class="btn go big" data-a="again">🔁 لعبة جديدة بنفس اللاعبين</button><button class="btn" data-a="lobby">⚙️ الإعدادات واللاعبين</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div></section>';
   }
 
-  var modal = null;
+  var modal = null, resetArm = 0;
   function vModal() {
     if (!modal) return "";
     var st = S.settings, inner = "";
@@ -565,6 +566,10 @@
     if (a === "close-back" && e.target !== b) return;
     switch (a) {
       case "start": startGame(); break;
+      case "reset-used":
+        if (Date.now() - resetArm < 4000) { S.used = []; resetArm = 0; save(); toast("تم التصفير — كل الأسئلة صارت جديدة"); }
+        else { resetArm = Date.now(); setTimeout(function () { if (S.phase === "lobby") render(); }, 4100); }
+        render(); break;
       case "mode": st.mode = v; if (v === "teams") S.players.forEach(function (p, i) { p.team = i % st.teamsN; }); save(); render(); broadcast(); break;
       case "settings": modal = "settings"; errMsg = ""; render(); break;
       case "howto": modal = "howto"; render(); break;

@@ -203,6 +203,8 @@
     return idx;
   }
 
+  var resetArm = 0;
+  function usedCount() { var u = Store.get(K.used, []); if (!Array.isArray(u)) return 0; return bank.filter(function (it) { return u.indexOf(it.id) >= 0; }).length; }
   function pickItem(surprise) {
     var s = game.settings, allC = CATS.map(function (c) { return c.id; });
     var cats = surprise ? ["surprise"] : (s.cats.length ? s.cats : allC);
@@ -219,17 +221,20 @@
       function (it) { return free(it); },
       function () { return true; }
     ];
-    for (var i = 0; i < tries.length; i++) {
-      var pool = bank.filter(tries[i]);
-      if (!pool.length) continue;
-      var fresh = pool.filter(function (it) { return hist.indexOf(it.id) < 0; });
-      var chosen = pick(fresh.length ? fresh : pool);
-      game.used.push(chosen.id);
-      hist.push(chosen.id); if (hist.length > bank.length * 0.8) hist = hist.slice(-Math.floor(bank.length / 2));
-      Store.set(K.used, hist);
-      return chosen.id;
-    }
-    return null;
+    // never repeat something that was ever played, until the whole bank has been used; then start a new cycle
+    var choose = function (onlyFresh) {
+      for (var i = 0; i < tries.length; i++) {
+        var pool = bank.filter(tries[i]);
+        if (onlyFresh) pool = pool.filter(function (it) { return hist.indexOf(it.id) < 0; });
+        if (pool.length) return pick(pool);
+      }
+      return null;
+    };
+    var chosen = choose(true);
+    if (!chosen) { hist = []; chosen = choose(false); }
+    if (!chosen) return null;
+    game.used.push(chosen.id); hist.push(chosen.id); Store.set(K.used, hist);
+    return chosen.id;
   }
 
   function startTurn(keepPlayer) {
@@ -556,7 +561,8 @@
       '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">يلا نلعب 🎮</button><button class="btn big" data-ui="setup">اللاعبين والإعدادات</button><button class="btn big ghost" data-ui="trial">تجربة سريعة</button></div>' +
       '<p class="summary">' + esc(summary()) + "</p>" +
       '<div class="row"><button class="btn ghost" data-ui="howto">كيف نلعب؟</button><button class="btn ghost" data-ui="bank">بنك الأشياء</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
-      '<p class="stats">في البنك <b>' + bank.length + "</b> شيء في <b>" + CATS.length + "</b> تصنيفات</p></section>";
+      '<p class="stats">في البنك <b>' + bank.length + "</b> شيء في <b>" + CATS.length + "</b> تصنيفات</p>" +
+      '<p class="reset-line"><button class="btn ghost tiny" data-ui="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + usedCount() + " من " + bank.length + " شيء، وما يتكرر شيء حتى تخلص</span></p>" + "</section>";
   }
 
   function vSetup() {
@@ -749,6 +755,10 @@
       case "home-clear": game = null; saveGame(); stopTimer(); go("home"); break;
       case "setup": go("setup"); break;
       case "howto": go("howto"); break;
+      case "reset-used":
+        if (Date.now() - resetArm < 4000) { Store.set(K.used, []); resetArm = 0; toast("تم التصفير — كل الأشياء صارت جديدة"); }
+        else { resetArm = Date.now(); setTimeout(function () { if (view === "home") render(); }, 4100); }
+        render(); break;
       case "bank": go("bank"); break;
       case "quick": case "start": case "replay": startGame(); break;
       case "trial":
