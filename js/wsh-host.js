@@ -3,6 +3,7 @@
   "use strict";
   var qs0 = new URLSearchParams(location.search);
   if (qs0.has("room") || qs0.has("join")) return; // this page is a phone
+  var AV = window.WSH_AV;
   var CATS = window.WSH_CATS, LEVELS = window.WSH_LEVELS, BANK = window.WSH_QUESTIONS;
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
@@ -86,7 +87,7 @@
     lastSeen[pid] = Date.now();
     var p = player(pid);
     if (m.t === "hello") {
-      var name = String(m.name || "").replace(/\s+/g, " ").trim().slice(0, 16), av = String(m.av || "🙂").slice(0, 4);
+      var name = String(m.name || "").replace(/\s+/g, " ").trim().slice(0, 16), av = String(m.av || "🙂"); if (!window.WSH_AVATARS[av]) av = av.slice(0, 4);
       if (!name) return;
       if (!p) {
         if (S.kicked && S.kicked.indexOf(pid) >= 0) { net.send(pid, { t: "kicked" }); return; }
@@ -94,8 +95,8 @@
         if (taken) { var k = 2; while (S.players.some(function (x) { return x.name === name + " " + k; })) k++; name = name + " " + k; }
         p = { id: pid, name: name, av: av, color: COLORS[S.players.length % COLORS.length], score: 0, fooled: 0, truths: 0, online: true, team: 0 };
         if (teamMode()) p.team = smallestTeam();
-        S.players.push(p); sfx.join(); save(); render();
-      } else { var was = p.online; p.online = true; p.av = av || p.av; if (!was) render(); }
+        S.players.push(p); sfx.join(); save(); render(); broadcast();
+      } else { var was = p.online; p.online = true; p.av = av || p.av; if (!was) { render(); broadcast(); } }
       sendTo(p);
       return;
     }
@@ -212,7 +213,7 @@
     S.lieErr[p.id] = "";
     S.lies[key] = { text: text, by: p.id };
     sfx.pop(); save(); render();
-    if (teamMode()) S.players.forEach(function (x) { if (x.team === p.team) sendTo(x); }); else sendTo(p);
+    broadcast(); // everyone's phone shows who has finished writing
     var need = teamMode() ? teamsWithOnline().length : onlinePlayers().length;
     if (Object.keys(S.lies).length >= need) { setTimeout(function () { if (S.phase === "write") advance(); }, 900); }
   }
@@ -247,7 +248,7 @@
     if (S.votes[p.id]) { sendTo(p); return; }
     var o = (S.options || []).filter(function (x) { return x.id === optId; })[0];
     if (!o || !canVote(p, o)) { sendTo(p); return; }
-    S.votes[p.id] = o.id; sfx.vote(); save(); render(); sendTo(p);
+    S.votes[p.id] = o.id; sfx.vote(); save(); render(); broadcast();
     var voters = onlinePlayers().filter(function (x) { return S.options.some(function (o2) { return canVote(x, o2); }); });
     if (voters.every(function (x) { return S.votes[x.id]; })) setTimeout(function () { if (S.phase === "vote") advance(); }, 900);
   }
@@ -307,14 +308,14 @@
     var v = { t: "state", phase: S.phase, code: S.code, paused: !!S.paused, round: S.round, rounds: S.rounds, mult: mult(),
       me: { name: p.name, av: p.av, color: p.color, score: p.score, rank: rank, team: teamMode() ? TEAMS[p.team] : null },
       players: S.players.length, left: timeLeft(), total: S.timer ? S.timer.total : 0 };
-    if (["intro", "write", "read", "vote"].indexOf(S.phase) >= 0 && q) { v.q = q.text; v.cat = catName(q.cat); }
+    if (["intro", "write", "read", "vote", "reveal"].indexOf(S.phase) >= 0 && q) { v.q = q.text; v.cat = catName(q.cat); }
     if (S.phase === "write") {
       var key = teamMode() ? "t" + p.team : p.id, L = S.lies[key];
       v.wrote = !!L; v.lie = L ? L.text : ""; v.err = S.lieErr[p.id] || "";
       if (teamMode() && L && L.by !== p.id) { var by = player(L.by); v.mateLie = (by ? by.name : "زميلك"); }
     }
     if (S.phase === "vote" || S.phase === "read") {
-      v.options = S.options.filter(function (o) { return canVote(p, o); }).map(function (o) { return { id: o.id, text: o.text }; });
+      v.options = S.options.map(function (o, i) { return { id: o.id, text: o.text, n: i + 1, ok: canVote(p, o) }; }).filter(function (o) { return o.ok; });
       v.voted = S.votes[p.id] || "";
     }
     if (S.phase === "reveal" || S.phase === "scores" || S.phase === "final") {
@@ -322,8 +323,37 @@
     }
     return v;
   }
-  function sendTo(p) { if (net && p) net.send(p.id, viewFor(p)); }
-  function broadcast() { S.players.forEach(sendTo); }
+  // the same picture the TV shows, as plain data, so every phone can show it too (nothing hidden is included)
+  function screenData() {
+    var who = function (p, done) { return { av: p.av, name: p.name, color: p.color, done: !!done }; };
+    if (S.phase === "lobby") return { who: S.players.map(function (p) { return who(p, p.online); }) };
+    if (S.phase === "write") {
+      if (teamMode()) return { teams: teamBoard().map(function (t) { return { icon: t.icon, name: t.name, color: t.color, done: !!S.lies["t" + t.i] }; }) };
+      return { who: S.players.map(function (p) { return who(p, S.lies[p.id]); }) };
+    }
+    if (S.phase === "read" || S.phase === "vote") return { opts: S.options.map(function (o, i) { return { n: i + 1, text: o.text }; }), who: S.players.map(function (p) { return who(p, S.votes[p.id]); }) };
+    if (S.phase === "reveal") return revealModel();
+    if (S.phase === "scores" || S.phase === "final") {
+      var rows;
+      if (teamMode()) rows = teamBoard().map(function (t, i) { var got = t.members.reduce(function (s2, p) { var r = S.roundPts && S.roundPts[p.id]; return s2 + (r ? r.truth + r.fool : 0); }, 0); return { rank: i + 1, icon: t.icon, name: t.name, color: t.color, score: t.score, plus: S.phase === "scores" ? got : 0 }; });
+      else rows = ranked().map(function (p, i) { var r = S.roundPts && S.roundPts[p.id]; return { rank: i + 1, av: p.av, name: p.name, color: p.color, score: p.score, plus: S.phase === "scores" && r ? r.truth + r.fool : 0 }; });
+      var d = { rows: rows.slice(0, 12), total: rows.length, last: isLast() };
+      var best = S.bestLiar && player(S.bestLiar.id);
+      if (S.phase === "scores" && best) d.best = { av: best.av, name: best.name, fooled: S.bestLiar.fooled };
+      if (S.phase === "final") {
+        var b = ranked(), liar = b.slice().sort(function (x, y) { return y.fooled - x.fooled; })[0], sharp = b.slice().sort(function (x, y) { return y.truths - x.truths; })[0];
+        d.awards = [];
+        if (liar && liar.fooled) d.awards.push({ icon: "😈", label: "ملك الخداع", av: liar.av, name: liar.name, val: "عدد المخدوعين: " + liar.fooled });
+        if (sharp && sharp.truths) d.awards.push({ icon: "🧠", label: "أكثر إجابات صحيحة", av: sharp.av, name: sharp.name, val: sharp.truths + " مرات" });
+      }
+      return d;
+    }
+    return null;
+  }
+  function sendTo(p) { if (net && p) { var v = viewFor(p); v.screen = inBroadcast ? screenCache : screenData(); net.send(p.id, v); } }
+
+  var screenCache = null, inBroadcast = false;
+  function broadcast() { screenCache = screenData(); inBroadcast = true; try { S.players.forEach(sendTo); } finally { inBroadcast = false; } }
   setInterval(function () { if (["write", "vote", "read", "intro"].indexOf(S.phase) >= 0) broadcast(); }, 5000);
 
   /* ---------------- TV rendering ---------------- */
@@ -337,7 +367,7 @@
     try { var qr = window.qrcode(0, "M"); qr.addData(text); qr.make(); return qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch (e) { return ""; }
   }
   function avatar(p, extra) {
-    return '<span class="av' + (p.online ? "" : " off") + (extra || "") + '" style="--c:' + p.color + '"><i>' + esc(p.av) + "</i><b>" + esc(p.name) + "</b></span>";
+    return '<span class="av' + (p.online ? "" : " off") + (extra || "") + '" style="--c:' + p.color + '"><i>' + AV(p.av) + "</i><b>" + esc(p.name) + "</b></span>";
   }
   function ring() { var left = timeLeft(), t = S.timer ? S.timer.total : 1; return '<div class="ring" id="ring" style="--p:' + (left / t).toFixed(4) + '"><b>' + Math.ceil(left / 1000) + "</b></div>"; }
 
@@ -359,7 +389,7 @@
   function vLobby() {
     var st = S.settings, n = S.players.length, url = joinUrl();
     var playersHtml = n ? S.players.map(function (p) {
-      return '<div class="pcard" style="--c:' + p.color + '"><span class="pav">' + esc(p.av) + '</span><b>' + esc(p.name) + "</b>" +
+      return '<div class="pcard" style="--c:' + p.color + '"><span class="pav">' + AV(p.av) + '</span><b>' + esc(p.name) + "</b>" +
         (teamMode() ? '<button class="tchip" data-a="team" data-id="' + esc(p.id) + '" style="--t:' + TEAMS[p.team].color + '" title="تغيير الفريق">' + TEAMS[p.team].icon + " " + TEAMS[p.team].name + "</button>" : "") +
         (p.online ? "" : '<small class="offl">غير متصل</small>') + '<button class="kick" data-a="kick" data-id="' + esc(p.id) + '" aria-label="إزالة ' + esc(p.name) + '">✕</button></div>';
     }).join("") : '<p class="empty">امسحوا الرمز بالجوال وادخلوا بأسمائكم 📱</p>';
@@ -405,35 +435,45 @@
       '<div class="opts c' + cols + '" style="--rows:' + Math.ceil(S.options.length / cols) + '">' + S.options.map(function (o, i) { return optCard(o, i, "in"); }).join("") + "</div>" +
       '<div class="who">' + (reading ? '<p class="kicker">بعد لحظات يبدأ التصويت من الجوال</p>' : who) + "</div></section>";
   }
-  function vReveal() {
-    var q = curQ(), st = S.reveal.steps[S.reveal.step], cols = S.options.length > 8 ? 3 : 2, done = {};
-    S.reveal.steps.slice(0, S.reveal.step).forEach(function (s) { if (s.id) done[s.id] = s.kind; });
+  // what is visible at the current reveal step: drawn by the TV and sent to the phones as data
+  function revealModel() {
+    var q = curQ(), st = S.reveal.steps[S.reveal.step], done = {}, m = mult();
+    S.reveal.steps.slice(0, S.reveal.step).forEach(function (s2) { if (s2.id) done[s2.id] = s2.kind; });
     if (st.kind === "rest") S.options.forEach(function (o) { if (o.kind !== "truth" && !votersOf(o).length) done[o.id] = "author"; });
-    var html = S.options.map(function (o, i) {
-      var cls = "", extra = "", voters = votersOf(o);
-      var cur = st.id === o.id, shownAuthor = done[o.id] === "author" || (cur && st.kind === "author") || (done[o.id] === "picked" && !cur);
-      var isTruthShown = o.kind === "truth" && (cur || done[o.id]);
-      if (cur) cls += " spot";
-      if (cur || done[o.id] || st.kind === "rest") {
-        if (voters.length) extra += '<span class="voters">' + voters.map(function (v) { return '<i style="--c:' + v.color + '" title="' + esc(v.name) + '">' + esc(v.av) + "</i>"; }).join("") + "</span>";
-      }
-      if (isTruthShown) { cls += " truth"; extra += '<span class="stamp ok">الحقيقة ✓</span>'; }
-      else if (o.kind !== "truth" && (shownAuthor || st.kind === "rest" && done[o.id])) {
-        cls += " lie";
-        var names = o.kind === "house" ? "إجابة اللعبة 🤖" : "كذبة " + o.authors.map(function (a) { var p = player(a); return p ? esc(p.av + " " + p.name) : ""; }).join(" و");
-        extra += '<span class="stamp no">' + names + "</span>";
-      }
-      return optCard(o, i, cls, extra);
-    }).join("");
-    var cap = "";
+    var who = function (list) { return list.map(function (p) { return { av: p.av, name: p.name, color: p.color }; }); };
+    var opts = S.options.map(function (o, i) {
+      var voters = votersOf(o), cur = st.id === o.id;
+      var shownAuthor = done[o.id] === "author" || (cur && st.kind === "author") || (done[o.id] === "picked" && !cur);
+      var x = { n: i + 1, text: o.text, spot: cur, voters: (cur || done[o.id] || st.kind === "rest") ? who(voters) : [], stamp: null };
+      if (o.kind === "truth" && (cur || done[o.id])) x.stamp = { k: "ok" };
+      else if (o.kind !== "truth" && (shownAuthor || st.kind === "rest" && done[o.id])) x.stamp = o.kind === "house" ? { k: "house" } : { k: "lie", by: who(o.authors.map(player).filter(Boolean)) };
+      return x;
+    });
+    var cap = "", names = function (list) { return list.map(function (p) { return p.name; }).join(" و"); };
     if (st.kind === "intro") cap = "لحظة الحقيقة… 🥁";
-    else if (st.kind === "picked") { var o1 = optById(st.id), vs = votersOf(o1); cap = "اختيار " + vs.map(function (v) { return esc(v.name); }).join(" و") + ": «" + esc(o1.text) + "»… 🤔"; }
-    else if (st.kind === "author") { var o2 = optById(st.id), n2 = votersOf(o2).length; cap = o2.kind === "house" ? "انخدعتوا بإجابة اللعبة! 🤖 بدون نقاط" : "😈 كذبة " + o2.authors.map(function (a) { var p = player(a); return p ? esc(p.name) : ""; }).join(" و") + " · المخدوعين " + n2 + " (+" + n2 * mult() + ")"; }
-    else if (st.kind === "truth") { var o3 = optById(st.id), w = votersOf(o3); cap = w.length ? "عرفها: " + w.map(function (v) { return esc(v.name); }).join(" و") + " 👏 (+" + 2 * mult() + ")" : "ولا أحد عرف الحقيقة! 😱"; }
+    else if (st.kind === "picked") { var o1 = optById(st.id); cap = "اختيار " + names(votersOf(o1)) + ": «" + o1.text + "»… 🤔"; }
+    else if (st.kind === "author") { var o2 = optById(st.id), n2 = votersOf(o2).length; cap = o2.kind === "house" ? "انخدعتوا بإجابة اللعبة! 🤖 بدون نقاط" : "😈 كذبة " + names(o2.authors.map(player).filter(Boolean)) + " · المخدوعين " + n2 + " (+" + n2 * m + ")"; }
+    else if (st.kind === "truth") { var w = votersOf(optById(st.id)); cap = w.length ? "عرفها: " + names(w) + " 👏 (+" + 2 * m + ")" : "ولا أحد عرف الحقيقة! 😱"; }
     else if (st.kind === "rest") cap = "وهذي إجابات ما صدّقها أحد 😅";
+    var showNote = st.kind === "truth" || S.reveal.step === S.reveal.steps.length - 1;
+    return { opts: opts, cap: cap, note: showNote ? q.note : "", truth: st.kind === "truth" };
+  }
+  function stampHtml(x) {
+    if (!x.stamp) return "";
+    if (x.stamp.k === "ok") return '<span class="stamp ok">الحقيقة ✓</span>';
+    if (x.stamp.k === "house") return '<span class="stamp no">إجابة اللعبة 🤖</span>';
+    return '<span class="stamp no">كذبة ' + x.stamp.by.map(function (p) { return AV(p.av) + " " + esc(p.name); }).join(" و") + "</span>";
+  }
+  function vReveal() {
+    var q = curQ(), M = revealModel(), cols = S.options.length > 8 ? 3 : 2;
+    var html = M.opts.map(function (x, i) {
+      var cls = (x.spot ? " spot" : "") + (x.stamp ? (x.stamp.k === "ok" ? " truth" : " lie") : "");
+      var extra = (x.voters.length ? '<span class="voters">' + x.voters.map(function (v) { return '<i style="--c:' + v.color + '" title="' + esc(v.name) + '">' + AV(v.av) + "</i>"; }).join("") + "</span>" : "") + stampHtml(x);
+      return optCard(x, i, cls, extra);
+    }).join("");
     return '<section class="stage reveal"><div class="qhead"><h2 class="question sm">' + esc(q.text) + "</h2></div>" +
-      '<div class="opts c' + cols + '" style="--rows:' + Math.ceil(S.options.length / cols) + '">' + html + '</div><div class="cap">' + cap + "</div>" +
-      (st.kind === "truth" || S.reveal.step === S.reveal.steps.length - 1 ? '<p class="note">💡 ' + esc(q.note) + "</p>" : "") + "</section>";
+      '<div class="opts c' + cols + '" style="--rows:' + Math.ceil(S.options.length / cols) + '">' + html + '</div><div class="cap">' + esc(M.cap) + "</div>" +
+      (M.note ? '<p class="note">💡 ' + esc(M.note) + "</p>" : "") + "</section>";
   }
   function vScores() {
     var rows, best = S.bestLiar && player(S.bestLiar.id);
@@ -447,11 +487,11 @@
       var b = ranked(), top2 = Math.max(1, b[0] ? b[0].score : 1), shown = b.slice(0, 10);
       rows = shown.map(function (p, i) {
         var r = S.roundPts[p.id], got = r ? r.truth + r.fool : 0;
-        return '<div class="srow" style="--c:' + p.color + ";--w:" + (p.score / top2 * 100).toFixed(1) + "%;--d:" + i * 0.08 + 's"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.av + " " + p.name) + '</span><span class="track"><span class="fill"></span></span><span class="sc">' + p.score + "</span>" + (got ? '<span class="plus">+' + got + "</span>" : "") + "</div>";
+        return '<div class="srow" style="--c:' + p.color + ";--w:" + (p.score / top2 * 100).toFixed(1) + "%;--d:" + i * 0.08 + 's"><span class="rk">' + (i + 1) + '</span><span class="nm">' + AV(p.av) + " " + esc(p.name) + '</span><span class="track"><span class="fill"></span></span><span class="sc">' + p.score + "</span>" + (got ? '<span class="plus">+' + got + "</span>" : "") + "</div>";
       }).join("") + (b.length > 10 ? '<p class="more">و' + (b.length - 10) + " لاعبين آخرين</p>" : "");
     }
     return '<section class="stage scores"><h2 class="stitle">الترتيب بعد الجولة ' + S.round + "</h2>" +
-      (best ? '<div class="award"><span>😈</span><div><small>أكبر مخادع في الجولة</small><b>' + esc(best.av + " " + best.name) + "</b><em>عدد المخدوعين: " + S.bestLiar.fooled + "</em></div></div>" : '<div class="award dim"><span>😇</span><div><small>ولا كذبة نجحت هالجولة</small><b>العائلة صاحية!</b></div></div>') +
+      (best ? '<div class="award"><span>😈</span><div><small>أكبر مخادع في الجولة</small><b>' + AV(best.av) + " " + esc(best.name) + "</b><em>عدد المخدوعين: " + S.bestLiar.fooled + "</em></div></div>" : '<div class="award dim"><span>😇</span><div><small>ولا كذبة نجحت هالجولة</small><b>العائلة صاحية!</b></div></div>') +
       '<div class="board">' + rows + "</div>" + '<p class="kicker">' + (isLast() ? "النتيجة النهائية بعد لحظات…" : "الجولة التالية بعد لحظات…") + "</p></section>";
   }
   function vFinal() {
@@ -460,12 +500,12 @@
     if (teamMode()) {
       var tb = teamBoard();
       podium = tb.slice(0, 3).map(function (t, i) { return '<div class="pod p' + (i + 1) + '" style="--c:' + t.color + '"><span class="pav">' + t.icon + "</span><b>" + t.name + "</b><em>" + t.score + '</em><span class="step">' + (i + 1) + "</span></div>"; });
-    } else podium = b.slice(0, 3).map(function (p, i) { return '<div class="pod p' + (i + 1) + '" style="--c:' + p.color + '"><span class="pav">' + esc(p.av) + "</span><b>" + esc(p.name) + "</b><em>" + p.score + '</em><span class="step">' + (i + 1) + "</span></div>"; });
+    } else podium = b.slice(0, 3).map(function (p, i) { return '<div class="pod p' + (i + 1) + '" style="--c:' + p.color + '"><span class="pav">' + AV(p.av) + "</span><b>" + esc(p.name) + "</b><em>" + p.score + '</em><span class="step">' + (i + 1) + "</span></div>"; });
     var order = podium.length === 3 ? [podium[1], podium[0], podium[2]] : podium;
     return '<section class="stage final"><h2 class="stitle">🏆 ' + (teamMode() ? "الفريق الفائز" : "البطل") + "</h2>" +
       '<div class="podium">' + order.join("") + "</div>" +
-      '<div class="awards">' + (liar && liar.fooled ? '<div class="award"><span>😈</span><div><small>ملك الخداع</small><b>' + esc(liar.av + " " + liar.name) + "</b><em>عدد المخدوعين: " + liar.fooled + "</em></div></div>" : "") +
-      (sharp && sharp.truths ? '<div class="award"><span>🧠</span><div><small>صاحب أكثر إجابات صحيحة</small><b>' + esc(sharp.av + " " + sharp.name) + "</b><em>" + sharp.truths + " مرات</em></div></div>" : "") + "</div>" +
+      '<div class="awards">' + (liar && liar.fooled ? '<div class="award"><span>😈</span><div><small>ملك الخداع</small><b>' + AV(liar.av) + " " + esc(liar.name) + "</b><em>عدد المخدوعين: " + liar.fooled + "</em></div></div>" : "") +
+      (sharp && sharp.truths ? '<div class="award"><span>🧠</span><div><small>صاحب أكثر إجابات صحيحة</small><b>' + AV(sharp.av) + " " + esc(sharp.name) + "</b><em>" + sharp.truths + " مرات</em></div></div>" : "") + "</div>" +
       '<div class="row"><button class="btn go big" data-a="again">🔁 لعبة جديدة بنفس اللاعبين</button><button class="btn" data-a="lobby">⚙️ الإعدادات واللاعبين</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div></section>';
   }
 
