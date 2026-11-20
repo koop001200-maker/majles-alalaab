@@ -35,20 +35,30 @@
     V = m; sending = false;
     if (phaseChanged) { pick = ""; if (m.phase !== "write") draft = ""; buzz(); }
     endsAt = m.paused ? 0 : Date.now() + (m.left || 0);
-    if (status !== "online") status = "online";
+    status = "online";
     render();
   }
 
+  var tstat = "connecting", startedAt = Date.now();
   function connect() {
     if (!code) return;
     net = window.WshNet.join(code, pid, {
       onMsg: onMsg,
       onOpen: hello,
-      onStatus: function (s) { if (s !== "online" && V && Date.now() - net.lastHostMsg() < 6000) return; status = s; render(); }
+      onStatus: function (s) { tstat = s; refreshStatus(); }
     });
     hello();
-    setInterval(function () { if (joined) net.send({ t: "ping" }); if (V && net.lastHostMsg() && Date.now() - net.lastHostMsg() > 12000) { status = "reconnecting"; render(); } }, 4000);
+    // until the TV answers, keep saying hello; after that, a light ping keeps us listed as online
+    setInterval(function () { if (joined) net.send(V ? { t: "ping" } : { t: "hello", name: me.name, av: me.av || AVATARS[0] }); refreshStatus(); }, 3000);
   }
+  function computeStatus() {
+    if (tstat === "offline") return "offline";
+    var last = net ? net.lastHostMsg() : 0;
+    if (!last) return joined && Date.now() - startedAt > 9000 && tstat === "online" ? "noroom" : "connecting";
+    if (Date.now() - last > 12000) return "reconnecting";
+    return "online";
+  }
+  function refreshStatus() { var s = computeStatus(); if (s !== status) { status = s; render(); } }
   function buzz() { try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} }
 
   /* ---------------- views ---------------- */
@@ -71,7 +81,7 @@
       '<button class="btn go big" type="submit">ادخل اللعبة ▶</button></form>' + netLine() + "</section>";
   }
   function netLine() {
-    var t = { connecting: "🟡 جاري الاتصال بالتلفزيون…", reconnecting: "🟡 انقطع الاتصال — جاري إعادة الاتصال…", noroom: "🔴 ما لقينا الغرفة — تأكد أن التلفزيون مفتوح وأن الرمز صحيح", offline: "🔴 لا يوجد إنترنت" }[status];
+    var t = { connecting: "🟡 جاري الاتصال بالتلفزيون…", reconnecting: "🟡 انقطع الاتصال — جاري إعادة الاتصال…", noroom: "🔴 ما وصل رد من التلفزيون — تأكد أن «وش الصح؟» مفتوحة على التلفزيون وأن رمز الغرفة " + code + " هو نفسه الظاهر عليه", offline: "🔴 لا يوجد إنترنت" }[status];
     return t ? '<p class="pnet">' + t + "</p>" : "";
   }
   function body() {

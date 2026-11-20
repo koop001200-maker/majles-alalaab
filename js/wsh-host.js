@@ -66,7 +66,9 @@
   var net = null, netStatus = "connecting";
   function startNet() {
     if (net) net.close();
-    net = window.WshNet.host(S.code, { onMsg: onMsg, onLeave: onLeave, onStatus: function (st) { netStatus = st; renderStatus(); } });
+    net = window.WshNet.host(S.code, { onMsg: onMsg, onLeave: onLeave, onStatus: function (st) { netStatus = st; renderStatus(); },
+      // another TV is already using this room code: take a new one (only matters before anyone joined)
+      onConflict: function () { if (S.players.length) return; S.code = newRoomCode(); save(); startNet(); render(); } });
   }
 
   function player(id) { for (var i = 0; i < S.players.length; i++) if (S.players[i].id === id) return S.players[i]; return null; }
@@ -350,7 +352,7 @@
       '<button class="btn sm" data-a="sound">' + (S.settings.sound ? "🔊" : "🔇") + '</button><button class="btn sm" data-a="fs">⛶</button></div></header>';
   }
   function statusText() {
-    return { online: "🟢 الغرفة جاهزة", connecting: "🟡 جاري تجهيز الغرفة…", reconnecting: "🟡 إعادة الاتصال…", offline: "🔴 لا يوجد إنترنت — جاري المحاولة", taken: "🟡 الرمز مستخدم، جاري المحاولة…", local: "🟢 وضع النوافذ المحلية", unsupported: "🔴 المتصفح لا يدعم الاتصال", error: "🔴 تعذّر تجهيز الغرفة", closed: "" }[netStatus] || "";
+    return { online: "🟢 الغرفة جاهزة", connecting: "🟡 جاري تجهيز الغرفة… (تأكد أن التلفزيون متصل بالإنترنت)", reconnecting: "🟡 إعادة الاتصال…", offline: "🔴 لا يوجد إنترنت — جاري المحاولة", taken: "🟡 الرمز مستخدم، جاري المحاولة…", local: "🟢 وضع النوافذ المحلية", unsupported: "🔴 المتصفح لا يدعم الاتصال", error: "🔴 تعذّر تجهيز الغرفة", closed: "" }[netStatus] || "";
   }
   function renderStatus() { var el = $("#net"); if (el) el.textContent = statusText(); }
 
