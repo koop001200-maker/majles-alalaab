@@ -3,14 +3,14 @@
  * المجموعات: محتوى كل لعبة مقسوم إلى مجموعات ثابتة الحجم (مثلاً 8 بطاقات). عدد المجموعات المتاحة = ما بقي من
  * محتوى لم يُلعب بعد ÷ حجم المجموعة (للأعلى). كلما لعبتَ نقص العدد، وإذا زاد المحتوى زاد العدد حين تمتلئ المجموعة.
  *
- * الجولات المجانية: 3 جولات لكل لعبة (عدا «وش الصح؟»)، بعدها تظهر شاشة الاشتراك.
+ * قبل الاشتراك: 3 مجموعات مفتوحة لكل لعبة (عدا «وش الصح؟»)، وبعد الاشتراك تُفتح كل مجموعات البنك.
  *
  * لا تُخزَّن أي بيانات بطاقة ولا تُرسل لأي مكان: ما يُكتب في الخانات يُستخدم للتحقق الشكلي فقط ثم يُنسى.
  */
 (function () {
   "use strict";
   var SUB_KEY = "majlis_sub_v1", FREE_KEY = "majlis_free_v1", SETS_KEY = "majlis_sets_v1";
-  var FREE_ROUNDS = 3;
+  var FREE_SETS = 3; // sets that open before subscribing; after subscribing every set in the bank is open
   var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8 };
   var NAMES = { mak: "مين أكون؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟" };
   var DEFAULT_TOTAL = { mak: 96, kh: 411, rt: 192, hf: 582, wsh: 152 }; // shown on the hub before a game has ever been opened
@@ -31,10 +31,11 @@
   function subscribe(planId) { var p = PLANS[planId] || PLANS.month; set(SUB_KEY, { plan: p.id, at: Date.now(), until: Date.now() + p.ms }); changed(); placeBadge(); }
   function unsubscribe() { try { localStorage.removeItem(SUB_KEY); } catch (e) {} changed(); placeBadge(); }
   function freeUsed(game) { var f = get(FREE_KEY, {}); return (f && +f[game]) || 0; }
+  function freeRounds(game) { return FREE_SETS * (SIZE[game] || 8); }
   function gate(game) {
     if (isSub()) return true;
     var f = get(FREE_KEY, {}); if (!f || typeof f !== "object") f = {};
-    if ((+f[game] || 0) >= FREE_ROUNDS) { openPaywall(game); return false; }
+    if ((+f[game] || 0) >= freeRounds(game)) { openPaywall(game); return false; }
     f[game] = (+f[game] || 0) + 1; set(FREE_KEY, f); placeBadge();
     return true;
   }
@@ -43,7 +44,9 @@
   function setsInfo(game) {
     var d = get(SETS_KEY, {}), e = d && d[game];
     var total = e ? +e.total : DEFAULT_TOTAL[game], unplayed = e ? +e.unplayed : DEFAULT_TOTAL[game], size = SIZE[game] || 8;
-    return { size: size, total: total, unplayed: unplayed, left: Math.ceil(unplayed / size), all: Math.ceil(total / size) };
+    var full = Math.ceil(unplayed / size), left = full;
+    if (game !== "wsh" && !isSub()) left = Math.max(0, Math.min(full, Math.ceil((freeRounds(game) - freeUsed(game)) / size)));
+    return { size: size, total: total, unplayed: unplayed, left: left, full: full, all: Math.ceil(total / size) };
   }
   var curGame = null;
   function sets(game, total, unplayed) {
@@ -57,11 +60,11 @@
     if (!curGame) return "";
     var i = setsInfo(curGame);
     var small = window.innerWidth < 560;
-    return "🎮 " + i.left + (small ? "" : " مجموعة لعب متاحة") + (isSub() ? "" : " · 🔒");
+    return "🎮 " + i.left + (small ? "" : " مجموعة متاحة");
   }
   function badgeTitle() {
     var i = setsInfo(curGame);
-    return NAMES[curGame] + ": " + i.left + " من " + i.all + " مجموعة متاحة (كل مجموعة " + i.size + " جولات من المحتوى). " + (isSub() ? "أنت مشترك." : "الجولات المجانية: " + Math.max(0, FREE_ROUNDS - freeUsed(curGame)) + " من " + FREE_ROUNDS + ".");
+    return NAMES[curGame] + ": " + i.left + " مجموعة متاحة (كل مجموعة " + i.size + " جولات)";
   }
   var placing = false;
   function placeBadge() {
@@ -139,10 +142,10 @@
     d.push((10 - (sum % 10)) % 10);
     return d.join("").replace(/(.{4})/g, "$1 ").trim();
   }
-  var FIRST = ["AHMED", "MOHAMMED", "KHALID", "FAHAD", "NOURA", "SARA", "REEM", "ABDULLAH", "SULTAN", "LAMA"], LAST = ["ALQAHTANI", "ALOTAIBI", "ALHARBI", "ALDOSARI", "ALGHAMDI", "ALZAHRANI", "ALSHEHRI", "ALMUTAIRI"];
+  var FIRST = ["AHMED", "MOHAMMED", "KHALID", "FAHAD", "ABDULLAH", "SULTAN", "SALMAN", "TURKI", "NASSER", "FAISAL", "OMAR", "YOUSEF"], LAST = ["ABDULLAH", "MOHAMMED", "SAEED", "ABDULRAHMAN", "IBRAHIM", "SALEH", "FAHAD", "ALI"];
   function randCard() {
     var yy = (new Date().getFullYear() % 100) + 1 + Math.floor(Math.random() * 4), mm = 1 + Math.floor(Math.random() * 12);
-    return { num: randVisa(), name: FIRST[Math.floor(Math.random() * FIRST.length)] + " " + LAST[Math.floor(Math.random() * LAST.length)], exp: (mm < 10 ? "0" : "") + mm + "/" + yy, cvv: String(100 + Math.floor(Math.random() * 900)) };
+    return { num: randVisa(), name: (function () { var a = FIRST[Math.floor(Math.random() * FIRST.length)], b; do { b = LAST[Math.floor(Math.random() * LAST.length)]; } while (b === a); return a + " " + b; })(), exp: (mm < 10 ? "0" : "") + mm + "/" + yy, cvv: String(100 + Math.floor(Math.random() * 900)) };
   }
 
   /* ---------------- paywall ---------------- */
@@ -162,8 +165,8 @@
     if (!overlay) return;
     var s = state, h = "";
     if (s.step === "lock") {
-      h = '<div class="lock" aria-hidden="true">🔒</div><h2>خلصت جولاتك المجانية</h2>' +
-        "<p>جرّبت " + FREE_ROUNDS + " جولات من «" + esc(NAMES[s.game] || "") + "». اشترك وافتح البنك كامل بدون حدود، وبدون تكرار.</p>" +
+      h = '<div class="lock" aria-hidden="true">🔒</div><h2>خلصت مجموعاتك المجانية</h2>' +
+        "<p>لعبت المجموعات المجانية الثلاث من «" + esc(NAMES[s.game] || "") + "». اشترك وافتح كل مجموعات البنك.</p>" +
         '<div class="row"><button class="b go" data-a="plans">اشترك ⭐</button></div><div class="row"><button class="b link" data-a="close">ليس الآن</button></div>';
     } else if (s.step === "plans") {
       var d = PLANS.day, m = PLANS.month, per = (19.99 / 30).toFixed(2), save = Math.round((1 - 19.99 / (9.99 * 30)) * 100);
@@ -182,7 +185,7 @@
         '<div class="two"><label>تاريخ الانتهاء<input id="f-exp" inputmode="numeric" maxlength="5" placeholder="MM/YY" autocomplete="off"></label><label>CVV<input id="f-cvv" inputmode="numeric" maxlength="3" placeholder="123" autocomplete="off"></label></div>' +
         '<div class="err" id="mp-err" role="alert">' + esc(s.err) + "</div></form></div>" +
         '<div class="row"><button class="b go" data-a="pay">اشترك — ' + PLANS[s.plan].price + ' ر.س</button><button class="b hot" data-a="saved" type="button">💳 البطاقة المحفوظة</button><button class="b link" data-a="plans">رجوع</button></div>' +
-        '<p class="fine">نسخة تجريبية للعرض فقط: لا يتم أي خصم، ولا تُحفظ بيانات البطاقة ولا تُرسل لأي جهة.</p>';
+'';
     } else if (s.step === "busy") {
       h = '<div class="spin" aria-hidden="true"></div><h2>جاري إتمام الاشتراك…</h2><p>لحظات</p>';
     } else if (s.step === "done") {
@@ -234,7 +237,7 @@
 
   /* ---------------- public API ---------------- */
   window.MAJLIS_PASS = {
-    FREE_ROUNDS: FREE_ROUNDS, SIZE: SIZE, PLANS: PLANS, NAMES: NAMES,
+    FREE_SETS: FREE_SETS, freeRounds: freeRounds, SIZE: SIZE, PLANS: PLANS, NAMES: NAMES,
     isSub: isSub, sub: sub, subscribe: subscribe, unsubscribe: unsubscribe, gate: gate, freeUsed: freeUsed,
     sets: sets, setsInfo: setsInfo, openPaywall: openPaywall, luhnOk: luhnOk, randCard: randCard,
     onChange: function (f) { listeners.push(f); }

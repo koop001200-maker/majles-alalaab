@@ -50,15 +50,13 @@
     Store.set("kh_bank_ver", 3);
   }
   function saveBank() { Store.set(K.bank, bank); }
-  // hint = the item's category + the shape of its name (first letter of each word, empty boxes for the rest)
+  // hint = the first letter of the answer and how many words it has (after «ال» the next letter is the useful one)
   function hintHTML(it) {
-    var cat = CATS.filter(function (c) { return c.id === it.cat; })[0];
     var words = String(it.name).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim().split(" ");
-    return '<span class="hint-cat">' + (cat ? esc(cat.icon + " " + cat.name) : "") + "</span>" +
-      '<span class="hint-words">' + words.map(function (w) {
-        var L = Array.from(w), show = (L.length > 3 && L[0] === "ا" && L[1] === "ل") ? 3 : 1;
-        return '<span class="hw">' + L.map(function (ch, i) { return "<i" + (i < show ? ' class="on"' : "") + ">" + (i < show ? esc(ch) : "") + "</i>"; }).join("") + "</span>";
-      }).join("") + "</span>";
+    var L = Array.from(words[0]), al = L.length > 3 && L[0] === "ا" && L[1] === "ل";
+    var n = words.length, cnt = n === 1 ? "كلمة واحدة" : n === 2 ? "كلمتين" : n + " كلمات";
+    return '<span class="hint-letter">' + esc(al ? L[2] : L[0]) + "</span>" +
+      '<span class="hint-text">' + (al ? "يبدأ بـ «ال» وبعدها حرف " : "أول حرف ") + "<b>" + esc(al ? L[2] : L[0]) + "</b> · " + cnt + "</span>";
   }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
   function photo(id) { return Store.raw(K.img + id); }
@@ -114,7 +112,7 @@
   settings.memTime = [4, 6, 8, 10].indexOf(+settings.memTime) >= 0 ? +settings.memTime : 6;
   function saveSettings() { Store.set(K.settings, settings); }
 
-  var view = "home", setupTab = "players", setupErr = "", modal = null, bankF = { cat: "", lvl: "", q: "" }, pendingDel = null;
+  var view = location.hash === "#bank" ? "bank" : "home", setupTab = "players", setupErr = "", modal = null, bankF = { cat: "", lvl: "", q: "" }, pendingDel = null;
   var game = validGame(Store.get(K.game, null));
   function validGame(g) {
     try {
@@ -576,12 +574,13 @@
     return '<section class="home"><div class="emoji-row" aria-hidden="true"><span>🐪</span><span>☕</span><span>🎲</span></div>' +
       '<h1 class="title">خمّن وش هو؟</h1><div class="sadu" aria-hidden="true"></div>' +
       '<p class="subtitle">واحد ما يشوف الشاشة، والباقين يشوفون الشيء. يسأل أسئلة جوابها «إيه» أو «لا» ويخمّن قبل لا يخلص الوقت!</p>' +
+      '<div class="home-stack">' +
       (resumable ? '<button class="btn go big" data-ui="resume">كمّل اللعبة (الجولة ' + game.round + ")</button>" : "") +
-      '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">يلا نلعب 🎮</button><button class="btn big" data-ui="setup">اللاعبين والإعدادات</button><button class="btn big ghost" data-ui="trial">تجربة سريعة</button></div>' +
-      '<p class="summary">' + esc(summary()) + "</p>" +
-      '<div class="row"><button class="btn ghost" data-ui="howto">كيف نلعب؟</button><button class="btn ghost" data-ui="bank">بنك الأشياء</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
-      '<p class="stats">في البنك <b>' + bank.length + "</b> شيء في <b>" + CATS.length + "</b> تصنيفات</p>" +
-      '<p class="reset-line"><button class="btn ghost tiny" data-ui="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + usedCount() + " من " + bank.length + " شيء، وما يتكرر شيء حتى تخلص</span></p>" + "</section>";
+      '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="quick">ابدأ اللعب 🎮</button>' +
+      '<div class="row"><button class="btn big ghost" data-ui="trial">تجربة سريعة</button><button class="btn big ghost" data-ui="howto">طريقة اللعب</button></div>' +
+      '<button class="btn big" data-ui="setup">الإعدادات</button>' +
+      '<div class="row small"><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn ghost tiny" data-ui="reset-used" title="تصفير سجل الأشياء التي طلعت">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية" : "↺ تصفير") + "</button></div>" +
+      "</div></section>";
   }
 
   function vSetup() {
@@ -652,7 +651,7 @@
       '<select id="bf-lvl" data-bf="lvl" aria-label="الصعوبة"><option value="">كل المستويات</option>' + LEVELS.map(function (l) { return '<option value="' + l.id + '"' + (+bankF.lvl === l.id ? " selected" : "") + ">" + l.name + "</option>"; }).join("") + "</select>" +
       '<input id="bf-q" type="search" data-bf="q" placeholder="بحث" value="' + esc(bankF.q) + '"><span class="muted">' + list.length + " من " + bank.length + "</span></div>" +
       '<div class="scroll"><div class="bank-grid">' + (items || '<p class="muted">ما فيه نتائج.</p>') + "</div></div>" +
-      '<div class="row"><button class="btn small ghost" data-ui="credits">📷 مصادر الصور</button><button class="btn small ghost" data-ui="reset-bank">استعادة البنك الأصلي</button></div></section>';
+      '<div class="row"><button class="btn small ghost" data-ui="reset-bank">استعادة البنك الأصلي</button></div></section>';
   }
 
   function vModal() {
@@ -690,14 +689,6 @@
         (ph ? '<div class="photo-prev"><img src="' + ph + '" alt="معاينة"><button type="button" class="btn small no" data-ui="photo-del">حذف الصورة</button></div>' : "") +
         (m.err ? '<p class="error">' + esc(m.err) + "</p>" : "") +
         '<div class="actions"><button class="btn go big" type="submit">حفظ</button><button class="btn big" type="button" data-ui="close">إلغاء</button></div></form>';
-    } else if (m.type === "credits") {
-      var P = window.KH_PHOTOS || {}, ids = Object.keys(P);
-      inner = "<h2>مصادر الصور 📷</h2><p class=\"muted\">الصور من ويكيميديا كومنز برخص حرة، وهذه أسماء أصحابها ورخصها كما تشترط الرخص.</p>" +
-        '<div style="text-align:start;display:grid;gap:6px;' + (ids.length ? "max-height:55vh;overflow:auto" : "") + '">' + (ids.length ? ids.map(function (id) {
-          var c = P[id], it = item(id);
-          return '<div style="padding:.3em .6em;border-radius:10px;background:var(--surface-2);font-size:.85em"><b>' + esc(it ? it.name : id) + "</b> — " + esc(c.author) + " · " + esc(c.license) + ' · <span class="muted" dir="ltr" style="overflow-wrap:anywhere">' + esc(c.title || c.page) + "</span></div>";
-        }).join("") : '<p class="muted" style="margin:0">لا توجد صور مرفقة.</p>') + "</div>" +
-        '<div class="actions"><button class="btn big" data-ui="close">تمام</button></div>';
     } else if (m.type === "reset") {
       inner = '<h2>استعادة البنك الأصلي؟</h2><p>تنحذف الأشياء المضافة والتعديلات (الصور تبقى للأشياء الأصلية).</p><div class="actions"><button class="btn no big" data-ui="reset-yes">استعادة</button><button class="btn big" data-ui="close">رجوع</button></div>';
     }
@@ -808,7 +799,6 @@
       case "new-item": modal = { type: "edit", isNew: true, it: { id: "", cat: bankF.cat || "surprise", name: "", emoji: "❓", syn: [], lvl: +bankF.lvl || 2 }, photo: null }; render(); break;
       case "photo-del": modal.photo = null; modal.photoDel = true; keepForm(); render(); break;
       case "reset-bank": modal = { type: "reset" }; render(); break;
-      case "credits": modal = { type: "credits" }; render(); break;
       case "reset-yes": bank = defaultBank(); saveBank(); modal = null; toast("رجع البنك الأصلي"); render(); break;
     }
   }

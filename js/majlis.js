@@ -43,7 +43,7 @@
   }
 
   /* ---------------- 2) fit or page every box that would scroll ---------------- */
-  var MIN_ZOOM = 0.7, pagers = [], pageMemo = {}, queued = false;
+  var MIN_ZOOM = 0.7, minZoom = function () { return innerHeight < 520 ? 0.4 : MIN_ZOOM; }, pagers = [], pageMemo = {}, queued = false;
   var canZoom = (function () { try { return CSS.supports("zoom", "0.9"); } catch (e) { return false; } })();
 
   function sig(el) {
@@ -65,11 +65,11 @@
     var counts = {}, best = 0, all = el.querySelectorAll("*");
     for (var i = 0; i < all.length && i < 3000; i++) {
       var n = all[i], par = n.parentElement; if (!par) continue;
-      var k = (par === el ? "" : "p") + n.tagName + "." + (typeof n.className === "string" ? n.className.split(" ")[0] : "");
+      var k = (par === el ? "" : "p") + n.tagName;
       k += "@" + (par.dataset && par.dataset.mjid ? par.dataset.mjid : (par.dataset.mjid = Math.random().toString(36).slice(2, 8)));
       counts[k] = (counts[k] || 0) + 1; if (counts[k] > best) best = counts[k];
     }
-    return best >= 10;
+    return best >= 8;
   }
   function hasForm(el) { return !!el.querySelector("input:not([type]), input[type=text], input[type=search], input[type=number], textarea"); }
   function inPopup(el) { return !!(el.closest('.modal, [role="dialog"], .modal-back, dialog') || el.querySelector('.modal, [role="dialog"]')); }
@@ -83,7 +83,7 @@
       if (cur < 1) { el.style.zoom = Math.min(1, cur + 0.05); if (overflowing(el)) el.style.zoom = cur; }
       return true;
     }
-    var min = el.__mjList ? MIN_ZOOM : 0.5;
+    var min = el.__mjList ? minZoom() : 0.5;
     for (var z = cur - 0.05; z >= min - 0.001; z -= 0.05) { el.style.zoom = z.toFixed(2); if (!overflowing(el)) return true; }
     el.style.zoom = "";
     return false;

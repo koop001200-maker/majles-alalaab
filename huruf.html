@@ -266,6 +266,19 @@ textarea{width:100%;min-height:90px;resize:vertical}
   .d-body .board{max-height:28vh}
   .d-foot .hint{display:none}
 }
+/* phone held sideways: board beside the letters, everything on one screen */
+@media (max-height:520px) and (min-width:600px){
+  .display{height:100dvh!important;min-height:0!important;overflow:hidden!important}
+  .d-body{grid-template-columns:minmax(0,1fr) minmax(180px,34%)!important;grid-template-rows:minmax(0,1fr)!important;min-height:0}
+  .tiles{--fs:min(15vmin,calc(46vw / (var(--n) * 1.32)))!important}
+  .board{display:flex!important;flex-direction:column;min-height:0;height:calc(100dvh - 168px)!important;max-height:none!important;align-self:start;padding:8px 10px!important}
+  .board h2{font-size:1rem!important;margin:0 0 4px!important}
+  .board .tap{display:none}
+  #d-board{flex:1;min-height:0;overflow-y:auto;gap:4px}
+  .board li button{padding:2px 8px!important;font-size:.9rem}
+  .board .d-add{display:none}
+  .d-foot .hint{display:none}
+}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
@@ -305,19 +318,13 @@ textarea{width:100%;min-height:90px;resize:vertical}
     <div class="logo" aria-hidden="true"><span>ت</span><span>ح</span><span>د</span><span>ي</span></div>
     <h1 class="title">تحدي <em>الحروف</em></h1>
     <p class="subtitle">حروف مبعثرة على الشاشة… أول واحد يرتّبها ويقول الكلمة بصوت عالي ياخذ النقطة!</p>
-    <button class="btn primary big" id="h-resume" type="button" hidden>كمّل المسابقة</button>
-    <div class="row">
-      <button class="btn good huge" id="h-start" type="button">ابدأ ▶</button>
-      <button class="btn big" id="h-setup" type="button">المتسابقون والإعدادات</button>
-      <button class="btn big ghost" id="h-screen" type="button">شاشة عرض منفصلة</button>
+    <div class="home-stack">
+      <button class="btn primary big" id="h-resume" type="button" hidden>كمّل المسابقة</button>
+      <button class="btn good big start" id="h-start" type="button">ابدأ اللعب ▶</button>
+      <div class="row"><button class="btn big ghost" id="h-trial" type="button">تجربة سريعة</button><button class="btn big ghost" id="h-howto" type="button">طريقة اللعب</button></div>
+      <button class="btn big" id="h-setup" type="button">الإعدادات</button>
+      <div class="row small"><a class="btn ghost" href="index.html" style="text-decoration:none">🏠 كل الألعاب</a><button class="btn ghost tiny" id="h-reset" type="button">↺ تصفير</button></div>
     </div>
-    <p class="summary" id="h-summary"></p>
-    <div class="row">
-      <button class="btn ghost" id="h-howto" type="button">طريقة اللعب</button>
-      <a class="btn ghost" href="index.html" style="text-decoration:none">🏠 كل الألعاب</a>
-    </div>
-    <p class="stats" id="h-stats"></p>
-    <p class="reset-line"><button class="btn ghost tiny" id="h-reset" type="button">↺ تصفير السجل</button><span id="h-seen"></span></p>
   </section>
 
   <!-- ========== طريقة اللعب ========== -->
@@ -608,7 +615,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     const T = +S.settings.timer || 0; g.timed = T > 0; g.remaining = T * 1000; g.endsAt = g.timed ? Date.now() + g.remaining : 0;
   }
   function advance(s) {
-    const g = s.game, R = +s.settings.rounds || 0;
+    const g = s.game, R = g.maxRounds || +s.settings.rounds || 0;
     if (R && g.round >= R) { g.status = 'finished'; g.reason = 'rounds'; return; }
     const p = pool(s);
     if (!p.length) { g.status = 'finished'; g.reason = 'words'; return; }
@@ -616,17 +623,17 @@ textarea{width:100%;min-height:90px;resize:vertical}
     g.round++; g.used.push(w.id); s.seen.push(w.id); g.wordId = w.id; beginRound(g, w.text); g.pts = pointsFor(w);
   }
   const A = {
-    start(after) {
+    start(after, trial) {
       const lv = S.settings.level;
       if (!S.words.some((w) => lv === 'all' || w.level === lv)) return toast('لا توجد كلمات في المستوى المختار');
-      const go = () => { if (window.MAJLIS_PASS && !MAJLIS_PASS.gate('hf')) return; commit((s) => { s.players.forEach((p) => (p.score = 0)); Object.assign(s.game, { used: [], round: 0, reason: '' }); advance(s); }); if (typeof after === 'function') after(); };
+      const go = () => { if (window.MAJLIS_PASS && !MAJLIS_PASS.gate('hf')) return; commit((s) => { s.players.forEach((p) => (p.score = 0)); Object.assign(s.game, { used: [], round: 0, reason: '', maxRounds: trial ? 3 : 0 }); advance(s); }); if (typeof after === 'function') after(); };
       if (inRound(G().status)) ask('بدء مسابقة جديدة؟ ستُصفَّر النقاط وتبدأ من الجولة الأولى.', go); else go();
     },
     next() {
       const st = G().status;
       if (st === 'idle') return A.start();
       if (st === 'finished') return toast('انتهت المسابقة. ابدأ مسابقة جديدة.');
-      const R = +S.settings.rounds || 0;
+      const R = G().maxRounds || +S.settings.rounds || 0;
       if (!(R && G().round >= R) && window.MAJLIS_PASS && !MAJLIS_PASS.gate('hf')) return;
       commit(advance);
     },
@@ -763,7 +770,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
 
   let stageKey = '', fxKey = '', firstPaint = true;
   function renderDisplay() {
-    const g = G(), R = +S.settings.rounds || 0;
+    const g = G(), R = g.maxRounds || +S.settings.rounds || 0;
     $('#d-round').innerHTML = g.round ? `الجولة <b>${g.round}</b>${R ? ` <small>من ${R}</small>` : ''}` : 'استعدّوا';
     $('#d-body').classList.toggle('full', g.status === 'finished');
     $('#d-next').hidden = g.status === 'finished';
@@ -887,12 +894,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     const g = G(), R = +S.settings.rounds || 0, T = +S.settings.timer || 0, n = S.players.length;
     $('#h-resume').hidden = !inRound(g.status);
     $('#h-start').textContent = inRound(g.status) ? 'مسابقة جديدة ▶' : 'ابدأ ▶';
-    $('#h-summary').textContent = (n ? n + ' متسابقين' : 'لا يوجد متسابقون بعد') + ' · ' + (R ? R + ' جولات' : 'حتى نفاد الكلمات') +
-      ' · ' + (T ? T + ' ثانية' : 'بدون مؤقت') + ' · ' + (S.settings.level === 'all' ? 'كل المستويات' : 'مستوى ' + LEVELS[S.settings.level]);
-    $('#h-stats').innerHTML = `في البنك <b>${S.words.length}</b> كلمة · السهل والمتوسط بنقطة، والصعب بنقطتين`;
-    const seenN = S.words.filter((w) => S.seen.includes(w.id)).length;
-    $('#h-seen').textContent = `طلعت ${seenN} من ${S.words.length} كلمة، وما تتكرر كلمة حتى تخلص`;
-    $('#h-reset').textContent = Date.now() - resetArm < 4000 ? 'اضغط مرة ثانية للتأكيد' : '↺ تصفير السجل';
+    $('#h-reset').textContent = Date.now() - resetArm < 4000 ? 'اضغط مرة ثانية' : '↺ تصفير';
   }
   function passSync() {
     try { const seenN = S.words.filter((w) => S.seen.includes(w.id)).length; window.MAJLIS_PASS && MAJLIS_PASS.sets('hf', S.words.length, S.words.length - seenN); } catch (e) {}
@@ -955,7 +957,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     if (Date.now() - resetArm < 4000) { resetArm = 0; commit((s) => { s.seen = []; }); toast('تم التصفير — كل الكلمات صارت جديدة'); }
     else { resetArm = Date.now(); render(); setTimeout(() => { if (view === 'home') render(); }, 4100); }
   };
-  $('#h-screen').onclick = () => $('#c-open-display').click();
+  $('#h-trial').onclick = () => A.start(showGame, true);
   function selectTab(name) {
     document.querySelectorAll('[data-ctab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.ctab === name)));
     document.querySelectorAll('[data-col]').forEach((c) => c.classList.toggle('on', c.dataset.col === name));

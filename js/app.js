@@ -66,7 +66,7 @@
   function teamCount() { return settings.format === "players" ? 2 : +settings.format; }
 
   /* ---------- state ---------- */
-  var view = "home";
+  var view = location.hash === "#bank" ? "bank" : "home"; // the question bank is not linked from the screens; #bank opens it for maintenance
   var game = (function (g) {
     try {
       if (!g || !Array.isArray(g.teams) || g.teams.length < 2 || !Array.isArray(g.plan) || !g.plan.length || !g.settings || ["playing", "final", "over"].indexOf(g.status) < 0) return null;
@@ -406,21 +406,17 @@
   /* ---------- views ---------- */
   function vHome() {
     var resumable = game && game.status !== "over";
-    var lvlCount = [1, 2, 3].map(function (l) { return bank.filter(function (q) { return +q.lvl === l; }).length; });
     return '<section class="home">' +
       '<div class="logo-star" aria-hidden="true"><span>؟</span></div>' +
       '<h1 class="title">مين أكون؟</h1>' +
-      '<p class="subtitle">التحدي الإسلامي العائلي — أربع معلومات تنكشف تباعاً، ومن يعرف الجواب أولاً يكسب النقاط الأعلى.</p>' +
-      '<div class="home-main">' +
+      '<p class="subtitle">أربع معلومات تنكشف تباعاً، ومن يعرف الجواب أولاً يكسب النقاط الأعلى.</p>' +
+      '<div class="home-stack">' +
       (resumable ? '<button class="btn primary big" data-act="resume">استئناف اللعبة (الجولة ' + (game.idx + 1) + ")</button>" : "") +
-      '<div class="home-actions"><button class="btn ' + (resumable ? "" : "primary ") + 'big" data-act="quick">ابدأ اللعب الآن</button><button class="btn big ghost" data-act="trial">تجربة سريعة (3 جولات)</button>' +
-      '<button class="btn big" data-act="setup">الإعدادات والأوضاع</button></div>' +
-      '<span class="summary">' + esc(settingsSummary()) + "</span></div>" +
-      '<div class="home-actions"><button class="btn ghost" data-act="howto">طريقة اللعب</button><button class="btn ghost" data-act="bank">بنك الأسئلة</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
-      '<div class="home-stats"><span>البطاقات: <b>' + bank.length + '</b></span><span>الأقسام: <b>' + CATS.length + '</b></span>' +
-      '<span>عائلي <b>' + lvlCount[0] + '</b> · تحدي <b>' + lvlCount[1] + '</b> · خبراء <b>' + lvlCount[2] + "</b></span></div>" +
-      '<p class="reset-line"><button class="btn ghost tiny" data-act="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + usedCount() + " من " + bank.length + " بطاقة، وما يتكرر شيء حتى تخلص</span></p>" +
-      "</section>";
+      '<button class="btn ' + (resumable ? "" : "primary ") + 'big start" data-act="quick">ابدأ اللعب</button>' +
+      '<div class="row"><button class="btn big ghost" data-act="trial">تجربة سريعة</button><button class="btn big ghost" data-act="howto">طريقة اللعب</button></div>' +
+      '<button class="btn big" data-act="setup">الإعدادات</button>' +
+      '<div class="row small"><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn ghost tiny" data-act="reset-used" title="تصفير سجل البطاقات التي طلعت">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية" : "↺ تصفير") + "</button></div>" +
+      "</div></section>";
   }
 
   function vSetup(err) {

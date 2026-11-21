@@ -290,3 +290,20 @@ body .btn.tiny { font-size: clamp(11px, min(.85vw, 1.6vh), 16px) !important; pad
 @media (max-height: 700px) { body .reset-line span { display: none; } body .reset-line { margin-top: -6px; } body .btn.tiny { padding: .1em .7em !important; } body .home .stats { margin: 0; } }
 .g-kh .hint-cat { font-weight: 800; }
 .g-kh .hint-box { margin-top: 6px; }
+
+/* every game's home: start, then quick trial + how to play, then settings */
+body .home-stack { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.8vh, 20px); }
+body .home-stack .row { display: flex; flex-wrap: wrap; gap: clamp(8px, 1vw, 16px); justify-content: center; align-items: center; }
+body .home-stack .start { font-size: clamp(22px, min(2.6vw, 4.6vh), 54px) !important; padding: .35em 2em !important; }
+body .home-stack .row.small .btn { font-size: clamp(12px, min(.95vw, 1.8vh), 20px); }
+.g-kh .hint-letter { display: inline-grid; place-items: center; width: 1.9em; height: 1.9em; background: var(--m-yellow); border: 3px solid var(--m-ink); border-radius: .35em; font-family: var(--m-display); font-size: 1.5em; padding-top: .1em; }
+.g-kh .hint-text { font-weight: 800; }
+/* short screens (phone held sideways): tighter home */
+@media (max-height: 520px) {
+  body .home { gap: 4px !important; padding-block: 4px !important; }
+  body .home .subtitle, body .home .sadu, body .home .emoji-row, body .home .logo, body .home .logo-star { display: none !important; }
+  body .home .title { font-size: clamp(28px, 9vh, 48px) !important; margin: 0 !important; }
+  body .home-stack { gap: 6px; }
+  body .home-stack .btn { padding-block: .2em !important; font-size: clamp(14px, 4.4vh, 20px) !important; }
+  body .home-stack .start { font-size: clamp(16px, 5vh, 24px) !important; padding: .15em 1.6em !important; }
+}

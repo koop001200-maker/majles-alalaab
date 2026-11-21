@@ -119,7 +119,7 @@
     if (p === "intro") return '<div class="msg big">استعد… 🥁<br><small>الجولة ' + V.round + " من " + V.rounds + " · " + esc(V.cat) + "</small>" + (V.mult > 1 ? '<br><b class="x2">النقاط ×2 🔥</b>' : "") + "</div>";
     if (p === "write") {
       if (V.wrote) return '<p class="pq">' + esc(V.q) + "</p>" + timer() + '<div class="msg ok">✓ ' + (V.mateLie ? "زميلك " + esc(V.mateLie) + " كتب كذبة الفريق" : "تم إرسال كذبتك") + '<br><b class="mylie">«' + esc(V.lie) + '»</b></div>' + screenWho(sc, "خلّص الكتابة:");
-      return '<p class="pq">' + esc(V.q) + "</p>" + timer() + '<form id="lf" autocomplete="off"><label class="label" for="lie">اكتب إجابة مزيّفة تخدع فيها العائلة 😏</label>' +
+      return '<p class="pq">' + esc(V.q) + "</p>" + timer() + '<form id="lf" autocomplete="off"><label class="label" for="lie">اكتب إجابة مزيّفة تخدع فيها العائلة 😏</label>' + (V.fmt ? '<p class="pfmt">✍️ اكتب: <b>' + esc(V.fmt) + "</b></p>" : "") +
         '<input id="lie" maxlength="40" value="' + esc(draft) + '" placeholder="إجابة تبدو صحيحة…" enterkeyhint="send">' +
         (V.err ? '<p class="perr">' + esc(V.err) + "</p>" : "") + '<button class="btn go big" type="submit"' + (sending ? " disabled" : "") + ">إرسال ✍️</button></form>" + screenWho(sc, "خلّص الكتابة:");
     }

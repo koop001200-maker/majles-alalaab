@@ -482,13 +482,14 @@
     var resumable = game && game.phase !== "over";
     return '<section class="home"><div class="logo" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>' +
       '<h1 class="title">رتّبها <em>صح</em></h1>' +
-      '<p class="subtitle">بطاقات مبعثرة… وعليكم ترتيبها: من الأقدم للأحدث، من الأصغر للأكبر، من البداية للنهاية. ناقشوا، اختلفوا، واعتمدوا!</p>' +
+      '<p class="subtitle">بطاقات مبعثرة… وعليكم ترتيبها: من الأقدم للأحدث، من الأصغر للأكبر، من البداية للنهاية.</p>' +
+      '<div class="home-stack">' +
       (resumable ? '<button class="btn hot big" data-ui="resume">كمّل المباراة</button>' : "") +
-      '<div class="row"><button class="btn ' + (resumable ? "" : "go ") + 'huge" data-ui="quick">ابدأ ▶</button><button class="btn big" data-ui="setup">إعداد المباراة</button><button class="btn big ghost" data-ui="trial">تجربة سريعة</button></div>' +
-      '<p class="summary">' + esc(summary()) + "</p>" +
-      '<div class="row"><button class="btn ghost" data-ui="howto">طريقة اللعب</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div>' +
-      '<p class="stats">في البنك <b>' + BANK.length + "</b> سؤال في <b>" + CATS.length + "</b> مجالات</p>" +
-      '<p class="reset-line"><button class="btn ghost tiny" data-ui="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + usedCount() + " من " + BANK.length + " سؤال، وما يتكرر شيء حتى تخلص</span></p>" + "</section>";
+      '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="quick">ابدأ اللعب ▶</button>' +
+      '<div class="row"><button class="btn big ghost" data-ui="trial">تجربة سريعة</button><button class="btn big ghost" data-ui="howto">طريقة اللعب</button></div>' +
+      '<button class="btn big" data-ui="setup">الإعدادات</button>' +
+      '<div class="row small"><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn ghost tiny" data-ui="reset-used" title="تصفير سجل الأسئلة التي طلعت">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية" : "↺ تصفير") + "</button></div>" +
+      "</div></section>";
   }
 
   function vSetup() {

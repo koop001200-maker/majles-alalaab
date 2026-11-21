@@ -1,4 +1,4 @@
-/* صور حقيقية من ويكيميديا كومنز برخص حرة (CC / نطاق عام). المفتاح = رقم الشيء في بنك «خمّن وش هو؟». */
+/* صور حقيقية بتراخيص حرة؛ المصادر في img/kh/CREDITS.md. المفتاح = رقم الشيء في بنك «خمّن وش هو؟». */
 window.KH_PHOTOS = {
  "saudi-4": {
   "src": "img/kh/saudi-4.jpg",
@@ -126,13 +126,6 @@ window.KH_PHOTOS = {
   "license": "CC0",
   "page": "https://commons.wikimedia.org/wiki/File:Qing_Water_Flask_Canteen_(19597563428).jpg"
  },
- "saudi-32": {
-  "src": "img/kh/saudi-32.jpg",
-  "title": "Markouk - Bread on Saje.jpg",
-  "author": "Serge Melki",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Markouk_-_Bread_on_Saje.jpg"
- },
  "saudi-42": {
   "src": "img/kh/saudi-42.jpg",
   "title": "Mishwak.jpg",
@@ -189,13 +182,6 @@ window.KH_PHOTOS = {
   "license": "CC BY-SA 4.0",
   "page": "https://commons.wikimedia.org/wiki/File:Tandoor-flatbread-inside-the-tandoor-oven.jpg"
  },
- "saudi-53": {
-  "src": "img/kh/saudi-53.jpg",
-  "title": "كأس سوبيا.jpg",
-  "author": "موسى",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:%D9%83%D8%A3%D8%B3_%D8%B3%D9%88%D8%A8%D9%8A%D8%A7.jpg"
- },
  "saudi-62": {
   "src": "img/kh/saudi-62.jpg",
   "title": "Pressure cooker - Hawkins, Contura Model - 3 litres - 2.jpg",
@@ -244,13 +230,6 @@ window.KH_PHOTOS = {
   "author": "Gaurav Dhwaj Khadka",
   "license": "CC BY-SA 4.0",
   "page": "https://commons.wikimedia.org/wiki/File:Karak_Tea.jpg"
- },
- "saudi-73": {
-  "src": "img/kh/saudi-73.jpg",
-  "title": "Waterskin (Library of Congress) 1890-1900.jpg",
-  "author": "Library of Congress (photographer unknown)",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Waterskin_(Library_of_Congress)_1890-1900.jpg"
  },
  "saudi-72": {
   "src": "img/kh/saudi-72.jpg",

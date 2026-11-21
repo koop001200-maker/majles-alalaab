@@ -78,7 +78,8 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 }
 @media (max-width: 640px) {
   .games { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
-  .chip, .live, .new { display: none; }
+  .live, .new { display: none; }
+  .chip { font-size: 12px; padding: 0 .5em; }
   main { padding-top: 54px; }
 }
 @media (max-width: 1000px) and (max-height: 520px) {
@@ -89,8 +90,8 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 #play { position: fixed; inset: 0; z-index: 10; background: var(--violet); }
 #play[hidden] { display: none; }
 #play iframe { width: 100%; height: 100%; border: 0; display: block; }
-.sets { align-self: center; background: #eef0ff; border: clamp(2px, .18vw, 4px) solid var(--ink); border-radius: 999px; padding: 0 .8em; font-weight: 800; font-size: clamp(12px, min(.95vw, 1.9vh), 22px); line-height: 1.6; white-space: nowrap; }
-.subbtn { position: fixed; top: clamp(10px, 1.6vh, 20px); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 5; font: 800 clamp(13px, min(1vw, 1.9vh), 20px)/1 var(--body); color: var(--ink); background: var(--yellow); border: var(--line); border-radius: 999px; padding: .55em 1em; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
+.subrow { display: flex; justify-content: center; }
+.subbtn { font: 800 clamp(15px, min(1.4vw, 2.6vh), 30px)/1 var(--body); color: var(--ink); background: var(--yellow); border: var(--line); border-radius: 999px; padding: .5em 1.6em; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
 .subbtn.on { background: var(--mint); }
 .splash { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; text-align: center; padding: 16px; background: linear-gradient(135deg, var(--violet) 0%, var(--violet-2) 55%, var(--violet) 100%); transition: opacity .45s ease, transform .45s ease; overflow: hidden; }
 .splash.out { opacity: 0; transform: scale(1.06); pointer-events: none; }
@@ -111,7 +112,6 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 </head>
 <body data-hub>
 <button class="fs" id="fs" type="button">⛶ شاشة كاملة</button>
-<button class="subbtn" id="sub" type="button"></button>
 <div class="splash" id="splash" role="dialog" aria-label="ابدأ">
   <span class="sp-float" style="top:10%;right:8%" aria-hidden="true">🎲</span><span class="sp-float" style="top:18%;left:9%;animation-delay:-1s" aria-hidden="true">🐪</span>
   <span class="sp-float" style="bottom:12%;right:12%;animation-delay:-2s" aria-hidden="true">☕</span><span class="sp-float" style="bottom:16%;left:8%;animation-delay:-3s" aria-hidden="true">🧩</span>
@@ -127,35 +127,36 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
   <nav class="games" aria-label="الألعاب">
     <a class="game g1" href="min-akoon.html" data-g="mak">
       <div class="art"><span class="qmark" aria-hidden="true">؟</span></div>
-      <span class="chip">2 – 6 فرق</span><span class="live" id="resume-a" hidden>محفوظة</span>
-      <h2>مين أكون؟</h2><span class="sets"></span>
+      <span class="chip sets"></span><span class="live" id="resume-a" hidden>محفوظة</span>
+      <h2>مين أكون؟</h2>
       <p>أربع معلومات وتعرف الشخصية</p>
     </a>
     <a class="game g2" href="khammen.html" data-g="kh">
       <div class="art"><span class="emo" aria-hidden="true">🐪☕🎲</span></div>
-      <span class="chip">2 – 16 لاعب</span><span class="live" id="resume-b" hidden>محفوظة</span>
-      <h2>خمّن وش هو؟</h2><span class="sets"></span>
+      <span class="chip sets"></span><span class="live" id="resume-b" hidden>محفوظة</span>
+      <h2>خمّن وش هو؟</h2>
       <p>اسأل «إيه أو لا» وخمّن الشيء</p>
     </a>
     <a class="game g3" href="huruf.html" data-g="hf">
       <div class="art"><div class="tiles letters" aria-hidden="true"><i>ح</i><i>ر</i><i>ف</i></div></div>
-      <span class="chip">بلا حد</span><span class="live" id="resume-d" hidden>جارية</span>
-      <h2>تحدي الحروف</h2><span class="sets"></span>
+      <span class="chip sets"></span><span class="live" id="resume-d" hidden>جارية</span>
+      <h2>تحدي الحروف</h2>
       <p>رتّب الحروف وقل الكلمة أول</p>
     </a>
     <a class="game g4" href="rattebha.html" data-g="rt">
       <div class="art"><div class="tiles numbers" aria-hidden="true"><i>1</i><i>2</i><i>3</i></div></div>
-      <span class="chip">2 – 6 فرق</span><span class="live" id="resume-c" hidden>محفوظة</span>
-      <h2>رتّبها صح</h2><span class="sets"></span>
+      <span class="chip sets"></span><span class="live" id="resume-c" hidden>محفوظة</span>
+      <h2>رتّبها صح</h2>
       <p>رتّب البطاقات قبل الفرق الثانية</p>
     </a>
     <a class="game g5" href="wsh.html" data-g="wsh">
       <div class="art"><span class="emo" aria-hidden="true">📱🤥📺</span></div>
-      <span class="chip">جوال لكل لاعب</span><span class="new" id="new-e">جديدة</span><span class="live" id="resume-e" hidden>جارية</span>
-      <h2>وش الصح؟</h2><span class="sets"></span>
+      <span class="chip sets"></span><span class="new" id="new-e">جديدة</span><span class="live" id="resume-e" hidden>جارية</span>
+      <h2>وش الصح؟</h2>
       <p>اكتب كذبة مقنعة واكشف الحقيقة</p>
     </a>
   </nav>
+  <div class="subrow"><button class="subbtn" id="sub" type="button"></button></div>
 </main>
 <div id="play" hidden></div>
 <script src="js/majlis-pass.js"></script>
@@ -180,7 +181,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
     var small = innerWidth < 640;
     [].forEach.call(document.querySelectorAll(".game[data-g]"), function (a) {
       var i = P.setsInfo(a.getAttribute("data-g")), el = a.querySelector(".sets");
-      if (el) { el.textContent = "🎮 " + i.left + (small ? "" : " مجموعة متاحة"); el.title = i.left + " من " + i.all + " مجموعة (كل مجموعة " + i.size + " جولات)"; }
+      if (el) { el.textContent = "🎮 " + i.left + (small ? "" : " مجموعة متاحة"); el.title = i.left + " مجموعة متاحة (كل مجموعة " + i.size + " جولات)"; }
     });
     var b = document.getElementById("sub"), sb = P.sub();
     b.classList.toggle("on", !!sb);

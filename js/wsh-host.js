@@ -210,6 +210,7 @@
     var key = teamMode() ? "t" + p.team : p.id;
     if (teamMode() && S.lies[key] && S.lies[key].by !== p.id) { sendTo(p); return; }
     if (isTruth(text, q)) { S.lieErr[p.id] = "إجابتك صحيحة أو قريبة جداً منها! 😅 اكتب إجابة مزيّفة بدلاً منها"; sendTo(p); return; }
+    if (!window.WSH_FMT_OK(window.WSH_FMT(q.answer), window.WSH_FMT(text))) { S.lieErr[p.id] = "اكتب " + fmtText(q) + " مثل الإجابة الصحيحة، عشان ما تنكشف كذبتك 😉"; sendTo(p); return; }
     S.lieErr[p.id] = "";
     S.lies[key] = { text: text, by: p.id };
     sfx.pop(); save(); render();
@@ -232,7 +233,8 @@
     });
     // fill with house answers so there is always something to doubt
     var minOpts = S.players.length <= 2 ? 5 : 4;
-    var decoys = shuffle(q.decoys.slice());
+    var tf = window.WSH_FMT(q.answer), decoys = shuffle(q.decoys.slice());
+    decoys = decoys.filter(function (d) { return window.WSH_FMT_OK(tf, window.WSH_FMT(d)); }).concat(decoys.filter(function (d) { return !window.WSH_FMT_OK(tf, window.WSH_FMT(d)); }));
     for (var i = 0; i < decoys.length && opts.length < minOpts; i++) {
       var dn = norm(decoys[i]); if (seen[dn]) continue;
       var d = { id: "H" + opts.length, text: decoys[i], kind: "house", authors: [] }; seen[dn] = d; opts.push(d);
@@ -311,7 +313,7 @@
     if (["intro", "write", "read", "vote", "reveal"].indexOf(S.phase) >= 0 && q) { v.q = q.text; v.cat = catName(q.cat); }
     if (S.phase === "write") {
       var key = teamMode() ? "t" + p.team : p.id, L = S.lies[key];
-      v.wrote = !!L; v.lie = L ? L.text : ""; v.err = S.lieErr[p.id] || "";
+      v.wrote = !!L; v.lie = L ? L.text : ""; v.err = S.lieErr[p.id] || ""; v.fmt = fmtText(q);
       if (teamMode() && L && L.by !== p.id) { var by = player(L.by); v.mateLie = (by ? by.name : "زميلك"); }
     }
     if (S.phase === "vote" || S.phase === "read") {
@@ -350,6 +352,7 @@
     }
     return null;
   }
+  function fmtText(q) { return window.WSH_FMT_TEXT(window.WSH_FMT(q.answer)); }
   function sendTo(p) { if (net && p) { var v = viewFor(p); v.screen = inBroadcast ? screenCache : screenData(); net.send(p.id, v); } }
 
   var screenCache = null, inBroadcast = false;
@@ -422,7 +425,7 @@
     var who = teamMode()
       ? need.map(function (t) { var done = !!S.lies["t" + t.i]; return '<span class="tdone' + (done ? " ok" : "") + '" style="--c:' + t.color + '">' + t.icon + " " + t.name + (done ? " ✓" : " ✍️") + "</span>"; }).join("")
       : S.players.map(function (p) { return avatar(p, S.lies[p.id] ? " done" : ""); }).join("");
-    return '<section class="stage write"><div class="qwrap"><p class="kicker">اكتبوا في جوالاتكم إجابة مزيّفة مقنعة 🤫</p><h2 class="question">' + esc(q.text) + "</h2></div>" + ring() +
+    return '<section class="stage write"><div class="qwrap"><p class="kicker">اكتبوا في جوالاتكم إجابة مزيّفة مقنعة 🤫</p><h2 class="question">' + esc(q.text) + '</h2><p class="fmt">✍️ اكتبوا: <b>' + esc(fmtText(q)) + "</b></p></div>" + ring() +
       '<div class="who">' + who + "</div></section>";
   }
   function optCard(o, i, cls, extra) {

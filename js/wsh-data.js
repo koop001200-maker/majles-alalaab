@@ -29,6 +29,18 @@ window.WSH_AV = function (av) {
   if (name) return '<img class="avimg" src="img/av/' + av.slice(1) + '.svg" alt="' + name + '" title="' + name + '">';
   return av.replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }) || "🙂";
 };
+/* صيغة الإجابة: رقم أو عدد الكلمات، وهل تبدأ بـ «ال». تُعرض للاعبين ليكتبوا كذبتهم بنفس الصيغة فلا تنكشف. */
+window.WSH_FMT = function (text) {
+  var t = String(text || "").replace(/[\u064B-\u065F\u0670\u0640]/g, "").replace(/[٠-٩]/g, function (d) { return "٠١٢٣٤٥٦٧٨٩".indexOf(d); }).replace(/\s+/g, " ").trim();
+  var num = /^[\d\s.,:\/\-–]+$/.test(t), w = t ? t.split(" ") : [];
+  var first = (w[0] || "").replace(/[إأآ]/g, "ا");
+  return { num: num, words: num ? 1 : w.length, al: !num && first.length > 3 && first.indexOf("ال") === 0 };
+};
+window.WSH_FMT_TEXT = function (f) {
+  if (f.num) return "رقم";
+  return (f.words === 1 ? "كلمة واحدة" : f.words === 2 ? "كلمتين" : f.words + " كلمات") + (f.al ? " · تبدأ بـ «ال»" : "");
+};
+window.WSH_FMT_OK = function (a, b) { return a.num === b.num && a.words === b.words && a.al === b.al; };
 window.WSH_FAMILY_CATS = ["saudi", "general", "islamic", "food", "animals", "weird", "screen", "sports"];
 
 (function () {
