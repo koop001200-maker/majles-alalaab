@@ -20,7 +20,7 @@
     unknown: { name: "جولة المجهول ❓", desc: "البطاقات تظهر… وطريقة الترتيب تنكشف بعد شوي" },
     decider: { name: "جولة الحسم 🔥", desc: "سؤال صعب والنقاط مضاعفة" }
   };
-  var SPEED_TIME = 25, UNKNOWN_DELAY = 8;
+  var SPEED_TIME = 25, UNKNOWN_DELAY = 8, PICK_TIME = 12, pickLeft = null;
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -40,12 +40,12 @@
   window.RT_SCORE = { inversions: inversions, basePoints: basePoints };
 
   /* ---------- settings ---------- */
-  var defaults = { format: "2", names: ["فريق الصقور", "فريق النخيل", "فريق النجوم", "فريق القمر", "فريق الفرسان", "فريق الواحة"], level: 1, perTeam: 3, timer: 60, host: "auto", specials: true, speedBonus: false, music: false, sound: true };
+  var defaults = { format: "2", names: ["فريق الصقور", "فريق النخيل", "فريق النجوم", "فريق القمر", "فريق الفرسان", "فريق الواحة"], level: 1, perTeam: 3, timer: 45, host: "auto", specials: true, speedBonus: true, music: false, sound: true };
   var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
   if (["pvp", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
   if ([1, 2, 3].indexOf(+settings.level) < 0) settings.level = 1; settings.level = +settings.level;
   settings.perTeam = Math.min(8, Math.max(1, Math.round(+settings.perTeam) || 3));
-  if ([0, 45, 60, 90, 120].indexOf(+settings.timer) < 0) settings.timer = 60; settings.timer = +settings.timer;
+  if ([0, 30, 45, 60, 90, 120].indexOf(+settings.timer) < 0) settings.timer = 45; settings.timer = +settings.timer;
   if (settings.host !== "host") settings.host = "auto";
   if (!Array.isArray(settings.names)) settings.names = defaults.names.slice();
   for (var ni = 0; ni < 6; ni++) if (typeof settings.names[ni] !== "string") settings.names[ni] = defaults.names[ni];
@@ -63,7 +63,7 @@
       if (g.phase !== "pick" && g.phase !== "over") {
         var c = g.cur; if (!c || !q(c.qid) || !Array.isArray(c.order) || c.order.length !== q(c.qid).items.length || !Array.isArray(c.queue) || !Array.isArray(c.results)) return null;
       }
-      g.teams.forEach(function (t) { t.score = +t.score || 0; t.perfect = +t.perfect || 0; t.name = String(t.name || "فريق"); });
+      g.teams.forEach(function (t) { t.score = +t.score || 0; t.perfect = +t.perfect || 0; t.streak = +t.streak || 0; t.name = String(t.name || "فريق"); });
       if (!Array.isArray(g.used)) g.used = []; if (!Array.isArray(g.log)) g.log = [];
       return g;
     } catch (e) { return null; }
@@ -207,13 +207,13 @@
     game.cur = { team: o.team, tile: o.tile, special: o.special, qid: o.qid, queue: o.queue, qi: 0, start: start, order: start.slice(),
       limit: limit, timeLeft: limit, elapsed: 0, ruleLeft: o.special === "unknown" ? UNKNOWN_DELAY : 0, paused: false,
       results: [], revealed: false, tiebreak: !!o.tiebreak, autoLeft: 0 };
-    game.phase = "intro"; introLeft = 3;
+    game.phase = "intro"; introLeft = 2;
     SFX.whoosh();
     commit();
     runIntro();
   }
 
-  var introTimer = null, introLeft = 3;
+  var introTimer = null, introLeft = 2;
   function runIntro() {
     clearInterval(introTimer);
     introTimer = setInterval(function () {
@@ -252,22 +252,25 @@
   }
 
   var revealTimer = null;
-  function doRevealSoon() { SFX.roll(); clearTimeout(revealTimer); revealTimer = setTimeout(doReveal, 2600); }
+  function doRevealSoon() { SFX.roll(); clearTimeout(revealTimer); revealTimer = setTimeout(doReveal, 1800); }
   function doReveal() {
     var c = game.cur; if (!c || c.revealed || game.phase !== "reveal") return;
     c.revealed = true;
     c.results.forEach(function (r) {
-      var t = game.teams[r.team]; t.score += r.points; if (r.errors === 0) t.perfect++;
+      var t = game.teams[r.team];
+      if (r.errors === 0) { t.streak = (t.streak || 0) + 1; t.perfect++; } else t.streak = 0;
+      if (r.errors === 0 && t.streak >= 2 && !c.tiebreak) { r.streakBonus = Math.min(3, t.streak - 1); r.points += r.streakBonus; toast("🔥 " + esc(t.name) + " — " + t.streak + " ترتيب كامل ورا بعض! +" + r.streakBonus); }
+      t.score += r.points;
       game.log.push({ team: r.team, qid: c.qid, points: r.points, errors: r.errors, turn: game.turn, tiebreak: c.tiebreak });
     });
     var best = Math.min.apply(null, c.results.map(function (r) { return r.errors; }));
     if (best === 0) { SFX.win(); confettiBurst = true; } else if (best === 1) SFX.mid(); else SFX.wah();
-    c.autoLeft = game.settings.host === "host" ? 0 : 15;
+    c.autoLeft = game.settings.host === "host" ? 0 : 8;
     revealAnim = true;
     commit();
   }
 
-  function toScores() { if (game.phase !== "reveal" && game.phase !== "play") return; if (game.phase === "reveal" && !game.cur.revealed) return; game.phase = "scores"; if (game.cur) game.cur.autoLeft = game.settings.host === "host" ? 0 : 10; SFX.pick(); commit(); }
+  function toScores() { if (game.phase !== "reveal" && game.phase !== "play") return; if (game.phase === "reveal" && !game.cur.revealed) return; game.phase = "scores"; if (game.cur) game.cur.autoLeft = game.settings.host === "host" ? 0 : 6; SFX.pick(); commit(); }
 
   function nextTurn() {
     if (game.phase !== "scores") return;
@@ -307,6 +310,12 @@
   function tick() {
     if (!game || view !== "game") return;
     var c = game.cur;
+    if (game.phase !== "pick") pickLeft = null;
+    if (game.phase === "pick" && !modal && game.settings.host !== "host" && !game.trial) {
+      pickLeft = pickLeft == null ? PICK_TIME : pickLeft - 1;
+      var pl = document.getElementById("pick-left"); if (pl) pl.textContent = Math.max(0, pickLeft);
+      if (pickLeft <= 0) { pickLeft = null; var free = []; game.tiles.forEach(function (t, i) { if (!t.opened) free.push(i); }); if (free.length) openTile(free[Math.floor(Math.random() * free.length)]); return; }
+    }
     if (game.phase === "play" && c && !c.paused && !modal) {
       c.elapsed++;
       if (c.ruleLeft > 0) {
@@ -360,7 +369,7 @@
       return '<button class="tile" data-tile="' + i + '" id="tile-' + i + '"' + (x.opened ? " disabled" : "") + ' aria-label="رقم ' + x.n + '">' + (x.opened ? '<span class="used">' + esc(game.teams[x.team].name) + "</span>" : x.n) + "</button>";
     }).join("");
     return '<section class="screen">' + topbar("<span>" + turnLabel() + "</span>") + strip(team) +
-      '<div class="spot" style="--c:' + t.color + '"><span class="muted">الدور على</span><span class="who">' + esc(t.name) + '</span><span class="muted">اختاروا رقماً ليفتح سؤالكم — بعض الأرقام فيها مفاجآت 🎁</span></div>' +
+      '<div class="spot" style="--c:' + t.color + '"><span class="muted">الدور على</span><span class="who">' + esc(t.name) + '</span><span class="muted">اختاروا رقماً ليفتح سؤالكم — بعض الأرقام فيها مفاجآت 🎁</span>' + (game.settings.host !== "host" && !game.trial ? '<span class="muted pickcd">⏱ يُفتح رقم عشوائي بعد <b id="pick-left">' + (pickLeft == null ? PICK_TIME : Math.max(0, pickLeft)) + "</b> ث</span>" : "") + '</div>' +
       '<div class="board" style="--cols:' + cols + '">' + tiles + "</div></section>";
   }
 
@@ -471,7 +480,7 @@
       '<div class="champ">' + L.map(function (i) { return esc(game.teams[i].name); }).join(" و ") + "</div>" +
       '<div class="pts"><span class="tot">' + top + " " + ptsWord(top) + "</span><span>🎯 " + game.teams[L[0]].perfect + " ترتيب كامل</span></div>" + barsHTML() +
       (game.trial ? '<p class="special"><b>خلصت التجربة 👌</b><span>جاهزين للمباراة الحقيقية؟</span></p>' : "") +
-      '<div class="row">' + (game.trial ? '<button class="btn go big" data-ui="quick">ابدأ المباراة الحقيقية ▶</button>' : '<button class="btn go big" data-ui="rematch">مباراة جديدة بنفس الفرق 🔁</button>') + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الرئيسية</button></div></section>';
+      '<div class="row">' + (game.trial ? '<button class="btn go big" data-ui="quick">ابدأ المباراة الحقيقية ▶</button>' : '<button class="btn go big" data-ui="rematch">مباراة جديدة بنفس الفرق 🔁</button>') + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الصفحة الأولى</button></div></section>';
   }
 
   function summary() {
@@ -489,7 +498,6 @@
       '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="quick">ابدأ اللعب ▶</button>' +
       '<div class="row"><button class="btn big ghost" data-ui="trial">تجربة سريعة</button><button class="btn big ghost" data-ui="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-ui="setup">الإعدادات</button>' +
-      '<div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>' +
       "</div></section>";
   }
 
@@ -504,21 +512,21 @@
       LEVELS.map(function (l) { return '<button class="chip" data-level="' + l.id + '" aria-pressed="' + (s.level === l.id) + '">' + l.name + "</button>"; }).join("") +
       '</div><p class="hint">' + ["", "معلومات معروفة تحتاج تفكير", "تحتاج تركيز ومعرفة جيدة", "معلومات أقل شيوعاً حتى بين المثقفين"][s.level] + "</p></div>" +
       '<div class="field"><span class="label">عدد الأدوار لكل فريق</span><div class="stepper"><button class="btn" data-ui="per-" aria-label="أقل">−</button><output>' + s.perTeam + '</output><button class="btn" data-ui="per+" aria-label="أكثر">+</button></div><p class="hint">مجموع الجولات: ' + s.perTeam * n + "</p></div>" +
-      '<div class="field"><span class="label">مدة الجولة</span><div class="chips">' + [[0, "بدون مؤقت"], [45, "45 ث"], [60, "60 ث"], [90, "90 ث"], [120, "120 ث"]].map(function (t) { return '<button class="chip" data-timer="' + t[0] + '" aria-pressed="' + (s.timer === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div></div></div>";
+      '<div class="field"><span class="label">مدة الجولة</span><div class="chips">' + [[0, "بدون مؤقت"], [30, "30 ث ⚡"], [45, "45 ث"], [60, "60 ث"], [90, "90 ث"], [120, "120 ث"]].map(function (t) { return '<button class="chip" data-timer="' + t[0] + '" aria-pressed="' + (s.timer === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div></div></div>";
     var c3 = '<div class="setup-col panel' + (setupTab === "mode" ? " on" : "") + '"><div class="field"><span class="label">طريقة الإدارة</span><div class="chips">' +
       '<button class="chip" data-host="auto" aria-pressed="' + (s.host === "auto") + '">تلقائي 🤖</button><button class="chip" data-host="host" aria-pressed="' + (s.host === "host") + '">مع مضيف 🎤</button></div>' +
       '<p class="hint">' + (s.host === "host" ? "المضيف يكشف الإجابات بنفسه ويتحكم في الانتقال، ويقدر يتخطى السؤال." : "اللعبة تكشف الإجابة بعد الاعتماد وتنتقل للنتائج تلقائياً.") + "</p></div>" +
       '<div class="field"><span class="label">إضافات</span><div class="toggles">' +
       [["specials", "🎁 الجولات الخاصة", "سرعة، تحدي، الكل يشارك، المجهول، الحسم — تظهر عشوائياً"], ["speedBonus", "⚡ نقاط السرعة", "+3 أو +1 للترتيب الكامل السريع"], ["music", "🎵 موسيقى خلفية", "خفيفة ويمكن إيقافها"], ["sound", "🔊 المؤثرات", "أصوات الكشف والتحريك والعد"]]
         .map(function (t) { return '<label class="toggle"><input type="checkbox" id="opt-' + t[0] + '" data-opt="' + t[0] + '"' + (s[t[0]] ? " checked" : "") + "><span><b>" + t[1] + "</b><small>" + t[2] + "</small></span></label>"; }).join("") + "</div></div></div>";
-    return '<section class="screen"><div class="page-head"><h2>إعداد المباراة</h2><button class="btn ghost" data-ui="home">الرئيسية</button></div>' +
+    return '<section class="screen"><div class="page-head"><h2>إعداد المباراة</h2><button class="btn ghost" data-ui="home">الصفحة الأولى</button></div>' +
       '<div class="tabs" role="tablist">' + [["teams", "الفرق"], ["level", "الأسئلة والوقت"], ["mode", "الإدارة والإضافات"]].map(function (t) { return '<button class="tab" role="tab" data-tab="' + t[0] + '" aria-selected="' + (setupTab === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div>" +
       '<div class="setup-body">' + c1 + c2 + c3 + "</div>" + (setupErr ? '<p class="error">' + esc(setupErr) + "</p>" : "") +
       '<div class="setup-foot"><span class="summary">' + esc(summary()) + '</span><button class="btn go huge" data-ui="start">ابدأ المباراة ▶</button></div></section>';
   }
 
   function vHowto() {
-    return '<section class="screen"><div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" data-ui="home">الرئيسية</button></div><div class="scroll"><div class="howto panel">' +
+    return '<section class="screen"><div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" data-ui="home">الصفحة الأولى</button></div><div class="scroll"><div class="howto panel">' +
       "<ol><li>الفريق صاحب الدور يختار رقماً من اللوحة، وكل رقم يفتح سؤالاً مختلفاً.</li><li>تظهر بطاقات مبعثرة وقاعدة الترتيب: من الأقدم للأحدث، من الأصغر للأكبر، وغيرها. البطاقة الأولى فوق والأخيرة تحت.</li>" +
       "<li>رتّبوا البطاقات بالسحب، أو بأزرار ▲▼، أو بالكيبورد، ثم اضغطوا «اعتماد الترتيب».</li><li>ينكشف الترتيب الصحيح مع مقارنة ترتيبكم وشرح المعلومة، وتنضاف النقاط تلقائياً.</li></ol>" +
       "<h3>النقاط</h3><ul><li>ترتيب صحيح بالكامل: <b>10</b></li><li>خطأ واحد (بطاقتان متبادلتان): <b>6</b></li><li>خطآن أو أكثر: <b>3</b></li><li>إذا كان نصف أزواج البطاقات أو أكثر مقلوباً، يعني الترتيب أسوأ من العشوائي: <b>0</b></li><li>نقاط السرعة (إذا فعّلتوها): +3 للترتيب الكامل في أول ثلث الوقت، و+1 في الثلث الثاني.</li></ul>" +

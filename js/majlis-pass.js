@@ -13,7 +13,7 @@
   var FILES = { mak: "min-akoon.html", kh: "khammen.html", hf: "huruf.html", rt: "rattebha.html", wsh: "wsh.html" };
   var FREE_SETS = 3; // sets that open before subscribing; after subscribing every set in the bank is open
   var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8 };
-  var NAMES = { mak: "مين أكون؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟" };
+  var NAMES = { mak: "من أنا؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟" };
   var DEFAULT_TOTAL = { mak: 96, kh: 411, rt: 192, hf: 582, wsh: 152 }; // shown on the hub before a game has ever been opened
   var PLANS = {
     day: { id: "day", name: "اشتراك يوم واحد", price: "9.99", unit: "لليوم", ms: 864e5 },
@@ -29,7 +29,7 @@
   /* ---------------- subscription state ---------------- */
   function sub() { var s = get(SUB_KEY, null); return s && s.until > Date.now() ? s : null; }
   function isSub() { return !!sub(); }
-  var AR_NAMES = { AHMED: "أحمد", MOHAMMED: "محمد", MOHAMMAD: "محمد", MUHAMMAD: "محمد", MOHAMED: "محمد", KHALID: "خالد", FAHAD: "فهد", ABDULLAH: "عبدالله", SULTAN: "سلطان", SALMAN: "سلمان", TURKI: "تركي", NASSER: "ناصر", NASER: "ناصر", FAISAL: "فيصل", OMAR: "عمر", YOUSEF: "يوسف", YOUSSEF: "يوسف", SAEED: "سعيد", ABDULRAHMAN: "عبدالرحمن", IBRAHIM: "إبراهيم", SALEH: "صالح", ALI: "علي", MAJED: "ماجد", BADER: "بدر", RASHID: "راشد", HAMAD: "حمد", SAAD: "سعد", NAIF: "نايف", MISHAL: "مشعل", FARIS: "فارس", ABDULAZIZ: "عبدالعزيز", HASSAN: "حسن", HUSSEIN: "حسين", MANSOUR: "منصور", YAZEED: "يزيد", ZIYAD: "زياد", TALAL: "طلال", MUTEB: "متعب", SAUD: "سعود", HAMZA: "حمزة", ABDULMAJEED: "عبدالمجيد", ABDULELAH: "عبدالإله", RAKAN: "راكان", NAWAF: "نواف", MESHARI: "مشاري", BANDAR: "بندر", MAZEN: "مازن", ANAS: "أنس", HANI: "هاني", WALEED: "وليد", SAMI: "سامي", ADEL: "عادل", NADER: "نادر", SAMER: "سامر", AYMAN: "أيمن" };
+  var AR_NAMES = { NOURA: "نورة", NORAH: "نورة", SARA: "سارة", SARAH: "سارة", REEM: "ريم", LAMA: "لمى", HESSA: "حصة", MARAM: "مرام", DANA: "دانة", LUJAIN: "لجين", RAZAN: "رزان", ABEER: "عبير", FATIMA: "فاطمة", AISHA: "عائشة", MAHA: "مها", HANAN: "حنان", SHAHAD: "شهد", JOURI: "جوري", GHADA: "غدير", GHADEER: "غدير", AMAL: "أمل", RANA: "رنا", HIND: "هند", LINA: "لينا", WAFA: "وفاء", SALMA: "سلمى", MONA: "منى", NADA: "ندى", RAWAN: "روان", TALA: "تالا", AHMED: "أحمد", MOHAMMED: "محمد", MOHAMMAD: "محمد", MUHAMMAD: "محمد", MOHAMED: "محمد", KHALID: "خالد", FAHAD: "فهد", ABDULLAH: "عبدالله", SULTAN: "سلطان", SALMAN: "سلمان", TURKI: "تركي", NASSER: "ناصر", NASER: "ناصر", FAISAL: "فيصل", OMAR: "عمر", YOUSEF: "يوسف", YOUSSEF: "يوسف", SAEED: "سعيد", ABDULRAHMAN: "عبدالرحمن", IBRAHIM: "إبراهيم", SALEH: "صالح", ALI: "علي", MAJED: "ماجد", BADER: "بدر", RASHID: "راشد", HAMAD: "حمد", SAAD: "سعد", NAIF: "نايف", MISHAL: "مشعل", FARIS: "فارس", ABDULAZIZ: "عبدالعزيز", HASSAN: "حسن", HUSSEIN: "حسين", MANSOUR: "منصور", YAZEED: "يزيد", ZIYAD: "زياد", TALAL: "طلال", MUTEB: "متعب", SAUD: "سعود", HAMZA: "حمزة", ABDULMAJEED: "عبدالمجيد", ABDULELAH: "عبدالإله", RAKAN: "راكان", NAWAF: "نواف", MESHARI: "مشاري", BANDAR: "بندر", MAZEN: "مازن", ANAS: "أنس", HANI: "هاني", WALEED: "وليد", SAMI: "سامي", ADEL: "عادل", NADER: "نادر", SAMER: "سامر", AYMAN: "أيمن" };
   var AR_LETTERS = { A: "ا", B: "ب", C: "ك", D: "د", E: "ي", F: "ف", G: "ق", H: "ه", I: "ي", J: "ج", K: "ك", L: "ل", M: "م", N: "ن", O: "و", P: "ب", Q: "ق", R: "ر", S: "س", T: "ت", U: "و", V: "ف", W: "و", X: "كس", Y: "ي", Z: "ز" };
   function arabicName(latin) {
     var t = String(latin || "").trim();
@@ -65,7 +65,8 @@
     curGame = game; if (extra) meta[game] = extra;
     var d = get(SETS_KEY, {}); if (!d || typeof d !== "object") d = {};
     var old = d[game];
-    if (!old || old.total !== total || old.unplayed !== unplayed) { d[game] = { total: total, unplayed: unplayed }; set(SETS_KEY, d); }
+    var prog = extra ? setList(game).map(function (x) { return x.u; }) : (old && old.prog) || [];
+    if (!old || old.total !== total || old.unplayed !== unplayed || JSON.stringify(old.prog || []) !== JSON.stringify(prog)) { d[game] = { total: total, unplayed: unplayed, prog: prog }; set(SETS_KEY, d); }
     placeBadge(); setTimeout(queuePlace, 0);
   }
   function badgeText() {
@@ -116,13 +117,27 @@
   function queuePlace() { if (!pq) { pq = true; requestAnimationFrame(function () { pq = false; placeBadge(); placeHome(); }); } }
 
   function setList(game) {
-    var m = meta[game]; if (!m || !m.ids) return [];
-    var size = SIZE[game] || 8, used = {}, out = []; (m.used || []).forEach(function (id) { used[id] = 1; });
-    for (var k = 0; k * size < m.ids.length; k++) {
-      var ids = m.ids.slice(k * size, (k + 1) * size), u = ids.filter(function (id) { return used[id]; }).length;
-      out.push({ k: k, n: ids.length, u: u, locked: game !== "wsh" && !isSub() && k >= FREE_SETS });
+    var m = meta[game], size = SIZE[game] || 8, out = [], k, n, u;
+    if (m && m.ids) {
+      var used = {}; (m.used || []).forEach(function (id) { used[id] = 1; });
+      for (k = 0; k * size < m.ids.length; k++) {
+        var ids = m.ids.slice(k * size, (k + 1) * size); u = ids.filter(function (id) { return used[id]; }).length;
+        out.push({ k: k, n: ids.length, u: u, locked: game !== "wsh" && !isSub() && k >= FREE_SETS });
+      }
+      return out;
     }
+    var d = get(SETS_KEY, {}), e = d && d[game], total = e ? +e.total : DEFAULT_TOTAL[game], prog = (e && e.prog) || [];
+    for (k = 0; k * size < total; k++) { n = Math.min(size, total - k * size); out.push({ k: k, n: n, u: Math.min(n, +prog[k] || 0), locked: game !== "wsh" && !isSub() && k >= FREE_SETS }); }
     return out;
+  }
+  var RESET_KEYS = { mak: "mak_used_v1", kh: "kh_used_v1", rt: "rt_used_v1" };
+  function resetHistory(game) {
+    try {
+      if (meta[game] && meta[game].reset) { meta[game].reset(); return; }
+      if (RESET_KEYS[game]) localStorage.setItem(RESET_KEYS[game], "[]");
+      else { var key = game === "hf" ? "tahaddi-alhuruf-v1" : "wsh_host_v1", o = JSON.parse(localStorage.getItem(key) || "null"); if (o) { if (game === "hf") o.seen = []; else o.used = []; localStorage.setItem(key, JSON.stringify(o)); } }
+      var d = get(SETS_KEY, {}); if (d && d[game]) { d[game].prog = []; d[game].unplayed = d[game].total; set(SETS_KEY, d); }
+    } catch (e) {}
   }
   // ids of the chosen set (sticky for 30 min) or null = no restriction
   function takeScope(game, allIds) {
@@ -143,7 +158,7 @@
   css.textContent =
     ".home-pill{display:inline-flex;align-items:center;gap:.3em;background:#fbbf24;color:#111827;border:2px solid #111827;border-radius:999px;padding:.1em .9em;font:800 clamp(14px,min(1.1vw,2vh),24px)/1.5 Changa,'Segoe UI',Tahoma,sans-serif;white-space:nowrap;text-decoration:none;box-shadow:2px 2px 0 #111827}.home-pill:hover{background:#fde68a}" +
     ".home-pill.fixed{position:fixed;top:clamp(8px,1.6vh,18px);right:clamp(8px,1.2vw,18px);z-index:2147482000}" +
-    ".mp .gchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.mp .gc{border:2px solid #111827;border-radius:999px;background:#fff;color:#111827;text-decoration:none;font-weight:800;padding:.1em .9em;font-size:clamp(12px,min(1.1vw,2vh),20px)}.mp .gc.on{background:#fbbf24}" +
+    ".mp .gchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.mp .gc{min-height:30px;border:2px solid #111827;border-radius:999px;background:#fff;color:#111827;text-decoration:none;font-weight:800;padding:.1em .9em;font-size:clamp(12px,min(1.1vw,2vh),20px)}.mp .gc.on{background:#fbbf24}" +
     ".mp .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,1vw,14px)}" +
     ".mp .st{border:3px solid #111827;border-radius:16px;background:#fff;color:#111827;padding:clamp(6px,1.4vh,16px) 4px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:3px 3px 0 #111827}" +
     ".mp .st b{font:400 clamp(20px,min(2.4vw,4.4vh),44px)/1 Lalezar,Changa,sans-serif}.mp .st small{font-weight:700;font-size:clamp(10px,min(.9vw,1.7vh),16px)}" +
@@ -167,7 +182,7 @@
     ".mp .plan{position:relative;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;border:3px solid #111827;border-radius:20px;background:#f3f4f6;color:#4b5563;padding:clamp(10px,2vh,24px) 10px;cursor:pointer;font-family:inherit}" +
     ".mp .plan.on{background:#fef3c7;color:#111827;box-shadow:6px 6px 0 #111827;transform:translate(-2px,-2px)}" +
     ".mp .plan .nm{font-weight:800;font-size:clamp(14px,min(1.4vw,2.6vh),26px)}" +
-    ".mp .plan .pr{font:400 clamp(30px,min(4vw,7.4vh),80px)/1 Lalezar,Changa,sans-serif}.mp .plan .pr small{font:800 .32em Changa,sans-serif;margin-inline-start:.3em}" +
+    ".mp .plan .pr{font:400 clamp(30px,min(4vw,7.4vh),80px)/1 Lalezar,Changa,sans-serif}.mp .plan .pr small{font:800 max(.32em,11px) Changa,sans-serif;margin-inline-start:.3em}" +
     ".mp .plan .nt{font-weight:700;font-size:clamp(11px,min(1vw,1.9vh),19px)}" +
     ".mp .plan .tag{position:absolute;top:-14px;inset-inline:0;margin-inline:auto;width:max-content;max-width:94%;background:#ef4444;color:#fff;border:2px solid #111827;border-radius:999px;padding:0 .9em;font-weight:800;font-size:clamp(11px,min(1.05vw,2vh),20px)}" +
     ".mp .plan .chk{position:absolute;top:8px;inset-inline-start:10px;width:1.4em;height:1.4em;border:2px solid #111827;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:clamp(11px,1.6vh,18px)}" +
@@ -200,7 +215,7 @@
     d.push((10 - (sum % 10)) % 10);
     return d.join("").replace(/(.{4})/g, "$1 ").trim();
   }
-  var FIRST = ["AHMED", "MOHAMMED", "KHALID", "FAHAD", "ABDULLAH", "SULTAN", "SALMAN", "TURKI", "NASSER", "FAISAL", "OMAR", "YOUSEF"], LAST = ["ABDULLAH", "MOHAMMED", "SAEED", "ABDULRAHMAN", "IBRAHIM", "SALEH", "FAHAD", "ALI"];
+  var FIRST = ["NOURA", "SARA", "REEM", "LAMA", "HESSA", "MARAM", "DANA", "LUJAIN", "RAZAN", "ABEER", "AHMED", "MOHAMMED", "KHALID", "FAHAD", "ABDULLAH", "SULTAN", "SALMAN", "TURKI", "NASSER", "FAISAL", "OMAR", "YOUSEF"], LAST = ["ABDULLAH", "MOHAMMED", "SAEED", "ABDULRAHMAN", "IBRAHIM", "SALEH", "FAHAD", "ALI"];
   function randCard() {
     var yy = (new Date().getFullYear() % 100) + 1 + Math.floor(Math.random() * 4), mm = 1 + Math.floor(Math.random() * 12);
     return { num: randVisa(), name: FIRST[Math.floor(Math.random() * FIRST.length)], exp: (mm < 10 ? "0" : "") + mm + "/" + yy, cvv: String(100 + Math.floor(Math.random() * 900)) };
@@ -210,9 +225,10 @@
   var overlay = null, state = null;
   function closePaywall() { if (overlay) { overlay.remove(); overlay = null; } state = null; document.removeEventListener("keydown", onKey, true); }
   function onKey(e) { if (e.key === "Escape" && overlay) { e.stopPropagation(); closePaywall(); } }
-  function openSets() {
-    if (overlay || !curGame) return;
-    state = { step: "sets", game: curGame, page: 0 };
+  function openSets(game) {
+    if (overlay) return;
+    var g = game || curGame || "mak";
+    state = { step: "sets", game: g, page: 0, hub: !curGame };
     overlay = document.createElement("div"); overlay.className = "mp-back";
     overlay.addEventListener("click", function (e) { if (e.target === overlay) closePaywall(); });
     overlay.addEventListener("click", onClick); overlay.addEventListener("input", onInput); overlay.addEventListener("submit", function (e) { e.preventDefault(); });
@@ -258,8 +274,8 @@
       var list = setList(s.game), per = window.innerHeight < 560 ? 8 : 12, pages = Math.max(1, Math.ceil(list.length / per)); s.page = Math.min(s.page || 0, pages - 1);
       var shown = list.slice(s.page * per, s.page * per + per), done = list.filter(function (x) { return x.u >= x.n && x.n; }).length;
       h = "<h2>🎮 المجموعات</h2>" +
-        '<div class="gchips">' + Object.keys(FILES).map(function (g) { return '<a class="gc' + (g === s.game ? " on" : "") + '" href="' + FILES[g] + '">' + esc(NAMES[g]) + "</a>"; }).join("") + "</div>" +
-        "<p>اختر المجموعة اللي تبي تبدأ منها (" + done + " من " + list.length + " انلعبت)</p>" +
+        '<div class="gchips">' + Object.keys(FILES).map(function (g) { return '<button class="gc' + (g === s.game ? " on" : "") + '" data-g="' + g + '" type="button">' + esc(NAMES[g]) + "</button>"; }).join("") + "</div>" +
+        "<p>اختر المجموعة اللي تبي تبدأ منها (" + done + " من " + list.length + " انلعبت) — تفتح اللعبة وتضغط «ابدأ»</p>" +
         '<div class="tiles">' + shown.map(function (x) {
           var st = x.locked ? "🔒 بعد الاشتراك" : x.u >= x.n ? "✅ لعبتها" : x.u ? "🟡 " + x.u + "/" + x.n : "⚪ جديدة";
           return '<button class="st ' + (x.locked ? "lock" : x.u >= x.n ? "done" : x.u ? "part" : "") + '" data-k="' + x.k + '"><b>' + (x.k + 1) + "</b><small>" + st + "</small></button>";
@@ -300,17 +316,20 @@
   }
   function onClick(e) {
     var p = e.target.closest("[data-plan]"); if (p && state.step === "plans") { state.plan = p.getAttribute("data-plan"); draw(); return; }
+    var gb = e.target.closest(".gc[data-g]");
+    if (gb && state && state.step === "sets") { state.game = gb.getAttribute("data-g"); state.page = 0; state.arm = 0; draw(); return; }
     var tk = e.target.closest("[data-k]");
     if (tk && state && state.step === "sets") {
       var k = +tk.getAttribute("data-k"), item = setList(state.game).filter(function (x) { return x.k === k; })[0];
       if (item && item.locked) { state.plan = state.plan || "month"; state.step = "plans"; draw(); return; }
-      choose(state.game, k); closePaywall(); setTimeout(startFromHome, 30); return;
+      var gk = state.game; choose(gk, k); closePaywall();
+      setTimeout(function () { var a = document.querySelector('a.game[data-g="' + gk + '"]'); if (a) a.click(); else startFromHome(); }, 30); return;
     }
     var b = e.target.closest("[data-a]"); if (!b || !state) return;
     var a = b.getAttribute("data-a");
     if (a === "pg") { state.page = Math.max(0, state.page + (+b.getAttribute("data-d"))); draw(); return; }
     if (a === "reset") {
-      if (state.arm && Date.now() - state.arm < 4000) { var m = meta[state.game]; if (m && m.reset) { try { m.reset(); } catch (er) {} } state.arm = 0; if (m) m.used = []; draw(); }
+      if (state.arm && Date.now() - state.arm < 4000) { resetHistory(state.game); var m = meta[state.game]; if (m) m.used = []; state.arm = 0; draw(); }
       else { state.arm = Date.now(); draw(); }
       return;
     }

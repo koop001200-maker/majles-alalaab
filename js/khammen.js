@@ -561,7 +561,7 @@
       '<div class="pts"><span class="total">' + top + " " + ptsWord(top) + "</span><span>✓ " + champs[0].p.wins + " تخمينات صح</span></div>" + teamLine +
       '<div class="board panel">' + boardHTML(false) + "</div>" +
       (game.trial ? '<p class="banner surprise">خلصت التجربة 👌 جاهزين للعب الجد؟</p>' : "") +
-      '<div class="row"><button class="btn go big" data-ui="replay">' + (game.trial ? "نلعب جد! 🎮" : "نلعب مرة ثانية 🔁") + "</button>" + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الرئيسية</button></div></section>';
+      '<div class="row"><button class="btn go big" data-ui="replay">' + (game.trial ? "نلعب جد! 🎮" : "نلعب مرة ثانية 🔁") + "</button>" + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الصفحة الأولى</button></div></section>';
   }
 
   function summary() {
@@ -580,7 +580,6 @@
       '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="quick">ابدأ اللعب 🎮</button>' +
       '<div class="row"><button class="btn big ghost" data-ui="trial">تجربة سريعة</button><button class="btn big ghost" data-ui="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-ui="setup">الإعدادات</button>' +
-      '<div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>' +
       "</div></section>";
   }
 
@@ -612,14 +611,14 @@
       [["double", "🔥 الجولة الأخيرة دبل", "النقاط ×2 في آخر جولة"], ["surprise", "🎉 جولة المفاجأة", "جولة في النص كلها أشياء غريبة"], ["random", "🎲 النمط العشوائي", "النظام يختار التصنيف والصعوبة واللاعب"], ["sound", "🔊 الأصوات", "مؤقت وأصوات للصح والغلط"], ["photos", "📷 صور حقيقية", "صورة بدل الرمز للأشياء اللي لها صورة"]]
         .map(function (t) { return '<label class="toggle"><input type="checkbox" id="opt-' + t[0] + '" data-opt="' + t[0] + '"' + (s[t[0]] ? " checked" : "") + "><span><b>" + t[1] + "</b><small>" + t[2] + "</small></span></label>"; }).join("") +
       "</div></div></div>";
-    return '<section class="screen"><div class="page-head"><h2>جهّزوا اللعبة</h2><button class="btn ghost" data-ui="home">الرئيسية</button></div>' +
+    return '<section class="screen"><div class="page-head"><h2>جهّزوا اللعبة</h2><button class="btn ghost" data-ui="home">الصفحة الأولى</button></div>' +
       '<div class="tabs" role="tablist">' + [["players", "اللاعبين"], ["items", "الأشياء"], ["rounds", "الجولات"]].map(function (t) { return '<button class="tab" role="tab" data-tab="' + t[0] + '" aria-selected="' + (setupTab === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div>" +
       '<div class="setup-body">' + col1 + col2 + col3 + "</div>" + (setupErr ? '<p class="error">' + esc(setupErr) + "</p>" : "") +
       '<div class="setup-foot"><span class="summary">' + esc(summary()) + '</span><button class="btn go huge" data-ui="start">ابدأ 🎮</button></div></section>';
   }
 
   function vHowto() {
-    return '<section class="screen"><div class="page-head"><h2>كيف نلعب؟</h2><button class="btn ghost" data-ui="home">الرئيسية</button></div><div class="scroll"><div class="howto panel">' +
+    return '<section class="screen"><div class="page-head"><h2>كيف نلعب؟</h2><button class="btn ghost" data-ui="home">الصفحة الأولى</button></div><div class="scroll"><div class="howto panel">' +
       "<ol><li>صاحب الدور يلف وجهه عن الشاشة 🙈، والباقين يضغطون «وريني» ويحفظون الشيء.</li>" +
       "<li>يختفي الشيء، ويلتفت صاحب الدور ويضغط «يلا نبدأ».</li>" +
       "<li>يسأل أسئلة جوابها «إيه» أو «لا» بس — ممنوع التلميح أو قول الاسم.</li>" +
@@ -646,7 +645,7 @@
       return '<div class="bank-item"><span class="em">' + (ph ? '<img src="' + ph + '" alt="">' : it.emoji) + '</span><span style="min-width:0"><span class="nm">' + esc(it.name) + '</span><span class="mt">' + cat(it.cat).icon + " " + lvl(it.lvl).name + " · " + it.syn.length + " مرادف</span></span>" +
         '<span class="acts"><button class="btn small" data-edit="' + it.id + '">تعديل</button>' + del + "</span></div>";
     }).join("");
-    return '<section class="screen"><div class="page-head"><h2>بنك الأشياء</h2><div class="row"><button class="btn go" data-ui="new-item">إضافة شيء</button><button class="btn ghost" data-ui="home">الرئيسية</button></div></div>' +
+    return '<section class="screen"><div class="page-head"><h2>بنك الأشياء</h2><div class="row"><button class="btn go" data-ui="new-item">إضافة شيء</button><button class="btn ghost" data-ui="home">الصفحة الأولى</button></div></div>' +
       '<div class="warn-note">الشاشة هذي تكشف كل الأشياء — افتحوها بعيد عن اللاعبين. تقدرون تضيفون صورة حقيقية لأي شيء من زر «تعديل».</div>' +
       '<div class="bank-tools"><select id="bf-cat" data-bf="cat" aria-label="التصنيف"><option value="">كل التصنيفات</option>' + CATS.map(function (c) { return '<option value="' + c.id + '"' + (bankF.cat === c.id ? " selected" : "") + ">" + c.icon + " " + c.name + "</option>"; }).join("") + "</select>" +
       '<select id="bf-lvl" data-bf="lvl" aria-label="الصعوبة"><option value="">كل المستويات</option>' + LEVELS.map(function (l) { return '<option value="' + l.id + '"' + (+bankF.lvl === l.id ? " selected" : "") + ">" + l.name + "</option>"; }).join("") + "</select>" +

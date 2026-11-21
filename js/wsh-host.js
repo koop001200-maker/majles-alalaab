@@ -413,7 +413,6 @@
         '<div class="modes">' + Object.keys(MODES).map(function (k) { return '<button class="mode' + (st.mode === k ? " on" : "") + '" data-a="mode" data-v="' + k + '"><span>' + MODES[k].icon + "</span><b>" + MODES[k].name + "</b><small>" + MODES[k].hint + "</small></button>"; }).join("") + "</div>" +
         '<div class="plist"><h2>اللاعبون <span>' + n + "</span></h2><div class=\"pgrid\">" + playersHtml + "</div>" + tip + "</div>" +
         '<div class="lfoot"><span class="summary">' + esc(MODES[st.mode].name) + " · " + (st.mode === "quick" ? Math.min(st.rounds, 6) : st.rounds) + " جولات · " + (st.level ? LEVELS[st.level - 1].name : "صعوبة منوّعة") + " · " + cats + " · كتابة " + (st.mode === "quick" ? Math.min(st.writeSec, 40) : st.writeSec) + "ث · تصويت " + (st.mode === "quick" ? Math.min(st.voteSec, 20) : st.voteSec) + "ث" + (st.mode === "teams" ? " · " + st.teamsN + " فرق" : "") + "</span>" +
-        '<p class="reset-line"><button class="btn sm ghost" data-open-sets type="button">🎮 المجموعات</button></p>' +
         '<div class="row"><button class="btn" data-a="settings">⚙️ الإعدادات</button><button class="btn" data-a="howto">❓ طريقة اللعب</button><button class="btn go big" data-a="start"' + (n < 2 ? " disabled" : "") + ">ابدأ اللعب ▶</button></div></div>" +
       "</div></section>";
   }

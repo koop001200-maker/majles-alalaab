@@ -1,4 +1,4 @@
-/* «مين أكون؟» — محرك اللعبة. يعمل محلياً بالكامل، ويحفظ في localStorage. */
+/* «من أنا؟» — محرك اللعبة. يعمل محلياً بالكامل، ويحفظ في localStorage. */
 (function () {
   "use strict";
 
@@ -409,14 +409,13 @@
     var resumable = game && game.status !== "over";
     return '<section class="home">' +
       '<div class="logo-star" aria-hidden="true"><span>؟</span></div>' +
-      '<h1 class="title">مين أكون؟</h1>' +
+      '<h1 class="title">من أنا؟</h1>' +
       '<p class="subtitle">أربع معلومات تنكشف تباعاً، ومن يعرف الجواب أولاً يكسب النقاط الأعلى.</p>' +
       '<div class="home-stack">' +
       (resumable ? '<button class="btn primary big" data-act="resume">استئناف اللعبة (الجولة ' + (game.idx + 1) + ")</button>" : "") +
       '<button class="btn ' + (resumable ? "" : "primary ") + 'big start" data-act="quick">ابدأ اللعب</button>' +
       '<div class="row"><button class="btn big ghost" data-act="trial">تجربة سريعة</button><button class="btn big ghost" data-act="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-act="setup">الإعدادات</button>' +
-      '<div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>' +
       "</div></section>";
   }
 
@@ -470,7 +469,7 @@
       "</div></div></div>";
     var tabs = [["teams", "الفرق"], ["questions", "الأسئلة"], ["modes", "الأوضاع"]];
     return '<section class="screen">' +
-      '<div class="page-head"><h2>إعداد اللعبة</h2><button class="btn ghost" data-act="home">الرئيسية</button></div>' +
+      '<div class="page-head"><h2>إعداد اللعبة</h2><button class="btn ghost" data-act="home">الصفحة الأولى</button></div>' +
       '<div class="tabs" role="tablist">' + tabs.map(function (t) { return '<button class="tab" role="tab" data-tab="' + t[0] + '" aria-selected="' + (setupTab === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div>" +
       '<div class="setup-body">' + colTeams + colQs + colModes + "</div>" +
       (err ? '<p class="error">' + esc(err) + "</p>" : "") +
@@ -479,7 +478,7 @@
   }
 
   function vHowto() {
-    return '<section class="screen"><div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" data-act="home">الرئيسية</button></div>' +
+    return '<section class="screen"><div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" data-act="home">الصفحة الأولى</button></div>' +
       '<div class="scroll"><div class="howto panel">' +
       "<p>في كل جولة تظهر بطاقة عن شخصية أو حدث أو مكان أو مفهوم إسلامي. يكشف مقدم اللعبة المعلومات واحدة تلو الأخرى من الأصعب إلى الأسهل، والهدف أن تعرف الإجابة بأقل عدد من المعلومات.</p>" +
       "<h3>النقاط</h3>" +
@@ -552,7 +551,7 @@
     return '<section class="screen game">' + topbarHTML(badges) +
       scoreboardHTML(game.settings.answerMode === "turn" && !r.done ? r.active : -1, r.done ? [] : r.locked, marks) +
       '<article class="qcard' + (p.type === "golden" ? " golden" : "") + (r.done && r.winner != null && freshDone ? " flash-good" : "") + '">' +
-      '<div class="qcard-head"><h3>' + (r.done ? "انكشفت الهوية!" : "مين أكون؟") + "</h3>" + timer + "</div>" + inner +
+      '<div class="qcard-head"><h3>' + (r.done ? "انكشفت الهوية!" : "من أنا؟") + "</h3>" + timer + "</div>" + inner +
       (r.done ? "" : '<div class="status ' + statusCls + '">' + esc(statusText) + "</div>") + "</article>" +
       '<div class="hostbar">' + bar + "</div></section>";
   }
@@ -609,7 +608,7 @@
       '<p class="muted">عدد الجولات: ' + game.plan.length + " — عُرفت الإجابة في " + correct + " منها. أحسنتم!</p>" +
       (game.trial ? '<p class="gold" style="font-size:1.2em">خلصت التجربة 👌 جاهزين للمباراة الحقيقية؟</p>' : "") +
       '<div class="home-actions"><button class="btn primary big" data-act="replay">' + (game.trial ? "ابدأ المباراة الحقيقية" : "العب مرة أخرى بأسئلة جديدة") + "</button>" +
-      '<button class="btn big" data-act="setup">تعديل الإعدادات</button><button class="btn big ghost" data-act="home-clear">الرئيسية</button></div>' +
+      '<button class="btn big" data-act="setup">تعديل الإعدادات</button><button class="btn big ghost" data-act="home-clear">الصفحة الأولى</button></div>' +
       "</section>";
   }
 
@@ -631,7 +630,7 @@
         '<div class="acts"><button class="btn small" data-edit="' + esc(q.id) + '">تعديل</button>' + del + "</div></div>";
     }).join("");
     return '<section class="screen">' +
-      '<div class="page-head"><h2>بنك الأسئلة</h2><div class="head-actions"><button class="btn primary" data-act="q-new">إضافة سؤال</button><button class="btn ghost" data-act="home">الرئيسية</button></div></div>' +
+      '<div class="page-head"><h2>بنك الأسئلة</h2><div class="head-actions"><button class="btn primary" data-act="q-new">إضافة سؤال</button><button class="btn ghost" data-act="home">الصفحة الأولى</button></div></div>' +
       '<div class="warn-note">هذه الشاشة تعرض الإجابات — افتحها بعيداً عن اللاعبين. عند إضافة سؤال اذكر مصدره (السورة ورقم الآية، أو مصدر الحديث ودرجته).</div>' +
       '<div class="bank-tools">' +
       '<select id="f-cat" data-filter="cat" aria-label="القسم"><option value="">كل الأقسام</option>' + CATS.map(function (c) { return '<option value="' + c.id + '"' + (bankFilter.cat === c.id ? " selected" : "") + ">" + c.name + "</option>"; }).join("") + "</select>" +

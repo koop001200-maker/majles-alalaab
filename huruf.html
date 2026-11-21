@@ -323,13 +323,13 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <button class="btn good big start" id="h-start" type="button">ابدأ اللعب ▶</button>
       <div class="row"><button class="btn big ghost" id="h-trial" type="button">تجربة سريعة</button><button class="btn big ghost" id="h-howto" type="button">طريقة اللعب</button></div>
       <button class="btn big" id="h-setup" type="button">الإعدادات</button>
-      <div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>
+      
     </div>
   </section>
 
   <!-- ========== طريقة اللعب ========== -->
   <section class="howto-v" id="view-howto" hidden aria-label="طريقة اللعب">
-    <div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" type="button" data-go="home">الرئيسية</button></div>
+    <div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" type="button" data-go="home">الصفحة الأولى</button></div>
     <div class="card howto">
       <ol>
         <li>اكتبوا أسماء المتسابقين من «المتسابقون والإعدادات»، واختاروا المستوى والمؤقت وعدد الجولات.</li>
@@ -371,7 +371,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <button class="btn" id="d-fs" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>ملء الشاشة</button>
       <button class="btn ghost" id="d-sound" type="button" hidden>تفعيل الصوت</button>
       <button class="btn ghost" id="d-control" type="button">الإعدادات</button>
-      <button class="btn ghost" type="button" data-go="home">الرئيسية</button>
+      <button class="btn ghost" type="button" data-go="home">الصفحة الأولى</button>
       <span class="hint">اختصارات: <span class="kbd">F</span> ملء الشاشة · <span class="kbd">N</span> التالية · <span class="kbd">مسافة</span> إيقاف</span>
     </footer>
     <canvas id="confetti" aria-hidden="true"></canvas>
@@ -386,7 +386,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <span class="status" id="c-status">لم تبدأ</span>
       <button class="btn good" id="c-here" type="button">ابدأ ▶</button>
       <button class="btn" id="c-open-display" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>شاشة عرض منفصلة</button>
-      <button class="btn ghost" type="button" data-go="home">الرئيسية</button>
+      <button class="btn ghost" type="button" data-go="home">الصفحة الأولى</button>
     </header>
 
     <div class="c-tabs" role="tablist" aria-label="أقسام لوحة المنظّم">
@@ -517,11 +517,12 @@ textarea{width:100%;min-height:90px;resize:vertical}
     medium: 'نجمة كتاب وردة تفاح حليب شجرة حصان دجاج نحلة نملة أرنب ثعلب غزال بقرة خروف زهرة قهوة رمان كرسي سرير مكتب شمعة ساعة هاتف سماء غيمة صخرة نخلة ورقة قارب قطار دمية لعبة هدية مسجد خيمة حمام طريق شارع كوكب مشمش حذاء خاتم سوار نهار شتاء ربيع خريف واحة شاطئ مطار طيار بحار صياد نجار حداد خياط معلم طبيب ممرض شرطي رسام كاتب شاعر فلاح جندي موقد مرآة شماغ عقال كبسة مندي جريش هريس تميس غراب هدهد بلبل ضفدع قنفذ كنغر شلال ملعب مسبح متحف ركبة إصبع لسان جبين رقبة ذراع حاجب غرفة مطبخ صالة جدار كنبة سكين شوكة فوطة مخدة لحاف بساط علبة سحاب ضباب تراب غابة قطرة شروق غروب ماعز نعجة حمار فقمة نورس بجعة دودة عقرب خفاش بندق فستق زبدة قشطة لبنة شعير فلفل كمون قرفة عصير كرنب قميص معطف حزام جورب نعال قبعة وشاح شنطة قرية مخبز مصنع فندق دكان مركب عربة دفتر إبرة صباح مساء أحمر أزرق أخضر أصفر أسود أبيض وردي خالة حفيد عروس خباز طباخ راعي سائق حارس بائع شباك موزة عنبة حديد نحاس لؤلؤ صورة فيلم سدرة بذرة ثمرة بومة',
     hard: 'مدرسة سيارة حديقة طائرة مكتبة فراشة برتقال صندوق زرافة مفتاح دراجة بطاطس سلحفاة عنكبوت مثلجات ملعقة نافذة سفينة مصباح ليمون حمامة مدينة بطيخة ثلاجة غسالة كاميرا فراولة أناناس بروكلي حاسوب تلسكوب أخطبوط مكرونة بسكويت كهرباء جوائز بطولات ملاعب لاعبون طباشير مسطرة ممحاة مبراة دفاتر حقائب مقلمة بوصلة منظار خريطة كيمياء فيزياء قراصنة جزيرة محيطات شلالات براكين أعاصير عواصف قفازات معاطف فساتين نظارات مراوح مصابيح ستائر سجادات وسادات مزرعة فلاحون جرارات محاصيل فواكه بقدونس قرنبيط ملفوف سبانخ زنجبيل زعفران بهارات بيتزا فطائر بقلاوة كنافة قطايف معمول حلويات عصائر بسبوسة مهلبية لقيمات مكسرات طابعات هواتف نجارون خبازون طباخون ممرضات مهندس معلمون رسامون صحراء ميناء منارة صيدلي بستان حظيرة إسطبل مدفأة مروحة مكنسة ستارة وسادة بطانية سجادة فانوس قنديل فنجان مبخرة مسبحة عباءة طاقية مرقوق سمبوسة كليجا عصفور طاووس نعامة حرباء سحلية جرادة يمامة سنجاب دلفين بطريق بركان زلزال إعصار مغارة نافورة جامعة خزانة طاولة إبريق صابون منشفة ببغاء ذبابة سروال نظارة حقيبة حافلة شاحنة صاروخ مجداف فرشاة مطرقة منشار مسمار مجرفة ظهيرة أسبوع دقيقة ثانية رمادي مزارع بحيرة تفاحة رمانة ألماس'
 ,
+    short: 'باب خشب|كوب شاي|قلب كبير|جمل كبير|قط ابيض|ورد احمر|سيف حاد|خيل عربي|تمر رطب|لبن بارد|خبز حار|شاي اخضر|بحر ازرق|جبل عالي|نهر طويل|ليل بارد|يوم حار|شتاء بارد|ريح قوية|مطر خفيف|ثلج ابيض|ظل شجر|ورق شجر|رز ابيض|لحم غنم|حليب بقر|دلو ماء|كوب ماء|درع حديد|سور عالي|برج عالي|عيد سعيد|يوم جديد|عام جديد|وقت قصير|فجر جديد|حظ سعيد|قلب طيب|وجه جميل|بنت ذكية|اب حنون|جد كريم|خال كريم|سمك طازج|تفاح احمر|موز اصفر|عنب اخضر|ثوب ابيض|حذاء جديد|قلم حبر|ورق ابيض|شمس حارة|قمر منير|نجم لامع|برد شديد|جو لطيف|ماء عذب|بحر عميق|رمل ناعم|وادي عميق|سيف خشب|كرة قدم|كرة سلة|عين ماء|ورد جميل|ليل طويل|صبح جميل',
     phrases: 'كأس العالم|كرة القدم|كرة السلة|كرة اليد|شهر رمضان|عيد الفطر|عيد الأضحى|يوم الجمعة|صلاة الفجر|قهوة عربية|دلة قهوة|فنجان قهوة|شاي حليب|ماء بارد|عصير برتقال|آيس كريم|خبز تميس|طبق كبسة|سيارة أجرة|سيارة إسعاف|دراجة نارية|طائرة ورقية|ساعة يد|ساعة رملية|نظارة شمسية|فرشاة أسنان|معجون أسنان|قلم رصاص|حقيبة مدرسية|جرس الباب|سلة مهملات|مكيف هواء|البحر الأحمر|الخليج العربي|جزيرة العرب|جبل طويق|وادي حنيفة|ضوء القمر|شروق الشمس|غروب الشمس|قوس قزح|غيمة بيضاء|مطر غزير|ألعاب نارية|حديقة عامة|مدينة ملاهي|حمام سباحة|هدية العيد|ثوب العيد|شماغ أحمر|بشت أسود|قطة صغيرة|نحلة عسل|نجم ساطع|فلم كرتون'
   };
   // single words are separated by spaces; two-word entries (like «كأس العالم») by |
-  const DEFAULT_WORDS = [WORD_BANK.easy, WORD_BANK.medium, WORD_BANK.hard].join(' ').split(' ').concat(WORD_BANK.phrases.split('|'));
-  const BANK_VERSION = 5;
+  const DEFAULT_WORDS = [WORD_BANK.easy, WORD_BANK.medium, WORD_BANK.hard].join(' ').split(' ').concat(WORD_BANK.phrases.split('|'), WORD_BANK.short.split('|'));
+  const BANK_VERSION = 6;
   const MAX_LETTERS = 6; // no long words: the longest word has 6 letters
 
   /* ---------- الحروف والخلط ---------- */

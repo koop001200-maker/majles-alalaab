@@ -54,13 +54,25 @@ async function invariants(p, page, scr) {
     const dark = c => { const m = c.match(/\d+(\.\d+)?/g); if (!m) return false; const [r, g, b, a = 1] = m.map(Number); return a > 0.5 && (r + g + b) / 3 < 45; };
     // 1. page itself never scrolls (TV-first, no scrolling) — except the documented tiny-landscape leftover
     if (de.scrollHeight > innerHeight + 2 && innerHeight > 420) out.push(`vertical scroll ${de.scrollHeight}>${innerHeight}`);
-    if (de.scrollWidth > innerWidth + 2) out.push(`horizontal scroll ${de.scrollWidth}>${innerWidth}`);
+    if (de.scrollWidth > innerWidth + 2) { const off = [...document.querySelectorAll('body *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > innerWidth + 2 && getComputedStyle(e).position !== 'fixed'; }).slice(0, 3).map(e => e.tagName.toLowerCase() + '.' + String(e.className).slice(0, 20)); out.push(`horizontal scroll ${de.scrollWidth}>${innerWidth} by ${off.join(' ')}`); }
     // 2. unfilled template tokens, "undefined", "NaN", "[object Object]" on screen
     const t = document.body.innerText || ''; const bad = t.match(/undefined|NaN|\[object Object\]/); if (bad) out.push('bad text on screen: ' + bad[0]);
     // 3. visible buttons that are black (touch/hover bug)
     document.querySelectorAll('button, .btn, a.game, .tile').forEach(b => { const r = b.getBoundingClientRect(); if (!r.width || !r.height) return; const cs = getComputedStyle(b); if (dark(cs.backgroundColor) && !/^(#?fs)$/.test(b.id) && !b.classList.contains('lock') && !b.closest('.mp-back, .splash')) out.push('black button: ' + (b.textContent || b.className).trim().slice(0, 24)); });
     // 4. tiny tap targets (<28px) among visible buttons
     const tinyList = []; document.querySelectorAll('button:not([disabled])').forEach(b => { const r = b.getBoundingClientRect(); if (r.width && r.height && (r.height < 22 || r.width < 22) && getComputedStyle(b).visibility !== 'hidden') tinyList.push((b.textContent || b.className || b.id).trim().slice(0, 14) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height)); }); if (tinyList.length) out.push('tiny buttons (<22px): ' + tinyList.slice(0, 4).join(' | '));
+    // 4b. text too small to read, text clipped by its box, buttons overlapping each other
+    let small = 0, smallList = [], clipped = [];
+    document.querySelectorAll('button, .btn, h1, h2, h3, p, label, span, b, small').forEach(e => {
+      const r = e.getBoundingClientRect(); if (!r.width || !r.height || !(e.textContent || '').trim() || e.children.length > 3) return;
+      const fs = parseFloat(getComputedStyle(e).fontSize) * (parseFloat(getComputedStyle(document.documentElement).zoom) || 1) * (parseFloat(getComputedStyle(document.body).zoom) || 1);
+      if (fs < 10 && getComputedStyle(e).visibility !== 'hidden') { small++; smallList.push((e.textContent || '').trim().slice(0, 14) + ' ' + fs.toFixed(1) + 'px'); }
+      const cs = getComputedStyle(e); if ((cs.overflow === 'hidden' || cs.overflowX === 'hidden') && cs.textOverflow !== 'ellipsis' && e.scrollWidth > e.clientWidth + 3 && e.clientWidth > 0 && /button|btn|chip|tab/.test(e.tagName + e.className)) clipped.push((e.textContent || '').trim().slice(0, 16));
+    });
+    if (small > 3) out.push(small + ' text elements under 10px: ' + smallList.slice(0, 3).join(' | '));
+    if (clipped.length) out.push('clipped text: ' + clipped.slice(0, 3).join(' | '));
+    const bs = [...document.querySelectorAll('button:not([disabled]), a.btn')].filter(b => { const r = b.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0) || getComputedStyle(b).visibility === 'hidden') return false; const t = document.elementFromPoint(Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2))); return !!t && (b === t || b.contains(t) || t.contains(b)); }).slice(0, 60);
+    for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) { if (bs[i].contains(bs[j]) || bs[j].contains(bs[i])) continue; const a = bs[i].getBoundingClientRect(), b = bs[j].getBoundingClientRect(); const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left), oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); if (ox > 6 && oy > 6 && getComputedStyle(bs[i]).position !== 'fixed' && getComputedStyle(bs[j]).position !== 'fixed') { out.push('buttons overlap: ' + (bs[i].textContent || '').trim().slice(0, 12) + ' × ' + (bs[j].textContent || '').trim().slice(0, 12)); i = bs.length; break; } }
     // 5. injected markup must never execute
     if (window.__pwn) out.push('XSS: injected script ran');
     // 6. elements hanging off-screen
@@ -82,6 +94,15 @@ async function invariants(p, page, scr) {
     p.on('dialog', d => d.dismiss().catch(() => {}));
     await p.goto('file://' + path.join(ROOT, file)).catch(e => note(name, scr, 'load', e.message));
     await p.waitForTimeout(250); await invariants(p, name, scr);
+    // guided walk: play the primary path like a real family would, checking every screen
+    for (let i = 0; i < (QUICK ? 10 : 24); i++) {
+      const sel = ['[data-act=answer]', '[data-act=next]', '[data-ui=next]', '[data-ui=to-scores]', '.tile:not([disabled])', '#d-next', '#h-start', '[data-act=quick]', '[data-ui=quick]', '.btn.go:not([disabled])', '.btn.primary:not([disabled])', '.start'];
+      let done = false;
+      for (const q of sel) { const e = await p.$(q).catch(() => null); if (e && await e.isVisible().catch(() => false)) { await e.click({ timeout: 700, noWaitAfter: true }).catch(() => {}); done = true; break; } }
+      await p.waitForTimeout(done ? 220 : 80);
+      if (i % 2 === 1) await invariants(p, name, scr + ' walk').catch(() => {});
+    }
+    await p.goto('file://' + path.join(ROOT, file)).catch(() => {}); await p.waitForTimeout(150);
     for (let i = 0; i < HOPS; i++) {
       await hop(p, name, scr, i, rec).catch(() => {}); hopsDone++;
       if (!p.url().includes(file) && !p.url().includes('index')) await p.goto('file://' + path.join(ROOT, file)).catch(() => {});

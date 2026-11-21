@@ -61,7 +61,7 @@ body .title { background: none !important; -webkit-background-clip: initial !imp
 body .subtitle { color: var(--m-ink) !important; font-weight: 700; }
 body .page-head h2 { color: var(--m-ink) !important; }
 
-/* ============ مين أكون؟ ============ */
+/* ============ من أنا؟ ============ */
 body.g-mak {
   --ink: #ffffff; --surface: #ffffff; --surface-2: #eef0ff; --surface-3: #e0e7ff; --line: #111827;
   --gold: #fbbf24; --gold-bright: #111827; --on-gold: #111827; --text: #111827; --muted: #4b5563;
@@ -276,7 +276,7 @@ body.g-mak, body.g-kh, body.g-rt { --muted: #1e1b4b; }
 body .reset-line { margin: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; font-size: clamp(12px, min(.9vw, 1.7vh), 18px); font-weight: 700; color: #1e1b4b; }
 body .btn.tiny { font-size: clamp(11px, min(.85vw, 1.6vh), 16px) !important; padding: .2em .8em !important; min-height: 28px; box-shadow: 2px 2px 0 var(--m-ink); }
 
-/* خمّن وش هو؟ — hint box; مين أكون؟ — +/- next to each team's score */
+/* خمّن وش هو؟ — hint box; من أنا؟ — +/- next to each team's score */
 .g-kh .hint-box { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; background: #fef3c7; border: 2px solid var(--m-ink); border-radius: 14px; padding: 6px 12px; font-size: clamp(14px, min(1.2vw, 2.2vh), 26px); }
 .g-kh .hint-words { display: inline-flex; flex-wrap: wrap; gap: .8em; direction: rtl; }
 .g-kh .hw { display: inline-flex; gap: .15em; }
@@ -328,3 +328,20 @@ html, body { overflow-x: hidden; }
 body button:not(.team-dot):not(.tile):not(.plan), body .btn { min-height: 30px; }
 .home-pill { font-size: clamp(14px, min(1.4vw, 2.6vh), 30px) !important; padding: .35em 1.1em !important; min-height: 36px; border-width: 3px !important; box-shadow: 3px 3px 0 #111827 !important; }
 body .home-stack .row.small .btn, body .home-stack .row.small .sets-pill { font-size: clamp(15px, min(1.2vw, 2.2vh), 26px) !important; padding: .35em 1em !important; }
+
+/* v23: رتّبها صح setup — tidy columns, centred footer, proper buttons */
+@media (min-width: 901px) {
+  .g-rt .setup-body { align-items: start; align-content: center; }
+  .g-rt .setup-col { align-self: start; max-height: 100%; }
+}
+.g-rt .field .btn.small { justify-self: center; width: auto; padding: .3em 1.2em; font-size: .9em; box-shadow: 2px 2px 0 var(--m-ink); }
+.g-rt .stepper { gap: 16px; }
+.g-rt .stepper .btn { width: 56px; min-height: 48px; font-size: 1.4em; }
+.g-rt .setup-foot { width: 100%; flex-direction: column; gap: clamp(6px, 1.4vh, 16px); }
+.g-rt .setup-foot .summary { order: 2; text-align: center; font-weight: 700; }
+.g-rt .setup-foot .btn.huge { order: 1; font-size: clamp(24px, min(2.6vw, 4.8vh), 56px); padding: .3em 2.2em; }
+.g-rt .page-head { align-items: center; }
+
+/* never below 10px */
+.clue .num small { font-size: max(.55em, 10px) !important; }
+@media (max-width: 520px) { .g-mak .clue .num small { display: none; } }
