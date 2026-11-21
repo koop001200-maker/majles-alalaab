@@ -318,3 +318,7 @@ html, body, body * { -webkit-tap-highlight-color: transparent; }
   body .btn:hover:not(:disabled) { transform: none; box-shadow: var(--m-shadow-sm); }
   body .btn:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--m-ink); }
 }
+
+/* selected filter tabs in تحدي الحروف: yellow, never black */
+.g-hf .tabs button[aria-pressed="true"] { background: var(--m-yellow); color: #111827; border-color: #111827; }
+.g-hf .icon-btn, .g-hf .icon-btn.del { min-width: 28px; min-height: 28px; }

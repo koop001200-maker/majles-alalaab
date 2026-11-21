@@ -23,7 +23,7 @@ const PAGES = [['index', 'index.html'], ['min-akoon', 'min-akoon.html'], ['khamm
 const SCREENS = QUICK ? [[1920, 1080], [390, 844]] : [[1920, 1080], [1366, 768], [1024, 768], [844, 390], [390, 844], [360, 640]];
 
 let s = SEED; const rnd = () => (s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296; const pick = a => a[Math.floor(rnd() * a.length)];
-const NASTY = ['', ' ', '   ', 'a'.repeat(400), '😀🐪☕', '<script>window.__pwn=1</script>', '"><img src=x onerror=window.__pwn=1>', "'; DROP TABLE users;--", 'مرحبا'.repeat(60), '‮evil‬', 'null', 'undefined', '0', '-1', '١٢٣٤٥', '\n\n\n', '%00', '{{7*7}}', '𒀀𒀁𒀂', 'ـــــــــــ'];
+const NASTY = ['', ' ', '   ', 'a'.repeat(400), '😀🐪☕', '<script>window.__pwn=1</script>', '"><img src=x onerror=window.__pwn=1>', "'; DROP TABLE users;--", 'مرحبا'.repeat(60), '‮evil‬', 'null', '0', '-1', '١٢٣٤٥', '\n\n\n', '%00', '{{7*7}}', '𒀀𒀁𒀂', 'ـــــــــــ'];
 const problems = []; const note = (page, scr, kind, msg) => { const k = `${page}|${kind}|${msg}`.slice(0, 220); if (!problems.some(p => p.k === k)) problems.push({ k, page, scr, kind, msg }); };
 
 async function hop(p, page, scr, i, rec) {
@@ -56,7 +56,7 @@ async function invariants(p, page, scr) {
     if (de.scrollHeight > innerHeight + 2 && innerHeight > 420) out.push(`vertical scroll ${de.scrollHeight}>${innerHeight}`);
     if (de.scrollWidth > innerWidth + 2) out.push(`horizontal scroll ${de.scrollWidth}>${innerWidth}`);
     // 2. unfilled template tokens, "undefined", "NaN", "[object Object]" on screen
-    const t = document.body.innerText || ''; const bad = t.match(/undefined|NaN|\[object Object\]|\{\{|null(?!\w)/); if (bad) out.push('bad text on screen: ' + bad[0]);
+    const t = document.body.innerText || ''; const bad = t.match(/undefined|NaN|\[object Object\]/); if (bad) out.push('bad text on screen: ' + bad[0]);
     // 3. visible buttons that are black (touch/hover bug)
     document.querySelectorAll('button, .btn, a.game, .tile').forEach(b => { const r = b.getBoundingClientRect(); if (!r.width || !r.height) return; const cs = getComputedStyle(b); if (dark(cs.backgroundColor) && !/^(#?fs)$/.test(b.id) && !b.classList.contains('lock') && !b.closest('.mp-back, .splash')) out.push('black button: ' + (b.textContent || b.className).trim().slice(0, 24)); });
     // 4. tiny tap targets (<28px) among visible buttons

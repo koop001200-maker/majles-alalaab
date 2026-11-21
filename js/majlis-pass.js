@@ -39,7 +39,7 @@
       return w.replace(/[^A-Z]/g, "").split("").map(function (c) { return AR_LETTERS[c] || ""; }).join("");
     }).filter(Boolean).join(" ");
   }
-  function subscribe(planId, name) { var p = PLANS[planId] || PLANS.month; set(SUB_KEY, { plan: p.id, at: Date.now(), until: Date.now() + p.ms, name: name ? arabicName(name) : "" }); changed(); placeBadge(); }
+  function subscribe(planId, name) { var p = PLANS[planId] || PLANS.month; set(SUB_KEY, { plan: p.id, at: Date.now(), until: Date.now() + p.ms, name: name ? arabicName(String(name).trim().split(/\s+/)[0]) : "" }); changed(); placeBadge(); }
   function unsubscribe() { try { localStorage.removeItem(SUB_KEY); } catch (e) {} changed(); placeBadge(); }
   function freeUsed(game) { var f = get(FREE_KEY, {}); return (f && +f[game]) || 0; }
   function freeRounds(game) { return FREE_SETS * (SIZE[game] || 8); }
@@ -83,19 +83,16 @@
     if (placing || !curGame || document.body.hasAttribute("data-hub")) return;
     placing = true;
     try {
-      var host = null, sels = [".top-actions", ".bar-l", ".d-top", ".c-top"];
-      for (var k = 0; k < sels.length && !host; k++) { var h = document.querySelector(sels[k]); if (h && h.getClientRects().length > 0) host = h; }
+      // the sets counter lives only on the game's first screen, next to the «المجموعات» button
+      var host = null, hs = document.querySelectorAll(".home-stack .row.small, .reset-line");
+      for (var k = 0; k < hs.length && !host; k++) if (hs[k].getClientRects().length > 0) host = hs[k];
       var pill = document.querySelector(".sets-pill");
-      var wantInline = !!host;
-      var hide = false; if (!host) [].forEach.call(document.querySelectorAll(".page-head, .howto-v"), function (e) { if (e.getClientRects().length) hide = true; }); // setup / bank / how-to screens have their own buttons at the top-left
-      if (pill && hide) { pill.remove(); placing = false; return; }
-      if (hide) { placing = false; return; }
-      if (!pill) { pill = document.createElement("span"); pill.className = "sets-pill"; pill.setAttribute("role", "status"); pill.addEventListener("click", function () { if (!isSub()) openPaywall(curGame, true); }); }
+      if (!host) { if (pill) pill.remove(); placing = false; return; }
+      if (!pill) { pill = document.createElement("span"); pill.className = "sets-pill"; pill.setAttribute("role", "status"); pill.addEventListener("click", function () { openSets(); }); }
       var txt = badgeText(); if (pill.textContent !== txt) pill.textContent = txt;
       var ttl = badgeTitle(); if (pill.title !== ttl) pill.title = ttl;
-      pill.classList.toggle("fixed", !wantInline);
-      var parent = wantInline ? host : document.body;
-      if (pill.parentNode !== parent || (wantInline && host.lastElementChild !== pill)) parent.appendChild(pill);
+      pill.classList.remove("fixed");
+      if (pill.parentNode !== host || host.firstElementChild !== pill) host.insertBefore(pill, host.firstChild);
     } catch (e) {}
     placing = false;
   }
@@ -107,7 +104,7 @@
       var host = null, sels = [".topbar .round-info", ".topbar .info", ".bar-r", ".d-top", ".c-top", ".page-head"], first = true;
       for (var k = 0; k < sels.length && !host; k++) { var h = document.querySelector(sels[k]); if (h && h.getClientRects().length > 0) { host = h; first = sels[k] !== ".page-head"; } }
       var pill = document.querySelector(".home-pill");
-      if (!pill) { pill = document.createElement("a"); pill.className = "home-pill"; pill.href = "index.html"; pill.textContent = "🏠 الرئيسية"; pill.title = "الرجوع إلى قائمة الألعاب"; }
+      if (!pill) { pill = document.createElement("a"); pill.className = "home-pill"; pill.href = "index.html"; pill.textContent = "↩ رجوع"; pill.title = "الرجوع إلى مجلس الألعاب"; }
       pill.classList.toggle("fixed", !host);
       var parent = host || document.body;
       if (pill.parentNode !== parent || (host && (first ? parent.firstElementChild !== pill : parent.lastElementChild !== pill))) { if (first && host) parent.insertBefore(pill, parent.firstChild); else parent.appendChild(pill); }
@@ -206,7 +203,7 @@
   var FIRST = ["AHMED", "MOHAMMED", "KHALID", "FAHAD", "ABDULLAH", "SULTAN", "SALMAN", "TURKI", "NASSER", "FAISAL", "OMAR", "YOUSEF"], LAST = ["ABDULLAH", "MOHAMMED", "SAEED", "ABDULRAHMAN", "IBRAHIM", "SALEH", "FAHAD", "ALI"];
   function randCard() {
     var yy = (new Date().getFullYear() % 100) + 1 + Math.floor(Math.random() * 4), mm = 1 + Math.floor(Math.random() * 12);
-    return { num: randVisa(), name: (function () { var a = FIRST[Math.floor(Math.random() * FIRST.length)], b; do { b = LAST[Math.floor(Math.random() * LAST.length)]; } while (b === a); return a + " " + b; })(), exp: (mm < 10 ? "0" : "") + mm + "/" + yy, cvv: String(100 + Math.floor(Math.random() * 900)) };
+    return { num: randVisa(), name: FIRST[Math.floor(Math.random() * FIRST.length)], exp: (mm < 10 ? "0" : "") + mm + "/" + yy, cvv: String(100 + Math.floor(Math.random() * 900)) };
   }
 
   /* ---------------- paywall ---------------- */
@@ -327,7 +324,7 @@
       var er = validate(); if (er) { overlay.querySelector("#mp-err").textContent = er; return; }
       var holder = overlay.querySelector("#f-name").value.trim();
       state.step = "busy"; draw();
-      setTimeout(function () { if (!overlay) return; subscribe(state.plan, holder); state.arName = arabicName(holder); state.step = "done"; draw(); }, 1700);
+      setTimeout(function () { if (!overlay) return; subscribe(state.plan, holder); state.arName = arabicName(String(holder).trim().split(/\s+/)[0]); state.step = "done"; draw(); }, 1700);
     } else if (a === "finish") closePaywall();
   }
 
