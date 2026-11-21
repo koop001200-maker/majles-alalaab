@@ -322,3 +322,9 @@ html, body, body * { -webkit-tap-highlight-color: transparent; }
 /* selected filter tabs in تحدي الحروف: yellow, never black */
 .g-hf .tabs button[aria-pressed="true"] { background: var(--m-yellow); color: #111827; border-color: #111827; }
 .g-hf .icon-btn, .g-hf .icon-btn.del { min-width: 28px; min-height: 28px; }
+
+/* v22: comfortable button sizes + back button */
+html, body { overflow-x: hidden; }
+body button:not(.team-dot):not(.tile):not(.plan), body .btn { min-height: 30px; }
+.home-pill { font-size: clamp(14px, min(1.4vw, 2.6vh), 30px) !important; padding: .35em 1.1em !important; min-height: 36px; border-width: 3px !important; box-shadow: 3px 3px 0 #111827 !important; }
+body .home-stack .row.small .btn, body .home-stack .row.small .sets-pill { font-size: clamp(15px, min(1.2vw, 2.2vh), 26px) !important; padding: .35em 1em !important; }

@@ -291,3 +291,7 @@ html, body, body * { -webkit-tap-highlight-color: transparent; }
   body:not(.phone) .modes { gap: 6px; }
   body:not(.phone) .mode { padding: 6px; }
 }
+
+/* v22: category/option chips big enough to tap */
+.chk, .cat, .chip, .catbtn, .opts button, .cats button, .cats label { min-height: 34px; }
+@media (max-width: 520px) { .cats button, .cats label, .opts button { padding-block: .45em; font-size: 14px; } }
