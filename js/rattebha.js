@@ -158,6 +158,7 @@
   function pickQuestion(special, levelOverride) {
     var s = game.settings, hist = Store.get(K.used, []); if (!Array.isArray(hist)) hist = [];
     var level = levelOverride || (special === "decider" ? Math.min(3, s.level + 1) : s.level);
+    var src = window.MAJLIS_PASS ? MAJLIS_PASS.scoped("rt", BANK, hist) : BANK;
     var free = function (x) { return game.used.indexOf(x.id) < 0; };
     var size = function (x) { return special === "challenge" ? x.items.length >= 6 : true; };
     var tries = [
@@ -170,7 +171,7 @@
     // never repeat a question that was ever played, until the whole bank has been used; then start a new cycle
     var choose = function (onlyFresh) {
       for (var i = 0; i < tries.length; i++) {
-        var pool = BANK.filter(tries[i]);
+        var pool = src.filter(tries[i]);
         if (onlyFresh) pool = pool.filter(function (x) { return hist.indexOf(x.id) < 0; });
         if (pool.length) return pick(pool);
       }
@@ -488,7 +489,7 @@
       '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="quick">ابدأ اللعب ▶</button>' +
       '<div class="row"><button class="btn big ghost" data-ui="trial">تجربة سريعة</button><button class="btn big ghost" data-ui="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-ui="setup">الإعدادات</button>' +
-      '<div class="row small"><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn ghost tiny" data-ui="reset-used" title="تصفير سجل الأسئلة التي طلعت">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية" : "↺ تصفير") + "</button></div>" +
+      '<div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>' +
       "</div></section>";
   }
 
@@ -548,7 +549,7 @@
     try {
       var u = Store.get(K.used, []); if (!Array.isArray(u)) u = [];
       var played = BANK.filter(function (x) { return u.indexOf(x.id) >= 0; }).length;
-      window.MAJLIS_PASS && MAJLIS_PASS.sets("rt", BANK.length, BANK.length - played);
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("rt", BANK.length, BANK.length - played, { ids: BANK.map(function (q) { return q.id; }), used: u, reset: function () { Store.set(K.used, []); } });
     } catch (e) {}
   }
   function render() {

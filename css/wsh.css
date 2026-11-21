@@ -279,3 +279,15 @@ body.phone .pbody > .msg.big:only-child { margin: auto 0; }
 .fmt { margin: 0; text-align: center; font-weight: 800; font-size: clamp(16px, min(1.6vw, 3vh), 36px); }
 .fmt b { background: var(--yellow); border: 3px solid var(--ink); border-radius: 999px; padding: 0 .8em; margin-inline-start: .3em; }
 .pfmt { margin: 0; font-weight: 800; font-size: 17px; background: #fef3c7; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; }
+
+html, body, body * { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) { .btn:hover:not(:disabled) { transform: none; box-shadow: 4px 4px 0 var(--ink); } }
+
+/* small portrait screens (host opened on a phone): keep the lobby on one screen */
+@media (max-width: 520px) and (max-height: 760px) {
+  body:not(.phone) .qr { width: clamp(96px, 26vh, 160px); }
+  body:not(.phone) .join h1, body:not(.phone) .join .title { display: none; }
+  body:not(.phone) .plist, body:not(.phone) .lfoot .summary, body:not(.phone) .reset-line { display: none; }
+  body:not(.phone) .modes { gap: 6px; }
+  body:not(.phone) .mode { padding: 6px; }
+}

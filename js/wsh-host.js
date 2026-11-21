@@ -128,7 +128,9 @@
   function pickQuestion() {
     var cats = S.settings.mode === "family" ? window.WSH_FAMILY_CATS : S.settings.cats;
     var lv = +S.settings.level;
-    var pool = BANK.filter(function (q) { return cats.indexOf(q.cat) >= 0 && (!lv || q.lvl === lv) && S.used.indexOf(q.id) < 0; });
+    var src = window.MAJLIS_PASS ? MAJLIS_PASS.scoped("wsh", BANK, S.used) : BANK;
+    var pool = src.filter(function (q) { return cats.indexOf(q.cat) >= 0 && (!lv || q.lvl === lv) && S.used.indexOf(q.id) < 0; });
+    if (!pool.length) pool = BANK.filter(function (q) { return cats.indexOf(q.cat) >= 0 && (!lv || q.lvl === lv) && S.used.indexOf(q.id) < 0; });
     if (!pool.length) pool = BANK.filter(function (q) { return cats.indexOf(q.cat) >= 0 && S.used.indexOf(q.id) < 0; });
     if (!pool.length) pool = BANK.filter(function (q) { return S.used.indexOf(q.id) < 0; });
     if (!pool.length) { S.used = []; pool = BANK.slice(); }
@@ -411,8 +413,8 @@
         '<div class="modes">' + Object.keys(MODES).map(function (k) { return '<button class="mode' + (st.mode === k ? " on" : "") + '" data-a="mode" data-v="' + k + '"><span>' + MODES[k].icon + "</span><b>" + MODES[k].name + "</b><small>" + MODES[k].hint + "</small></button>"; }).join("") + "</div>" +
         '<div class="plist"><h2>اللاعبون <span>' + n + "</span></h2><div class=\"pgrid\">" + playersHtml + "</div>" + tip + "</div>" +
         '<div class="lfoot"><span class="summary">' + esc(MODES[st.mode].name) + " · " + (st.mode === "quick" ? Math.min(st.rounds, 6) : st.rounds) + " جولات · " + (st.level ? LEVELS[st.level - 1].name : "صعوبة منوّعة") + " · " + cats + " · كتابة " + (st.mode === "quick" ? Math.min(st.writeSec, 40) : st.writeSec) + "ث · تصويت " + (st.mode === "quick" ? Math.min(st.voteSec, 20) : st.voteSec) + "ث" + (st.mode === "teams" ? " · " + st.teamsN + " فرق" : "") + "</span>" +
-        '<p class="reset-line"><button class="btn sm ghost" data-a="reset-used">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><span>طلع ' + BANK.filter(function (q) { return S.used.indexOf(q.id) >= 0; }).length + " من " + BANK.length + " سؤال، وما يتكرر سؤال حتى تخلص</span></p>" +
-        '<div class="row"><button class="btn" data-a="settings">⚙️ الإعدادات</button><button class="btn" data-a="howto">❓ طريقة اللعب</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn go big" data-a="start"' + (n < 2 ? " disabled" : "") + ">ابدأ اللعب ▶</button></div></div>" +
+        '<p class="reset-line"><button class="btn sm ghost" data-open-sets type="button">🎮 المجموعات</button></p>' +
+        '<div class="row"><button class="btn" data-a="settings">⚙️ الإعدادات</button><button class="btn" data-a="howto">❓ طريقة اللعب</button><button class="btn go big" data-a="start"' + (n < 2 ? " disabled" : "") + ">ابدأ اللعب ▶</button></div></div>" +
       "</div></section>";
   }
   function vIntro() {
@@ -510,7 +512,7 @@
       '<div class="podium">' + order.join("") + "</div>" +
       '<div class="awards">' + (liar && liar.fooled ? '<div class="award"><span>😈</span><div><small>ملك الخداع</small><b>' + AV(liar.av) + " " + esc(liar.name) + "</b><em>عدد المخدوعين: " + liar.fooled + "</em></div></div>" : "") +
       (sharp && sharp.truths ? '<div class="award"><span>🧠</span><div><small>صاحب أكثر إجابات صحيحة</small><b>' + AV(sharp.av) + " " + esc(sharp.name) + "</b><em>" + sharp.truths + " مرات</em></div></div>" : "") + "</div>" +
-      '<div class="row"><button class="btn go big" data-a="again">🔁 لعبة جديدة بنفس اللاعبين</button><button class="btn" data-a="lobby">⚙️ الإعدادات واللاعبين</button><a class="btn ghost" href="index.html">🏠 كل الألعاب</a></div></section>';
+      '<div class="row"><button class="btn go big" data-a="again">🔁 لعبة جديدة بنفس اللاعبين</button><button class="btn" data-a="lobby">⚙️ الإعدادات واللاعبين</button></div></section>';
   }
 
   var modal = null, resetArm = 0;
@@ -555,7 +557,7 @@
   function passSync() {
     try {
       var played = BANK.filter(function (q) { return S.used.indexOf(q.id) >= 0; }).length;
-      window.MAJLIS_PASS && MAJLIS_PASS.sets("wsh", BANK.length, BANK.length - played);
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("wsh", BANK.length, BANK.length - played, { ids: BANK.map(function (q) { return q.id; }), used: S.used, reset: function () { S.used = []; save(); } });
     } catch (e) {}
   }
   function render() {

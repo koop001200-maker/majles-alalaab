@@ -106,8 +106,22 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .sp-float { position: absolute; font-size: clamp(30px, 6vw, 90px); opacity: .9; filter: drop-shadow(3px 3px 0 rgba(17,24,39,.5)); animation: spfloat 5s ease-in-out infinite; }
 @keyframes spbeat { 50% { transform: scale(1.06); } }
 @keyframes spfloat { 50% { transform: translateY(-18px) rotate(6deg); } }
+html, body, body * { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) { .game:hover { transform: none; box-shadow: clamp(5px, .5vw, 10px) clamp(5px, .5vw, 10px) 0 var(--ink); } }
 @media (prefers-reduced-motion: reduce) { .sp-go, .sp-float { animation: none; } .splash { transition: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* v20: smaller cards, "coming soon" row, bigger start */
+main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
+.games { flex: 0 0 auto; height: clamp(200px, 38vh, 480px); }
+.soonrow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 30px); width: min(44%, 760px); height: clamp(54px, 9vh, 110px); margin-inline: auto; }
+.soon { display: flex; align-items: center; justify-content: center; gap: .5em; border: clamp(3px, .25vw, 5px) dashed rgba(255,255,255,.75); border-radius: clamp(14px, 1.4vw, 24px); background: rgba(255,255,255,.14); color: #fff; font: 400 clamp(18px, min(1.9vw, 3.6vh), 42px)/1 var(--display); user-select: none; }
+.soon small { font: 800 .55em/1 var(--body); background: var(--yellow); color: var(--ink); border-radius: 999px; padding: .25em .7em; }
+@media (max-width: 1200px), (max-height: 520px) { .games { flex: 1; height: auto; } .soonrow { width: min(90%, 760px); height: clamp(36px, 7vh, 60px); } }
+@media (max-height: 520px) { .soonrow { display: none; } }
+.sp-box { gap: clamp(22px, 5.5vh, 70px); }
+.sp-go { font-size: clamp(46px, min(6.4vw, 11.5vh), 140px); padding: .22em 1.7em .05em; box-shadow: clamp(6px, .7vw, 14px) clamp(6px, .7vw, 14px) 0 var(--ink); margin-block: clamp(6px, 2vh, 28px); }
+.subbtn { min-height: 34px; }
+.sp-note { margin-top: clamp(4px, 1.2vh, 16px); }
 </style>
 </head>
 <body data-hub>
@@ -156,6 +170,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
       <p>اكتب كذبة مقنعة واكشف الحقيقة</p>
     </a>
   </nav>
+  <div class="soonrow" aria-label="ألعاب قريباً"><div class="soon">🔜 لعبة جديدة <small>قريباً</small></div><div class="soon">🔜 لعبة جديدة <small>قريباً</small></div></div>
   <div class="subrow"><button class="subbtn" id="sub" type="button"></button></div>
 </main>
 <div id="play" hidden></div>

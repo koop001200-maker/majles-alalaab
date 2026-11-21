@@ -223,6 +223,7 @@
       if (avail.length) { var r = pick(avail); cats = [r.cat]; level = s.level ? s.level : r.lvl; }
     }
     var hist = Store.get(K.used, []); if (!Array.isArray(hist)) hist = [];
+    var src = window.MAJLIS_PASS ? MAJLIS_PASS.scoped("kh", bank, hist) : bank;
     var tries = [
       function (it) { return cats.indexOf(it.cat) >= 0 && (!level || it.lvl === level) && free(it); },
       function (it) { return cats.indexOf(it.cat) >= 0 && free(it); },
@@ -232,7 +233,7 @@
     // never repeat something that was ever played, until the whole bank has been used; then start a new cycle
     var choose = function (onlyFresh) {
       for (var i = 0; i < tries.length; i++) {
-        var pool = bank.filter(tries[i]);
+        var pool = src.filter(tries[i]);
         if (onlyFresh) pool = pool.filter(function (it) { return hist.indexOf(it.id) < 0; });
         if (pool.length) return pick(pool);
       }
@@ -579,7 +580,7 @@
       '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="quick">ابدأ اللعب 🎮</button>' +
       '<div class="row"><button class="btn big ghost" data-ui="trial">تجربة سريعة</button><button class="btn big ghost" data-ui="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-ui="setup">الإعدادات</button>' +
-      '<div class="row small"><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn ghost tiny" data-ui="reset-used" title="تصفير سجل الأشياء التي طلعت">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية" : "↺ تصفير") + "</button></div>" +
+      '<div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>' +
       "</div></section>";
   }
 
@@ -699,7 +700,7 @@
     try {
       var u = Store.get(K.used, []); if (!Array.isArray(u)) u = [];
       var played = bank.filter(function (it) { return u.indexOf(it.id) >= 0; }).length;
-      window.MAJLIS_PASS && MAJLIS_PASS.sets("kh", bank.length, bank.length - played);
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("kh", bank.length, bank.length - played, { ids: bank.map(function (q) { return q.id; }), used: u, reset: function () { Store.set(K.used, []); } });
     } catch (e) {}
   }
   function render() {

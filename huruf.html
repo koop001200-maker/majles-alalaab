@@ -323,7 +323,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <button class="btn good big start" id="h-start" type="button">ابدأ اللعب ▶</button>
       <div class="row"><button class="btn big ghost" id="h-trial" type="button">تجربة سريعة</button><button class="btn big ghost" id="h-howto" type="button">طريقة اللعب</button></div>
       <button class="btn big" id="h-setup" type="button">الإعدادات</button>
-      <div class="row small"><a class="btn ghost" href="index.html" style="text-decoration:none">🏠 كل الألعاب</a><button class="btn ghost tiny" id="h-reset" type="button">↺ تصفير</button></div>
+      <div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>
     </div>
   </section>
 
@@ -600,7 +600,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
   const inRound = (st) => ['playing', 'paused', 'won', 'timeout', 'revealed'].includes(st);
   function pool(s) {
     s = s || S;
-    const lv = s.settings.level, inLevel = s.words.filter((w) => (lv === 'all' || w.level === lv) && !s.game.used.includes(w.id));
+    const lv = s.settings.level, base = window.MAJLIS_PASS ? MAJLIS_PASS.scoped('hf', s.words, s.seen) : s.words, inLevel = base.filter((w) => (lv === 'all' || w.level === lv) && !s.game.used.includes(w.id));
     const fresh = inLevel.filter((w) => !s.seen.includes(w.id));
     if (fresh.length || !inLevel.length) return fresh;
     // every word here has appeared before: start a new cycle (still no repeats inside this contest)
@@ -894,10 +894,9 @@ textarea{width:100%;min-height:90px;resize:vertical}
     const g = G(), R = +S.settings.rounds || 0, T = +S.settings.timer || 0, n = S.players.length;
     $('#h-resume').hidden = !inRound(g.status);
     $('#h-start').textContent = inRound(g.status) ? 'مسابقة جديدة ▶' : 'ابدأ ▶';
-    $('#h-reset').textContent = Date.now() - resetArm < 4000 ? 'اضغط مرة ثانية' : '↺ تصفير';
   }
   function passSync() {
-    try { const seenN = S.words.filter((w) => S.seen.includes(w.id)).length; window.MAJLIS_PASS && MAJLIS_PASS.sets('hf', S.words.length, S.words.length - seenN); } catch (e) {}
+    try { const seenN = S.words.filter((w) => S.seen.includes(w.id)).length; window.MAJLIS_PASS && MAJLIS_PASS.sets('hf', S.words.length, S.words.length - seenN, { ids: S.words.map((w) => w.id), used: S.seen, reset: () => commit((x) => { x.seen = []; }) }); } catch (e) {}
   }
   function render() {
     passSync();
@@ -952,11 +951,6 @@ textarea{width:100%;min-height:90px;resize:vertical}
   $('#h-resume').onclick = showGame;
   $('#h-setup').onclick = () => { location.hash = 'control'; selectTab(S.players.length ? 'round' : 'people'); };
   $('#h-howto').onclick = () => { location.hash = 'howto'; };
-  let resetArm = 0;
-  $('#h-reset').onclick = () => {
-    if (Date.now() - resetArm < 4000) { resetArm = 0; commit((s) => { s.seen = []; }); toast('تم التصفير — كل الكلمات صارت جديدة'); }
-    else { resetArm = Date.now(); render(); setTimeout(() => { if (view === 'home') render(); }, 4100); }
-  };
   $('#h-trial').onclick = () => A.start(showGame, true);
   function selectTab(name) {
     document.querySelectorAll('[data-ctab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.ctab === name)));

@@ -111,7 +111,8 @@
   /* ---------- question picking ---------- */
   function pickQuestion(cats, lvl, exclude) {
     var used = Store.get(K.used, []); if (!Array.isArray(used)) used = [];
-    function pool(filterFn) { return bank.filter(function (q) { return exclude.indexOf(q.id) < 0 && filterFn(q); }); }
+    var src = window.MAJLIS_PASS ? MAJLIS_PASS.scoped("mak", bank, used) : bank;
+    function pool(filterFn) { return src.filter(function (q) { return exclude.indexOf(q.id) < 0 && filterFn(q); }); }
     var tries = [
       function (q) { return cats.indexOf(q.cat) >= 0 && +q.lvl === +lvl; },
       function (q) { return cats.indexOf(q.cat) >= 0 && Math.abs(+q.lvl - +lvl) === 1; },
@@ -415,7 +416,7 @@
       '<button class="btn ' + (resumable ? "" : "primary ") + 'big start" data-act="quick">ابدأ اللعب</button>' +
       '<div class="row"><button class="btn big ghost" data-act="trial">تجربة سريعة</button><button class="btn big ghost" data-act="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-act="setup">الإعدادات</button>' +
-      '<div class="row small"><a class="btn ghost" href="index.html">🏠 كل الألعاب</a><button class="btn ghost tiny" data-act="reset-used" title="تصفير سجل البطاقات التي طلعت">' + (Date.now() - resetArm < 4000 ? "اضغط مرة ثانية" : "↺ تصفير") + "</button></div>" +
+      '<div class="row small"><button class="btn ghost tiny" data-open-sets type="button">🎮 المجموعات</button></div>' +
       "</div></section>";
   }
 
@@ -688,7 +689,7 @@
     try {
       var u = Store.get(K.used, []); if (!Array.isArray(u)) u = [];
       var played = bank.filter(function (q) { return u.indexOf(q.id) >= 0; }).length;
-      window.MAJLIS_PASS && MAJLIS_PASS.sets("mak", bank.length, bank.length - played);
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("mak", bank.length, bank.length - played, { ids: bank.map(function (q) { return q.id; }), used: u, reset: function () { Store.set(K.used, []); } });
     } catch (e) {}
   }
   function render() {

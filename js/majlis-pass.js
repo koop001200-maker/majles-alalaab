@@ -9,7 +9,8 @@
  */
 (function () {
   "use strict";
-  var SUB_KEY = "majlis_sub_v1", FREE_KEY = "majlis_free_v1", SETS_KEY = "majlis_sets_v1";
+  var SUB_KEY = "majlis_sub_v1", FREE_KEY = "majlis_free_v1", SETS_KEY = "majlis_sets_v1", PICK_KEY = "majlis_pick_v1";
+  var FILES = { mak: "min-akoon.html", kh: "khammen.html", hf: "huruf.html", rt: "rattebha.html", wsh: "wsh.html" };
   var FREE_SETS = 3; // sets that open before subscribing; after subscribing every set in the bank is open
   var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8 };
   var NAMES = { mak: "مين أكون؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟" };
@@ -28,7 +29,17 @@
   /* ---------------- subscription state ---------------- */
   function sub() { var s = get(SUB_KEY, null); return s && s.until > Date.now() ? s : null; }
   function isSub() { return !!sub(); }
-  function subscribe(planId) { var p = PLANS[planId] || PLANS.month; set(SUB_KEY, { plan: p.id, at: Date.now(), until: Date.now() + p.ms }); changed(); placeBadge(); }
+  var AR_NAMES = { AHMED: "أحمد", MOHAMMED: "محمد", MOHAMMAD: "محمد", MUHAMMAD: "محمد", MOHAMED: "محمد", KHALID: "خالد", FAHAD: "فهد", ABDULLAH: "عبدالله", SULTAN: "سلطان", SALMAN: "سلمان", TURKI: "تركي", NASSER: "ناصر", NASER: "ناصر", FAISAL: "فيصل", OMAR: "عمر", YOUSEF: "يوسف", YOUSSEF: "يوسف", SAEED: "سعيد", ABDULRAHMAN: "عبدالرحمن", IBRAHIM: "إبراهيم", SALEH: "صالح", ALI: "علي", MAJED: "ماجد", BADER: "بدر", RASHID: "راشد", HAMAD: "حمد", SAAD: "سعد", NAIF: "نايف", MISHAL: "مشعل", FARIS: "فارس", ABDULAZIZ: "عبدالعزيز", HASSAN: "حسن", HUSSEIN: "حسين", MANSOUR: "منصور", YAZEED: "يزيد", ZIYAD: "زياد", TALAL: "طلال", MUTEB: "متعب", SAUD: "سعود", HAMZA: "حمزة", ABDULMAJEED: "عبدالمجيد", ABDULELAH: "عبدالإله", RAKAN: "راكان", NAWAF: "نواف", MESHARI: "مشاري", BANDAR: "بندر", MAZEN: "مازن", ANAS: "أنس", HANI: "هاني", WALEED: "وليد", SAMI: "سامي", ADEL: "عادل", NADER: "نادر", SAMER: "سامر", AYMAN: "أيمن" };
+  var AR_LETTERS = { A: "ا", B: "ب", C: "ك", D: "د", E: "ي", F: "ف", G: "ق", H: "ه", I: "ي", J: "ج", K: "ك", L: "ل", M: "م", N: "ن", O: "و", P: "ب", Q: "ق", R: "ر", S: "س", T: "ت", U: "و", V: "ف", W: "و", X: "كس", Y: "ي", Z: "ز" };
+  function arabicName(latin) {
+    var t = String(latin || "").trim();
+    if (/[\u0600-\u06FF]/.test(t)) return t;
+    return t.toUpperCase().split(/\s+/).filter(Boolean).map(function (w) {
+      if (AR_NAMES[w]) return AR_NAMES[w];
+      return w.replace(/[^A-Z]/g, "").split("").map(function (c) { return AR_LETTERS[c] || ""; }).join("");
+    }).filter(Boolean).join(" ");
+  }
+  function subscribe(planId, name) { var p = PLANS[planId] || PLANS.month; set(SUB_KEY, { plan: p.id, at: Date.now(), until: Date.now() + p.ms, name: name ? arabicName(name) : "" }); changed(); placeBadge(); }
   function unsubscribe() { try { localStorage.removeItem(SUB_KEY); } catch (e) {} changed(); placeBadge(); }
   function freeUsed(game) { var f = get(FREE_KEY, {}); return (f && +f[game]) || 0; }
   function freeRounds(game) { return FREE_SETS * (SIZE[game] || 8); }
@@ -49,12 +60,13 @@
     return { size: size, total: total, unplayed: unplayed, left: left, full: full, all: Math.ceil(total / size) };
   }
   var curGame = null;
-  function sets(game, total, unplayed) {
-    curGame = game;
+  var meta = {};
+  function sets(game, total, unplayed, extra) {
+    curGame = game; if (extra) meta[game] = extra;
     var d = get(SETS_KEY, {}); if (!d || typeof d !== "object") d = {};
     var old = d[game];
     if (!old || old.total !== total || old.unplayed !== unplayed) { d[game] = { total: total, unplayed: unplayed }; set(SETS_KEY, d); }
-    placeBadge();
+    placeBadge(); setTimeout(queuePlace, 0);
   }
   function badgeText() {
     if (!curGame) return "";
@@ -87,12 +99,59 @@
     } catch (e) {}
     placing = false;
   }
+  var hp = false;
+  function placeHome() {
+    if (hp || document.body.hasAttribute("data-hub") || !curGame) return;
+    hp = true;
+    try {
+      var host = null, sels = [".topbar .round-info", ".topbar .info", ".bar-r", ".d-top", ".c-top", ".page-head"], first = true;
+      for (var k = 0; k < sels.length && !host; k++) { var h = document.querySelector(sels[k]); if (h && h.getClientRects().length > 0) { host = h; first = sels[k] !== ".page-head"; } }
+      var pill = document.querySelector(".home-pill");
+      if (!pill) { pill = document.createElement("a"); pill.className = "home-pill"; pill.href = "index.html"; pill.textContent = "🏠 الرئيسية"; pill.title = "الرجوع إلى قائمة الألعاب"; }
+      pill.classList.toggle("fixed", !host);
+      var parent = host || document.body;
+      if (pill.parentNode !== parent || (host && (first ? parent.firstElementChild !== pill : parent.lastElementChild !== pill))) { if (first && host) parent.insertBefore(pill, parent.firstChild); else parent.appendChild(pill); }
+    } catch (e) {}
+    hp = false;
+  }
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-open-sets]"); if (b) { e.preventDefault(); openSets(); } });
   var pq = false;
-  function queuePlace() { if (!pq) { pq = true; requestAnimationFrame(function () { pq = false; placeBadge(); }); } }
+  function queuePlace() { if (!pq) { pq = true; requestAnimationFrame(function () { pq = false; placeBadge(); placeHome(); }); } }
+
+  function setList(game) {
+    var m = meta[game]; if (!m || !m.ids) return [];
+    var size = SIZE[game] || 8, used = {}, out = []; (m.used || []).forEach(function (id) { used[id] = 1; });
+    for (var k = 0; k * size < m.ids.length; k++) {
+      var ids = m.ids.slice(k * size, (k + 1) * size), u = ids.filter(function (id) { return used[id]; }).length;
+      out.push({ k: k, n: ids.length, u: u, locked: game !== "wsh" && !isSub() && k >= FREE_SETS });
+    }
+    return out;
+  }
+  // ids of the chosen set (sticky for 30 min) or null = no restriction
+  function takeScope(game, allIds) {
+    var pick = get(PICK_KEY, {}), size = SIZE[game] || 8;
+    if (!pick || !pick[game] || Date.now() - pick[game].at > 30 * 60 * 1000) return null;
+    var k = pick[game].k; if (game !== "wsh" && !isSub() && k >= FREE_SETS) return null;
+    var ids = allIds.slice(k * size, (k + 1) * size); return ids.length ? ids : null;
+  }
+  function scoped(game, items, usedIds) {
+    var sc = takeScope(game, items.map(function (x) { return x.id; })); if (!sc) return items;
+    var sub = items.filter(function (x) { return sc.indexOf(x.id) >= 0 && (!usedIds || usedIds.indexOf(x.id) < 0); });
+    return sub.length ? sub : items;
+  }
+  function choose(game, k) { var pick = get(PICK_KEY, {}); if (!pick || typeof pick !== "object") pick = {}; pick[game] = { k: k, at: Date.now() }; set(PICK_KEY, pick); }
 
   /* ---------------- styles ---------------- */
   var css = document.createElement("style");
   css.textContent =
+    ".home-pill{display:inline-flex;align-items:center;gap:.3em;background:#fbbf24;color:#111827;border:2px solid #111827;border-radius:999px;padding:.1em .9em;font:800 clamp(12px,min(.95vw,1.8vh),20px)/1.5 Changa,'Segoe UI',Tahoma,sans-serif;white-space:nowrap;text-decoration:none;box-shadow:2px 2px 0 #111827}.home-pill:hover{background:#fde68a}" +
+    ".home-pill.fixed{position:fixed;top:clamp(8px,1.6vh,18px);right:clamp(8px,1.2vw,18px);z-index:2147482000}" +
+    ".mp .gchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.mp .gc{border:2px solid #111827;border-radius:999px;background:#fff;color:#111827;text-decoration:none;font-weight:800;padding:.1em .9em;font-size:clamp(12px,min(1.1vw,2vh),20px)}.mp .gc.on{background:#fbbf24}" +
+    ".mp .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,1vw,14px)}" +
+    ".mp .st{border:3px solid #111827;border-radius:16px;background:#fff;color:#111827;padding:clamp(6px,1.4vh,16px) 4px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:3px 3px 0 #111827}" +
+    ".mp .st b{font:400 clamp(20px,min(2.4vw,4.4vh),44px)/1 Lalezar,Changa,sans-serif}.mp .st small{font-weight:700;font-size:clamp(10px,min(.9vw,1.7vh),16px)}" +
+    ".mp .st.done{background:#d1fae5}.mp .st.part{background:#fef3c7}.mp .st.lock{background:#f3f4f6;color:#6b7280}" +
+    ".mp .pg{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:clamp(12px,min(1.1vw,2vh),20px)}.mp .pg button{width:2.4em;height:2em;border:2px solid #111827;border-radius:999px;background:#fbbf24;font:800 1.2em/1 Changa,sans-serif;cursor:pointer;color:#111827}.mp .pg button:disabled{background:#e5e7eb;color:#9ca3af}" +
     ".sets-pill{display:inline-flex;align-items:center;gap:.3em;background:#fff;color:#111827;border:2px solid #111827;border-radius:999px;padding:.1em .8em;font:800 clamp(12px,min(.95vw,1.8vh),20px)/1.5 Changa,'Segoe UI',Tahoma,sans-serif;white-space:nowrap;cursor:default;box-shadow:2px 2px 0 #111827}" +
     ".sets-pill.fixed{position:fixed;top:clamp(8px,1.6vh,18px);left:clamp(8px,1.2vw,18px);z-index:2147482000;pointer-events:none}" +
     ".mp-back{position:fixed;inset:0;z-index:2147483200;background:rgba(17,24,39,.72);display:grid;place-items:center;padding:clamp(8px,2vh,24px);direction:rtl;font-family:Changa,'Segoe UI',Tahoma,sans-serif;color:#111827;animation:mpfade .2s}" +
@@ -103,9 +162,10 @@
     ".mp .lock{font-size:clamp(40px,min(6vw,11vh),110px);line-height:1}" +
     ".mp .row{display:flex;flex-wrap:wrap;gap:clamp(8px,1vw,16px);justify-content:center}" +
     ".mp .b{border:3px solid #111827;border-radius:999px;background:#fff;color:#111827;box-shadow:4px 4px 0 #111827;padding:.4em 1.3em;font:800 clamp(15px,min(1.5vw,2.8vh),30px)/1.3 Changa,sans-serif;cursor:pointer}" +
+    "@media (hover:none){.mp .b:hover{transform:none;box-shadow:4px 4px 0 #111827}}.mp,.mp *{-webkit-tap-highlight-color:transparent}" +
     ".mp .b:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #111827}.mp .b:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #111827}" +
     ".mp .b.go{background:#10b981;color:#fff}.mp .b.hot{background:#fbbf24}.mp .b:disabled{opacity:.5;box-shadow:none;cursor:default}" +
-    ".mp .b.link{border:0;background:none;box-shadow:none;text-decoration:underline;font-size:clamp(12px,min(1.1vw,2vh),20px);padding:.1em .6em}" +
+    ".mp .b.link{border:0;background:none;box-shadow:none;text-decoration:underline;font-size:clamp(12px,min(1.1vw,2vh),20px);padding:.1em .6em;min-height:28px}" +
     ".mp .plans{display:grid;grid-template-columns:1fr 1.15fr;gap:clamp(10px,1.4vw,24px);align-items:stretch}" +
     ".mp .plan{position:relative;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;border:3px solid #111827;border-radius:20px;background:#f3f4f6;color:#4b5563;padding:clamp(10px,2vh,24px) 10px;cursor:pointer;font-family:inherit}" +
     ".mp .plan.on{background:#fef3c7;color:#111827;box-shadow:6px 6px 0 #111827;transform:translate(-2px,-2px)}" +
@@ -121,6 +181,7 @@
     ".mp form{display:flex;flex-direction:column;gap:clamp(6px,1.2vh,12px)}.mp label{display:flex;flex-direction:column;gap:3px;font-weight:800;font-size:clamp(12px,min(1.05vw,2vh),20px)}" +
     ".mp input{border:3px solid #111827;border-radius:12px;padding:.35em .7em;font:700 clamp(14px,min(1.4vw,2.6vh),26px)/1.3 'Segoe UI',monospace;background:#fff;color:#111827;width:100%;direction:ltr;text-align:left}" +
     ".mp .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mp .err{color:#b91c1c;font-weight:800;min-height:1.4em;font-size:clamp(12px,min(1.05vw,2vh),20px)}" +
+    ".mp .dua{font-family:Lalezar,Changa,sans-serif;font-weight:400!important;font-size:clamp(22px,min(2.8vw,5vh),52px)!important;color:#047857}" +
     ".mp .fine{font-size:clamp(10px,min(.9vw,1.7vh),16px)!important;color:#4b5563;font-weight:700}" +
     ".mp .ok{width:clamp(70px,min(12vh,12vw),140px);aspect-ratio:1;border-radius:50%;background:#10b981;border:4px solid #111827;color:#fff;display:grid;place-items:center;margin:0 auto;font-size:clamp(40px,8vh,90px);animation:mppop .5s cubic-bezier(.2,1.5,.4,1);box-shadow:5px 5px 0 #111827}" +
     ".mp .spin{width:clamp(40px,8vh,80px);aspect-ratio:1;border:6px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;margin:0 auto;animation:mpspin .8s linear infinite}@keyframes mpspin{to{transform:rotate(360deg)}}" +
@@ -152,6 +213,16 @@
   var overlay = null, state = null;
   function closePaywall() { if (overlay) { overlay.remove(); overlay = null; } state = null; document.removeEventListener("keydown", onKey, true); }
   function onKey(e) { if (e.key === "Escape" && overlay) { e.stopPropagation(); closePaywall(); } }
+  function openSets() {
+    if (overlay || !curGame) return;
+    state = { step: "sets", game: curGame, page: 0 };
+    overlay = document.createElement("div"); overlay.className = "mp-back";
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closePaywall(); });
+    overlay.addEventListener("click", onClick); overlay.addEventListener("input", onInput); overlay.addEventListener("submit", function (e) { e.preventDefault(); });
+    document.body.appendChild(overlay); document.addEventListener("keydown", onKey, true);
+    draw();
+  }
+  function startFromHome() { var b = document.querySelector("[data-act=quick],[data-ui=quick],#h-start,[data-a=start]"); if (b) b.click(); }
   function openPaywall(game, plansFirst) {
     if (overlay) return;
     state = { step: plansFirst ? "plans" : "lock", game: game, plan: "month", err: "" };
@@ -186,10 +257,22 @@
         '<div class="err" id="mp-err" role="alert">' + esc(s.err) + "</div></form></div>" +
         '<div class="row"><button class="b go" data-a="pay">اشترك — ' + PLANS[s.plan].price + ' ر.س</button><button class="b hot" data-a="saved" type="button">💳 البطاقة المحفوظة</button><button class="b link" data-a="plans">رجوع</button></div>' +
 '';
+    } else if (s.step === "sets") {
+      var list = setList(s.game), per = window.innerHeight < 560 ? 8 : 12, pages = Math.max(1, Math.ceil(list.length / per)); s.page = Math.min(s.page || 0, pages - 1);
+      var shown = list.slice(s.page * per, s.page * per + per), done = list.filter(function (x) { return x.u >= x.n && x.n; }).length;
+      h = "<h2>🎮 المجموعات</h2>" +
+        '<div class="gchips">' + Object.keys(FILES).map(function (g) { return '<a class="gc' + (g === s.game ? " on" : "") + '" href="' + FILES[g] + '">' + esc(NAMES[g]) + "</a>"; }).join("") + "</div>" +
+        "<p>اختر المجموعة اللي تبي تبدأ منها (" + done + " من " + list.length + " انلعبت)</p>" +
+        '<div class="tiles">' + shown.map(function (x) {
+          var st = x.locked ? "🔒 بعد الاشتراك" : x.u >= x.n ? "✅ لعبتها" : x.u ? "🟡 " + x.u + "/" + x.n : "⚪ جديدة";
+          return '<button class="st ' + (x.locked ? "lock" : x.u >= x.n ? "done" : x.u ? "part" : "") + '" data-k="' + x.k + '"><b>' + (x.k + 1) + "</b><small>" + st + "</small></button>";
+        }).join("") + "</div>" +
+        (pages > 1 ? '<div class="pg"><button data-a="pg" data-d="1" aria-label="التالي"' + (s.page >= pages - 1 ? " disabled" : "") + '>›</button><span>صفحة ' + (s.page + 1) + " من " + pages + '</span><button data-a="pg" data-d="-1" aria-label="السابق"' + (s.page <= 0 ? " disabled" : "") + ">‹</button></div>" : "") +
+        '<div class="row"><button class="b link" data-a="reset">' + (s.arm && Date.now() - s.arm < 4000 ? "اضغط مرة ثانية للتأكيد" : "↺ تصفير السجل") + '</button><button class="b" data-a="close">إغلاق</button></div>';
     } else if (s.step === "busy") {
       h = '<div class="spin" aria-hidden="true"></div><h2>جاري إتمام الاشتراك…</h2><p>لحظات</p>';
     } else if (s.step === "done") {
-      h = '<div class="ok" aria-hidden="true">✓</div><h2>تم الاشتراك بنجاح 🎉</h2><p>' + esc(PLANS[s.plan].name) + " — صار البنك كامل مفتوح لك في كل الألعاب.</p>" +
+      h = '<div class="ok" aria-hidden="true">✓</div><h2>تم الاشتراك بنجاح 🎉</h2><p class="dua">الله يكثر خيرك' + (s.arName ? " يا <b>" + esc(s.arName) + "</b>" : "") + " 🤍</p><p>" + esc(PLANS[s.plan].name) + " — صار البنك كامل مفتوح لك في كل الألعاب.</p>" +
         '<div class="row"><button class="b go" data-a="finish">يلا نلعب ▶</button></div>';
     }
     overlay.innerHTML = '<div class="mp" role="document" aria-live="polite">' + h + "</div>";
@@ -204,7 +287,7 @@
   }
   function onInput(e) {
     var t = e.target;
-    if (t.id === "f-num") t.value = fmtNum(t.value); else if (t.id === "f-exp") t.value = fmtExp(t.value); else if (t.id === "f-cvv") t.value = t.value.replace(/\D/g, "").slice(0, 3); else if (t.id === "f-name") t.value = t.value.replace(/[^A-Za-z .'-]/g, "").toUpperCase();
+    if (t.id === "f-num") t.value = fmtNum(t.value); else if (t.id === "f-exp") t.value = fmtExp(t.value); else if (t.id === "f-cvv") t.value = t.value.replace(/\D/g, "").slice(0, 3); else if (t.id === "f-name") t.value = t.value.replace(/[^A-Za-z\u0600-\u06FF .'-]/g, "").toUpperCase();
     syncPreview();
   }
   function validate() {
@@ -220,8 +303,20 @@
   }
   function onClick(e) {
     var p = e.target.closest("[data-plan]"); if (p && state.step === "plans") { state.plan = p.getAttribute("data-plan"); draw(); return; }
+    var tk = e.target.closest("[data-k]");
+    if (tk && state && state.step === "sets") {
+      var k = +tk.getAttribute("data-k"), item = setList(state.game).filter(function (x) { return x.k === k; })[0];
+      if (item && item.locked) { state.plan = state.plan || "month"; state.step = "plans"; draw(); return; }
+      choose(state.game, k); closePaywall(); setTimeout(startFromHome, 30); return;
+    }
     var b = e.target.closest("[data-a]"); if (!b || !state) return;
     var a = b.getAttribute("data-a");
+    if (a === "pg") { state.page = Math.max(0, state.page + (+b.getAttribute("data-d"))); draw(); return; }
+    if (a === "reset") {
+      if (state.arm && Date.now() - state.arm < 4000) { var m = meta[state.game]; if (m && m.reset) { try { m.reset(); } catch (er) {} } state.arm = 0; if (m) m.used = []; draw(); }
+      else { state.arm = Date.now(); draw(); }
+      return;
+    }
     if (a === "close") closePaywall();
     else if (a === "plans") { state.step = "plans"; draw(); }
     else if (a === "card") { state.step = "card"; state.err = ""; draw(); var f = overlay.querySelector("#f-num"); if (f) f.focus(); }
@@ -230,8 +325,9 @@
       overlay.querySelector("#mp-err").textContent = ""; syncPreview();
     } else if (a === "pay") {
       var er = validate(); if (er) { overlay.querySelector("#mp-err").textContent = er; return; }
+      var holder = overlay.querySelector("#f-name").value.trim();
       state.step = "busy"; draw();
-      setTimeout(function () { if (!overlay) return; subscribe(state.plan); state.step = "done"; draw(); }, 1700);
+      setTimeout(function () { if (!overlay) return; subscribe(state.plan, holder); state.arName = arabicName(holder); state.step = "done"; draw(); }, 1700);
     } else if (a === "finish") closePaywall();
   }
 
@@ -239,7 +335,7 @@
   window.MAJLIS_PASS = {
     FREE_SETS: FREE_SETS, freeRounds: freeRounds, SIZE: SIZE, PLANS: PLANS, NAMES: NAMES,
     isSub: isSub, sub: sub, subscribe: subscribe, unsubscribe: unsubscribe, gate: gate, freeUsed: freeUsed,
-    sets: sets, setsInfo: setsInfo, openPaywall: openPaywall, luhnOk: luhnOk, randCard: randCard,
+    sets: sets, setsInfo: setsInfo, openPaywall: openPaywall, openSets: openSets, takeScope: takeScope, scoped: scoped, arabicName: arabicName, luhnOk: luhnOk, randCard: randCard,
     onChange: function (f) { listeners.push(f); }
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { new MutationObserver(queuePlace).observe(document.body, { childList: true, subtree: true }); });
