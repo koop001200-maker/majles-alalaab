@@ -192,7 +192,7 @@
     var p = game.plan[game.idx];
     markUsed(p.qid);
     game.round = {
-      revealed: 1, phase: "main", locked: [], winner: null, points: 0, done: false, hint: false, startedAt: Date.now(),
+      revealed: 1, phase: "main", locked: [], winner: null, points: 0, done: false, startedAt: Date.now(),
       active: game.idx % game.teams.length, timeLeft: null, timedOut: false, msg: "", msgType: ""
     };
     // the first clue opens by itself
@@ -204,15 +204,6 @@
     startTimer();
   }
 
-  // hint = the answer's shape: first letter of each word shown, the rest as empty boxes (titles like «عليه السلام» left out)
-  function hintHTML(answer) {
-    var a = String(answer).replace(/\(.*?\)/g, " ").replace(/(عليه|عليها) السلام|رضي الله (عنهما|عنهم|عنها|عنه)|ﷺ/g, " ").replace(/\s+/g, " ").trim();
-    return '<span class="hint-words">' + a.split(" ").map(function (w) {
-      var L = Array.from(w);
-      var show = (L.length > 3 && L[0] === "ا" && L[1] === "ل") ? 3 : 1; // «ال» says nothing on its own: show the letter after it too
-      return '<span class="hw">' + L.map(function (c, i) { return '<i' + (i < show ? ' class="on"' : "") + ">" + (i < show ? esc(c) : "") + "</i>"; }).join("") + "</span>";
-    }).join("") + "</span>";
-  }
   function pointsAt(revealed) {
     var p = game.plan[game.idx];
     var table = p.type === "golden" ? GOLD_POINTS : BASE_POINTS;
@@ -334,6 +325,7 @@
   function nextRound() {
     if (!game.round || !game.round.done) return;
     if (game.idx + 1 < game.plan.length) {
+      if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("mak")) return;
       game.idx++;
       newRound();
       commit();
@@ -549,9 +541,8 @@
           '<span class="num"><b>' + (i + 1) + "</b><small>" + pts + " " + pointsWord(pts) + "</small></span>" +
           '<span class="text">' + (shown ? esc(q.clues[i]) : "• • •") + "</span></li>";
       }
-      inner = '<ol class="clues">' + clues + "</ol>" + (r.hint ? '<div class="hint-box"><b>💡 تلميح:</b>' + hintHTML(q.answer) + "</div>" : "");
+      inner = '<ol class="clues">' + clues + "</ol>";
       bar = '<button class="btn primary big" data-act="reveal"' + (r.revealed >= 4 ? " disabled" : "") + ">" + (r.revealed === 0 ? "اكشف المعلومة الأولى" : "اكشف المعلومة التالية") + "</button>" +
-        '<button class="btn big hint-btn" data-act="hint"' + (r.hint ? " disabled" : "") + ">💡 تلميح" + (r.timeLeft != null ? " (يروح نص الوقت)" : "") + "</button>" +
         '<button class="btn big" data-act="answer"' + (r.revealed === 0 ? " disabled" : "") + ">اكشف الحل</button>";
     }
     var timer = (!r.done && r.timeLeft != null) ? '<span id="timer" class="timer' + (r.timeLeft <= 5 ? " warn" : "") + '">' + r.timeLeft + "</span>" : "";
@@ -697,7 +688,15 @@
 
   /* ---------- render ---------- */
   var setupErr = "";
+  function passSync() {
+    try {
+      var u = Store.get(K.used, []); if (!Array.isArray(u)) u = [];
+      var played = bank.filter(function (q) { return u.indexOf(q.id) >= 0; }).length;
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("mak", bank.length, bank.length - played);
+    } catch (e) {}
+  }
   function render() {
+    passSync();
     try { renderInner(); } catch (err) {
       if (window.console) console.error(err);
       game = null; saveGame(); view = "home"; modal = null; renderInner(); toast("صار خلل في اللعبة المحفوظة، فبدأنا من جديد");
@@ -761,6 +760,7 @@
     collectNames();
     if (!settings.cats.length) { view = "setup"; setupTab = "questions"; setupErr = "اختر قسماً واحداً على الأقل."; render(); return; }
     saveSettings();
+    if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("mak")) return;
     stopTimer();
     game = buildGame();
     if (!game.plan.length) { game = null; view = "setup"; setupErr = "لا توجد أسئلة كافية في بنك الأسئلة."; render(); return; }
@@ -774,6 +774,7 @@
   /* quick trial: 3 easy rounds with the saved team names; the saved settings are not changed */
   function startTrial() {
     collectNames();
+    if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("mak")) return;
     var saved = clone(settings);
     settings.rounds = 3; settings.level = 1; settings.cats = CATS.map(function (c) { return c.id; });
     settings.answerMode = "open"; settings.timer = false;
@@ -791,13 +792,6 @@
       case "home-clear": game = null; saveGame(); go("home"); break;
       case "setup": stopTimer(); go("setup"); break;
       case "howto": go("howto"); break;
-      case "hint":
-        if (game && game.status === "playing" && game.round && !game.round.done && !game.round.hint) {
-          var hr = game.round; hr.hint = true;
-          if (hr.timeLeft != null && hr.timeLeft > 0) hr.timeLeft = Math.max(1, Math.ceil(hr.timeLeft / 2));
-          SFX.reveal(); commit();
-        }
-        break;
       case "adj":
         if (game && el) { var at = +el.getAttribute("data-t"), ad = +el.getAttribute("data-d"); if (game.teams[at]) { game.teams[at].score += ad; game.log.push({ manual: true }); bumpTeam = ad > 0 ? at : null; commit(); bumpTeam = null; } }
         break;

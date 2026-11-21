@@ -296,6 +296,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@500;600;700;800&display=swap">
 <link rel="stylesheet" href="css/majlis-theme.css">
 <script src="js/majlis.js"></script>
+<script src="js/majlis-pass.js"></script>
 </head>
 <body class="g-hf">
 <div class="app" id="app">
@@ -618,13 +619,15 @@ textarea{width:100%;min-height:90px;resize:vertical}
     start(after) {
       const lv = S.settings.level;
       if (!S.words.some((w) => lv === 'all' || w.level === lv)) return toast('لا توجد كلمات في المستوى المختار');
-      const go = () => { commit((s) => { s.players.forEach((p) => (p.score = 0)); Object.assign(s.game, { used: [], round: 0, reason: '' }); advance(s); }); if (typeof after === 'function') after(); };
+      const go = () => { if (window.MAJLIS_PASS && !MAJLIS_PASS.gate('hf')) return; commit((s) => { s.players.forEach((p) => (p.score = 0)); Object.assign(s.game, { used: [], round: 0, reason: '' }); advance(s); }); if (typeof after === 'function') after(); };
       if (inRound(G().status)) ask('بدء مسابقة جديدة؟ ستُصفَّر النقاط وتبدأ من الجولة الأولى.', go); else go();
     },
     next() {
       const st = G().status;
       if (st === 'idle') return A.start();
       if (st === 'finished') return toast('انتهت المسابقة. ابدأ مسابقة جديدة.');
+      const R = +S.settings.rounds || 0;
+      if (!(R && G().round >= R) && window.MAJLIS_PASS && !MAJLIS_PASS.gate('hf')) return;
       commit(advance);
     },
     redo() {
@@ -891,7 +894,11 @@ textarea{width:100%;min-height:90px;resize:vertical}
     $('#h-seen').textContent = `طلعت ${seenN} من ${S.words.length} كلمة، وما تتكرر كلمة حتى تخلص`;
     $('#h-reset').textContent = Date.now() - resetArm < 4000 ? 'اضغط مرة ثانية للتأكيد' : '↺ تصفير السجل';
   }
+  function passSync() {
+    try { const seenN = S.words.filter((w) => S.seen.includes(w.id)).length; window.MAJLIS_PASS && MAJLIS_PASS.sets('hf', S.words.length, S.words.length - seenN); } catch (e) {}
+  }
   function render() {
+    passSync();
     if (view === 'display') renderDisplay(); else if (view === 'control') renderControl(); else if (view === 'home') renderHome();
     paintClock(); updateSoundBtn(); firstPaint = false;
   }

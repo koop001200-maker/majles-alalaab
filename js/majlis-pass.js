@@ -1,0 +1,246 @@
+/* «مجلس الألعاب» — المجموعات المتاحة، الجولات المجانية، والاشتراك (شكل تجريبي فقط: لا يوجد دفع حقيقي).
+ *
+ * المجموعات: محتوى كل لعبة مقسوم إلى مجموعات ثابتة الحجم (مثلاً 8 بطاقات). عدد المجموعات المتاحة = ما بقي من
+ * محتوى لم يُلعب بعد ÷ حجم المجموعة (للأعلى). كلما لعبتَ نقص العدد، وإذا زاد المحتوى زاد العدد حين تمتلئ المجموعة.
+ *
+ * الجولات المجانية: 3 جولات لكل لعبة (عدا «وش الصح؟»)، بعدها تظهر شاشة الاشتراك.
+ *
+ * لا تُخزَّن أي بيانات بطاقة ولا تُرسل لأي مكان: ما يُكتب في الخانات يُستخدم للتحقق الشكلي فقط ثم يُنسى.
+ */
+(function () {
+  "use strict";
+  var SUB_KEY = "majlis_sub_v1", FREE_KEY = "majlis_free_v1", SETS_KEY = "majlis_sets_v1";
+  var FREE_ROUNDS = 3;
+  var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8 };
+  var NAMES = { mak: "مين أكون؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟" };
+  var DEFAULT_TOTAL = { mak: 96, kh: 411, rt: 192, hf: 582, wsh: 152 }; // shown on the hub before a game has ever been opened
+  var PLANS = {
+    day: { id: "day", name: "اشتراك يوم واحد", price: "9.99", unit: "لليوم", ms: 864e5 },
+    month: { id: "month", name: "اشتراك شهر", price: "19.99", unit: "للشهر", ms: 30 * 864e5 }
+  };
+
+  function get(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var listeners = [];
+  function changed() { listeners.forEach(function (f) { try { f(); } catch (e) {} }); }
+
+  /* ---------------- subscription state ---------------- */
+  function sub() { var s = get(SUB_KEY, null); return s && s.until > Date.now() ? s : null; }
+  function isSub() { return !!sub(); }
+  function subscribe(planId) { var p = PLANS[planId] || PLANS.month; set(SUB_KEY, { plan: p.id, at: Date.now(), until: Date.now() + p.ms }); changed(); placeBadge(); }
+  function unsubscribe() { try { localStorage.removeItem(SUB_KEY); } catch (e) {} changed(); placeBadge(); }
+  function freeUsed(game) { var f = get(FREE_KEY, {}); return (f && +f[game]) || 0; }
+  function gate(game) {
+    if (isSub()) return true;
+    var f = get(FREE_KEY, {}); if (!f || typeof f !== "object") f = {};
+    if ((+f[game] || 0) >= FREE_ROUNDS) { openPaywall(game); return false; }
+    f[game] = (+f[game] || 0) + 1; set(FREE_KEY, f); placeBadge();
+    return true;
+  }
+
+  /* ---------------- available sets ---------------- */
+  function setsInfo(game) {
+    var d = get(SETS_KEY, {}), e = d && d[game];
+    var total = e ? +e.total : DEFAULT_TOTAL[game], unplayed = e ? +e.unplayed : DEFAULT_TOTAL[game], size = SIZE[game] || 8;
+    return { size: size, total: total, unplayed: unplayed, left: Math.ceil(unplayed / size), all: Math.ceil(total / size) };
+  }
+  var curGame = null;
+  function sets(game, total, unplayed) {
+    curGame = game;
+    var d = get(SETS_KEY, {}); if (!d || typeof d !== "object") d = {};
+    var old = d[game];
+    if (!old || old.total !== total || old.unplayed !== unplayed) { d[game] = { total: total, unplayed: unplayed }; set(SETS_KEY, d); }
+    placeBadge();
+  }
+  function badgeText() {
+    if (!curGame) return "";
+    var i = setsInfo(curGame);
+    var small = window.innerWidth < 560;
+    return "🎮 " + i.left + (small ? "" : " مجموعة لعب متاحة") + (isSub() ? "" : " · 🔒");
+  }
+  function badgeTitle() {
+    var i = setsInfo(curGame);
+    return NAMES[curGame] + ": " + i.left + " من " + i.all + " مجموعة متاحة (كل مجموعة " + i.size + " جولات من المحتوى). " + (isSub() ? "أنت مشترك." : "الجولات المجانية: " + Math.max(0, FREE_ROUNDS - freeUsed(curGame)) + " من " + FREE_ROUNDS + ".");
+  }
+  var placing = false;
+  function placeBadge() {
+    if (placing || !curGame || document.body.hasAttribute("data-hub")) return;
+    placing = true;
+    try {
+      var host = null, sels = [".top-actions", ".bar-l", ".d-top", ".c-top"];
+      for (var k = 0; k < sels.length && !host; k++) { var h = document.querySelector(sels[k]); if (h && h.getClientRects().length > 0) host = h; }
+      var pill = document.querySelector(".sets-pill");
+      var wantInline = !!host;
+      var hide = false; if (!host) [].forEach.call(document.querySelectorAll(".page-head, .howto-v"), function (e) { if (e.getClientRects().length) hide = true; }); // setup / bank / how-to screens have their own buttons at the top-left
+      if (pill && hide) { pill.remove(); placing = false; return; }
+      if (hide) { placing = false; return; }
+      if (!pill) { pill = document.createElement("span"); pill.className = "sets-pill"; pill.setAttribute("role", "status"); pill.addEventListener("click", function () { if (!isSub()) openPaywall(curGame, true); }); }
+      var txt = badgeText(); if (pill.textContent !== txt) pill.textContent = txt;
+      var ttl = badgeTitle(); if (pill.title !== ttl) pill.title = ttl;
+      pill.classList.toggle("fixed", !wantInline);
+      var parent = wantInline ? host : document.body;
+      if (pill.parentNode !== parent || (wantInline && host.lastElementChild !== pill)) parent.appendChild(pill);
+    } catch (e) {}
+    placing = false;
+  }
+  var pq = false;
+  function queuePlace() { if (!pq) { pq = true; requestAnimationFrame(function () { pq = false; placeBadge(); }); } }
+
+  /* ---------------- styles ---------------- */
+  var css = document.createElement("style");
+  css.textContent =
+    ".sets-pill{display:inline-flex;align-items:center;gap:.3em;background:#fff;color:#111827;border:2px solid #111827;border-radius:999px;padding:.1em .8em;font:800 clamp(12px,min(.95vw,1.8vh),20px)/1.5 Changa,'Segoe UI',Tahoma,sans-serif;white-space:nowrap;cursor:default;box-shadow:2px 2px 0 #111827}" +
+    ".sets-pill.fixed{position:fixed;top:clamp(8px,1.6vh,18px);left:clamp(8px,1.2vw,18px);z-index:2147482000;pointer-events:none}" +
+    ".mp-back{position:fixed;inset:0;z-index:2147483200;background:rgba(17,24,39,.72);display:grid;place-items:center;padding:clamp(8px,2vh,24px);direction:rtl;font-family:Changa,'Segoe UI',Tahoma,sans-serif;color:#111827;animation:mpfade .2s}" +
+    "@keyframes mpfade{from{opacity:0}}@keyframes mppop{from{transform:scale(.92);opacity:0}}" +
+    ".mp{width:min(100%,980px);max-height:100%;background:#fff;border:clamp(3px,.25vw,5px) solid #111827;border-radius:clamp(16px,2vw,28px);box-shadow:clamp(5px,.5vw,10px) clamp(5px,.5vw,10px) 0 #111827;padding:clamp(12px,2.4vh,30px) clamp(14px,2vw,34px);display:flex;flex-direction:column;gap:clamp(8px,1.6vh,18px);text-align:center;animation:mppop .25s cubic-bezier(.2,1.3,.4,1);overflow:hidden}" +
+    ".mp h2{margin:0;font:400 clamp(24px,min(3vw,5.4vh),56px)/1.2 Lalezar,Changa,sans-serif}" +
+    ".mp p{margin:0;font-weight:700;font-size:clamp(13px,min(1.3vw,2.4vh),24px);line-height:1.5}" +
+    ".mp .lock{font-size:clamp(40px,min(6vw,11vh),110px);line-height:1}" +
+    ".mp .row{display:flex;flex-wrap:wrap;gap:clamp(8px,1vw,16px);justify-content:center}" +
+    ".mp .b{border:3px solid #111827;border-radius:999px;background:#fff;color:#111827;box-shadow:4px 4px 0 #111827;padding:.4em 1.3em;font:800 clamp(15px,min(1.5vw,2.8vh),30px)/1.3 Changa,sans-serif;cursor:pointer}" +
+    ".mp .b:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #111827}.mp .b:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #111827}" +
+    ".mp .b.go{background:#10b981;color:#fff}.mp .b.hot{background:#fbbf24}.mp .b:disabled{opacity:.5;box-shadow:none;cursor:default}" +
+    ".mp .b.link{border:0;background:none;box-shadow:none;text-decoration:underline;font-size:clamp(12px,min(1.1vw,2vh),20px);padding:.1em .6em}" +
+    ".mp .plans{display:grid;grid-template-columns:1fr 1.15fr;gap:clamp(10px,1.4vw,24px);align-items:stretch}" +
+    ".mp .plan{position:relative;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;border:3px solid #111827;border-radius:20px;background:#f3f4f6;color:#4b5563;padding:clamp(10px,2vh,24px) 10px;cursor:pointer;font-family:inherit}" +
+    ".mp .plan.on{background:#fef3c7;color:#111827;box-shadow:6px 6px 0 #111827;transform:translate(-2px,-2px)}" +
+    ".mp .plan .nm{font-weight:800;font-size:clamp(14px,min(1.4vw,2.6vh),26px)}" +
+    ".mp .plan .pr{font:400 clamp(30px,min(4vw,7.4vh),80px)/1 Lalezar,Changa,sans-serif}.mp .plan .pr small{font:800 .32em Changa,sans-serif;margin-inline-start:.3em}" +
+    ".mp .plan .nt{font-weight:700;font-size:clamp(11px,min(1vw,1.9vh),19px)}" +
+    ".mp .plan .tag{position:absolute;top:-14px;inset-inline:0;margin-inline:auto;width:max-content;max-width:94%;background:#ef4444;color:#fff;border:2px solid #111827;border-radius:999px;padding:0 .9em;font-weight:800;font-size:clamp(11px,min(1.05vw,2vh),20px)}" +
+    ".mp .plan .chk{position:absolute;top:8px;inset-inline-start:10px;width:1.4em;height:1.4em;border:2px solid #111827;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:clamp(11px,1.6vh,18px)}" +
+    ".mp .plan.on .chk{background:#10b981;color:#fff}" +
+    ".mp .cardwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:clamp(10px,2vw,30px);align-items:center;text-align:start}" +
+    ".mp .vcard{aspect-ratio:1.586;border:3px solid #111827;border-radius:18px;background:linear-gradient(135deg,#1e3a8a,#6366f1 60%,#818cf8);color:#fff;padding:clamp(10px,2vh,22px);display:flex;flex-direction:column;justify-content:space-between;direction:ltr;box-shadow:5px 5px 0 #111827;font-family:'Segoe UI',monospace}" +
+    ".mp .vcard .vn{font-size:clamp(12px,min(1.55vw,3vh),30px);letter-spacing:.08em;font-weight:700;white-space:nowrap}.mp .vcard .vr{display:flex;justify-content:space-between;font-size:clamp(10px,min(1.1vw,2vh),20px);letter-spacing:.05em}.mp .vcard .vl{font:italic 900 clamp(18px,min(2.4vw,4.4vh),44px)/1 Georgia,serif;align-self:flex-end}" +
+    ".mp form{display:flex;flex-direction:column;gap:clamp(6px,1.2vh,12px)}.mp label{display:flex;flex-direction:column;gap:3px;font-weight:800;font-size:clamp(12px,min(1.05vw,2vh),20px)}" +
+    ".mp input{border:3px solid #111827;border-radius:12px;padding:.35em .7em;font:700 clamp(14px,min(1.4vw,2.6vh),26px)/1.3 'Segoe UI',monospace;background:#fff;color:#111827;width:100%;direction:ltr;text-align:left}" +
+    ".mp .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mp .err{color:#b91c1c;font-weight:800;min-height:1.4em;font-size:clamp(12px,min(1.05vw,2vh),20px)}" +
+    ".mp .fine{font-size:clamp(10px,min(.9vw,1.7vh),16px)!important;color:#4b5563;font-weight:700}" +
+    ".mp .ok{width:clamp(70px,min(12vh,12vw),140px);aspect-ratio:1;border-radius:50%;background:#10b981;border:4px solid #111827;color:#fff;display:grid;place-items:center;margin:0 auto;font-size:clamp(40px,8vh,90px);animation:mppop .5s cubic-bezier(.2,1.5,.4,1);box-shadow:5px 5px 0 #111827}" +
+    ".mp .spin{width:clamp(40px,8vh,80px);aspect-ratio:1;border:6px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;margin:0 auto;animation:mpspin .8s linear infinite}@keyframes mpspin{to{transform:rotate(360deg)}}" +
+    "@media (max-width:700px){.mp .cardwrap{grid-template-columns:1fr}.mp .vcard{display:none}}" +
+    "@media (max-height:620px){.mp .lock{display:none}.mp .plan .nt{display:none}.mp .fine{display:none}}" +
+    "@media (prefers-reduced-motion:reduce){.mp,.mp-back,.mp .ok,.mp .spin{animation:none!important}}";
+  (document.head || document.documentElement).appendChild(css);
+
+  /* ---------------- fake card helpers (no real payment) ---------------- */
+  function luhnOk(num) {
+    var s = String(num).replace(/\D/g, ""), sum = 0, alt = false;
+    if (s.length < 13) return false;
+    for (var i = s.length - 1; i >= 0; i--) { var n = +s[i]; if (alt) { n *= 2; if (n > 9) n -= 9; } sum += n; alt = !alt; }
+    return sum % 10 === 0;
+  }
+  function randVisa() {
+    var d = [4]; for (var i = 0; i < 14; i++) d.push(Math.floor(Math.random() * 10));
+    var sum = 0; for (i = 0; i < 15; i++) { var n = d[14 - i]; if (i % 2 === 0) { n *= 2; if (n > 9) n -= 9; } sum += n; }
+    d.push((10 - (sum % 10)) % 10);
+    return d.join("").replace(/(.{4})/g, "$1 ").trim();
+  }
+  var FIRST = ["AHMED", "MOHAMMED", "KHALID", "FAHAD", "NOURA", "SARA", "REEM", "ABDULLAH", "SULTAN", "LAMA"], LAST = ["ALQAHTANI", "ALOTAIBI", "ALHARBI", "ALDOSARI", "ALGHAMDI", "ALZAHRANI", "ALSHEHRI", "ALMUTAIRI"];
+  function randCard() {
+    var yy = (new Date().getFullYear() % 100) + 1 + Math.floor(Math.random() * 4), mm = 1 + Math.floor(Math.random() * 12);
+    return { num: randVisa(), name: FIRST[Math.floor(Math.random() * FIRST.length)] + " " + LAST[Math.floor(Math.random() * LAST.length)], exp: (mm < 10 ? "0" : "") + mm + "/" + yy, cvv: String(100 + Math.floor(Math.random() * 900)) };
+  }
+
+  /* ---------------- paywall ---------------- */
+  var overlay = null, state = null;
+  function closePaywall() { if (overlay) { overlay.remove(); overlay = null; } state = null; document.removeEventListener("keydown", onKey, true); }
+  function onKey(e) { if (e.key === "Escape" && overlay) { e.stopPropagation(); closePaywall(); } }
+  function openPaywall(game, plansFirst) {
+    if (overlay) return;
+    state = { step: plansFirst ? "plans" : "lock", game: game, plan: "month", err: "" };
+    overlay = document.createElement("div"); overlay.className = "mp-back";
+    overlay.addEventListener("click", function (e) { if (e.target === overlay && state && state.step !== "busy") closePaywall(); });
+    overlay.addEventListener("click", onClick); overlay.addEventListener("input", onInput); overlay.addEventListener("submit", function (e) { e.preventDefault(); });
+    document.body.appendChild(overlay); document.addEventListener("keydown", onKey, true);
+    draw();
+  }
+  function draw() {
+    if (!overlay) return;
+    var s = state, h = "";
+    if (s.step === "lock") {
+      h = '<div class="lock" aria-hidden="true">🔒</div><h2>خلصت جولاتك المجانية</h2>' +
+        "<p>جرّبت " + FREE_ROUNDS + " جولات من «" + esc(NAMES[s.game] || "") + "». اشترك وافتح البنك كامل بدون حدود، وبدون تكرار.</p>" +
+        '<div class="row"><button class="b go" data-a="plans">اشترك ⭐</button></div><div class="row"><button class="b link" data-a="close">ليس الآن</button></div>';
+    } else if (s.step === "plans") {
+      var d = PLANS.day, m = PLANS.month, per = (19.99 / 30).toFixed(2), save = Math.round((1 - 19.99 / (9.99 * 30)) * 100);
+      h = "<h2>اختر اشتراكك</h2><p>افتح كل الألعاب وكل المجموعات بدون حدود</p>" +
+        '<div class="plans" role="radiogroup" aria-label="الاشتراك">' +
+        '<button class="plan' + (s.plan === "day" ? " on" : "") + '" data-plan="day" role="radio" aria-checked="' + (s.plan === "day") + '"><span class="chk">' + (s.plan === "day" ? "✓" : "") + '</span><span class="nm">' + d.name + '</span><span class="pr">' + d.price + "<small>ر.س</small></span><span class=\"nt\">تجديد كل يوم</span></button>" +
+        '<button class="plan' + (s.plan === "month" ? " on" : "") + '" data-plan="month" role="radio" aria-checked="' + (s.plan === "month") + '"><span class="tag">⭐ الأكثر اختيارًا · وفّر ' + save + '٪</span><span class="chk">' + (s.plan === "month" ? "✓" : "") + '</span><span class="nm">' + m.name + '</span><span class="pr">' + m.price + "<small>ر.س</small></span><span class=\"nt\">يعني " + per + " ر.س باليوم فقط</span></button></div>" +
+        '<div class="row"><button class="b go" data-a="card">متابعة — ' + PLANS[s.plan].name + " (" + PLANS[s.plan].price + " ر.س)</button></div>" +
+        '<div class="row"><button class="b link" data-a="close">ليس الآن</button></div>';
+    } else if (s.step === "card") {
+      h = "<h2>بيانات البطاقة</h2>" +
+        '<div class="cardwrap"><div class="vcard" aria-hidden="true"><span class="vn" id="v-num">•••• •••• •••• ••••</span><span class="vr"><span id="v-name">CARD HOLDER</span><span id="v-exp">MM/YY</span></span><span class="vl">VISA</span></div>' +
+        '<form id="mp-form" autocomplete="off" novalidate>' +
+        '<label>رقم البطاقة<input id="f-num" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000" autocomplete="off"></label>' +
+        '<label>اسم حامل البطاقة<input id="f-name" maxlength="26" placeholder="NAME ON CARD" autocomplete="off"></label>' +
+        '<div class="two"><label>تاريخ الانتهاء<input id="f-exp" inputmode="numeric" maxlength="5" placeholder="MM/YY" autocomplete="off"></label><label>CVV<input id="f-cvv" inputmode="numeric" maxlength="3" placeholder="123" autocomplete="off"></label></div>' +
+        '<div class="err" id="mp-err" role="alert">' + esc(s.err) + "</div></form></div>" +
+        '<div class="row"><button class="b go" data-a="pay">اشترك — ' + PLANS[s.plan].price + ' ر.س</button><button class="b hot" data-a="saved" type="button">💳 البطاقة المحفوظة</button><button class="b link" data-a="plans">رجوع</button></div>' +
+        '<p class="fine">نسخة تجريبية للعرض فقط: لا يتم أي خصم، ولا تُحفظ بيانات البطاقة ولا تُرسل لأي جهة.</p>';
+    } else if (s.step === "busy") {
+      h = '<div class="spin" aria-hidden="true"></div><h2>جاري إتمام الاشتراك…</h2><p>لحظات</p>';
+    } else if (s.step === "done") {
+      h = '<div class="ok" aria-hidden="true">✓</div><h2>تم الاشتراك بنجاح 🎉</h2><p>' + esc(PLANS[s.plan].name) + " — صار البنك كامل مفتوح لك في كل الألعاب.</p>" +
+        '<div class="row"><button class="b go" data-a="finish">يلا نلعب ▶</button></div>';
+    }
+    overlay.innerHTML = '<div class="mp" role="document" aria-live="polite">' + h + "</div>";
+    var first = overlay.querySelector(".b.go, input"); if (first && s.step !== "card") { try { first.focus(); } catch (e) {} }
+  }
+  function fmtNum(v) { return v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim(); }
+  function fmtExp(v) { v = v.replace(/\D/g, "").slice(0, 4); return v.length > 2 ? v.slice(0, 2) + "/" + v.slice(2) : v; }
+  function syncPreview() {
+    var q = function (id) { var e = overlay.querySelector(id); return e ? e.value : ""; };
+    var n = overlay.querySelector("#v-num"); if (!n) return;
+    n.textContent = q("#f-num") || "•••• •••• •••• ••••"; overlay.querySelector("#v-name").textContent = (q("#f-name") || "CARD HOLDER").toUpperCase(); overlay.querySelector("#v-exp").textContent = q("#f-exp") || "MM/YY";
+  }
+  function onInput(e) {
+    var t = e.target;
+    if (t.id === "f-num") t.value = fmtNum(t.value); else if (t.id === "f-exp") t.value = fmtExp(t.value); else if (t.id === "f-cvv") t.value = t.value.replace(/\D/g, "").slice(0, 3); else if (t.id === "f-name") t.value = t.value.replace(/[^A-Za-z .'-]/g, "").toUpperCase();
+    syncPreview();
+  }
+  function validate() {
+    var v = function (id) { return overlay.querySelector(id).value.trim(); };
+    if (!luhnOk(v("#f-num")) || v("#f-num").replace(/\D/g, "").length !== 16) return "رقم البطاقة غير صحيح";
+    if (v("#f-name").length < 3) return "اكتب اسم حامل البطاقة";
+    var m = /^(\d\d)\/(\d\d)$/.exec(v("#f-exp"));
+    if (!m || +m[1] < 1 || +m[1] > 12) return "تاريخ الانتهاء غير صحيح";
+    var now = new Date(), yy = now.getFullYear() % 100, mm = now.getMonth() + 1;
+    if (+m[2] < yy || (+m[2] === yy && +m[1] < mm)) return "البطاقة منتهية";
+    if (!/^\d{3}$/.test(v("#f-cvv"))) return "رمز CVV من 3 أرقام";
+    return "";
+  }
+  function onClick(e) {
+    var p = e.target.closest("[data-plan]"); if (p && state.step === "plans") { state.plan = p.getAttribute("data-plan"); draw(); return; }
+    var b = e.target.closest("[data-a]"); if (!b || !state) return;
+    var a = b.getAttribute("data-a");
+    if (a === "close") closePaywall();
+    else if (a === "plans") { state.step = "plans"; draw(); }
+    else if (a === "card") { state.step = "card"; state.err = ""; draw(); var f = overlay.querySelector("#f-num"); if (f) f.focus(); }
+    else if (a === "saved") {
+      var c = randCard(); overlay.querySelector("#f-num").value = c.num; overlay.querySelector("#f-name").value = c.name; overlay.querySelector("#f-exp").value = c.exp; overlay.querySelector("#f-cvv").value = c.cvv;
+      overlay.querySelector("#mp-err").textContent = ""; syncPreview();
+    } else if (a === "pay") {
+      var er = validate(); if (er) { overlay.querySelector("#mp-err").textContent = er; return; }
+      state.step = "busy"; draw();
+      setTimeout(function () { if (!overlay) return; subscribe(state.plan); state.step = "done"; draw(); }, 1700);
+    } else if (a === "finish") closePaywall();
+  }
+
+  /* ---------------- public API ---------------- */
+  window.MAJLIS_PASS = {
+    FREE_ROUNDS: FREE_ROUNDS, SIZE: SIZE, PLANS: PLANS, NAMES: NAMES,
+    isSub: isSub, sub: sub, subscribe: subscribe, unsubscribe: unsubscribe, gate: gate, freeUsed: freeUsed,
+    sets: sets, setsInfo: setsInfo, openPaywall: openPaywall, luhnOk: luhnOk, randCard: randCard,
+    onChange: function (f) { listeners.push(f); }
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { new MutationObserver(queuePlace).observe(document.body, { childList: true, subtree: true }); });
+  else new MutationObserver(queuePlace).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener("resize", queuePlace);
+  window.addEventListener("storage", function (e) { if (e.key === SUB_KEY || e.key === FREE_KEY || e.key === SETS_KEY) { queuePlace(); changed(); } });
+})();

@@ -549,7 +549,14 @@
   }
   var errMsg = "";
 
+  function passSync() {
+    try {
+      var played = BANK.filter(function (q) { return S.used.indexOf(q.id) >= 0; }).length;
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("wsh", BANK.length, BANK.length - played);
+    } catch (e) {}
+  }
   function render() {
+    passSync();
     var v = { lobby: vLobby, intro: vIntro, write: vWrite, read: vVote, vote: vVote, reveal: vReveal, scores: vScores, final: vFinal }[S.phase] || vLobby;
     var html;
     try { html = topbar() + '<main class="screen">' + v() + "</main>" + vModal() + (S.paused ? '<div class="paused">⏸ متوقف مؤقتاً<button class="btn go big" data-a="pause">▶ استئناف</button></div>' : ""); }

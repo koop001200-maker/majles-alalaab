@@ -50,6 +50,16 @@
     Store.set("kh_bank_ver", 3);
   }
   function saveBank() { Store.set(K.bank, bank); }
+  // hint = the item's category + the shape of its name (first letter of each word, empty boxes for the rest)
+  function hintHTML(it) {
+    var cat = CATS.filter(function (c) { return c.id === it.cat; })[0];
+    var words = String(it.name).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim().split(" ");
+    return '<span class="hint-cat">' + (cat ? esc(cat.icon + " " + cat.name) : "") + "</span>" +
+      '<span class="hint-words">' + words.map(function (w) {
+        var L = Array.from(w), show = (L.length > 3 && L[0] === "ا" && L[1] === "ل") ? 3 : 1;
+        return '<span class="hw">' + L.map(function (ch, i) { return "<i" + (i < show ? ' class="on"' : "") + ">" + (i < show ? esc(ch) : "") + "</i>"; }).join("") + "</span>";
+      }).join("") + "</span>";
+  }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
   function photo(id) { return Store.raw(K.img + id); }
   /* photo shown in play: the family's own photo first, then the bundled photo pack (if enabled) */
@@ -302,6 +312,11 @@
       case "memdone": game.phase = "ready"; SFX.pop(); commit(); break;
       case "start": game.phase = "guess"; c.paused = false; SFX.go(); ensureTimer(); commit(); break;
       case "pause": c.paused = !c.paused; commit(); break;
+      case "hint":
+        if (game.phase === "guess" && !c.paused && !c.pendingEnd && c.hintFor !== c.itemId) {
+          c.hintFor = c.itemId; c.timeLeft = Math.max(1, Math.ceil(c.timeLeft / 2)); SFX.pop(); commit();
+        }
+        break;
       case "guess": modal = { type: "guess" }; render(); var gi = document.getElementById("guess-input"); if (gi) gi.focus(); break;
       case "spoken": modal = { type: "judge" }; render(); break;
       case "check":
@@ -408,6 +423,8 @@
   }
 
   function advance() {
+    var willEnd = game.k + 1 >= game.order.length && game.round + 1 > game.settings.rounds;
+    if (!willEnd) if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("kh")) return;
     game.k++;
     if (game.k >= game.order.length) {
       game.k = 0; game.round++;
@@ -498,10 +515,12 @@
         '<div class="ring' + (c.timeLeft <= 10 ? " warn" : "") + (c.paused ? " paused" : "") + '" id="ring" style="--p:' + (c.timeLeft / s.turnTime) + '"><span id="time-left">' + (c.paused && !c.pendingEnd ? "⏸ متوقف" : c.timeLeft) + "</span></div>" +
         '<div class="hearts' + (shakeNext ? " shake" : "") + '" aria-label="المحاولات الباقية ' + c.attempts + '">' + hearts + "</div>" +
         '<div class="feedback ' + (c.feedback ? c.feedback.cls : "") + '">' + (c.feedback ? esc(c.feedback.text) : "اسأل… والباقين يجاوبون «إيه» أو «لا» بس") + "</div>" +
+        (c.hintFor === c.itemId ? '<div class="hint-box"><b>💡 تلميح:</b>' + hintHTML(it) + "</div>" : "") +
         (c.guesses.length ? '<div class="guess-list">' + c.guesses.map(function (g) { return "<span>" + esc(g) + "</span>"; }).join("") + "</div>" : "") +
         (c.lastTyped && !c.pendingEnd ? '<button class="btn small ghost" data-act="object">🙋 اعتراض! كانت صح</button>' : "");
       if (c.pendingEnd) actions = '<button class="btn huge" data-act="object">🙋 اعتراض</button><button class="btn go huge" data-act="accept-end">تمام ▶</button>';
       else actions = '<button class="btn go huge" data-act="guess"' + (c.paused ? " disabled" : "") + ">خمّن 💡</button>" +
+        '<button class="btn big hint-btn" data-act="hint"' + (c.paused || c.hintFor === c.itemId ? " disabled" : "") + ">💡 تلميح (يروح نص الوقت)</button>" +
         '<button class="btn big" data-act="pause">' + (c.paused ? "▶ كمّل" : "⏸ وقف") + "</button>" +
         '<button class="btn big" data-act="skip">' + (s.mode === "duel" ? "باص ⏭" : "تخطي ⏭") + "</button>" +
         (s.mode === "duel" ? "" : '<button class="btn big" data-act="redo">إعادة 🔄</button>');
@@ -676,7 +695,7 @@
       inner = "<h2>مصادر الصور 📷</h2><p class=\"muted\">الصور من ويكيميديا كومنز برخص حرة، وهذه أسماء أصحابها ورخصها كما تشترط الرخص.</p>" +
         '<div style="text-align:start;display:grid;gap:6px;' + (ids.length ? "max-height:55vh;overflow:auto" : "") + '">' + (ids.length ? ids.map(function (id) {
           var c = P[id], it = item(id);
-          return '<div style="padding:.3em .6em;border-radius:10px;background:var(--surface-2);font-size:.85em"><b>' + esc(it ? it.name : id) + "</b> — " + esc(c.author) + " · " + esc(c.license) + ' · <span class="muted" dir="ltr">' + esc(c.page) + "</span></div>";
+          return '<div style="padding:.3em .6em;border-radius:10px;background:var(--surface-2);font-size:.85em"><b>' + esc(it ? it.name : id) + "</b> — " + esc(c.author) + " · " + esc(c.license) + ' · <span class="muted" dir="ltr" style="overflow-wrap:anywhere">' + esc(c.title || c.page) + "</span></div>";
         }).join("") : '<p class="muted" style="margin:0">لا توجد صور مرفقة.</p>') + "</div>" +
         '<div class="actions"><button class="btn big" data-ui="close">تمام</button></div>';
     } else if (m.type === "reset") {
@@ -685,7 +704,15 @@
     return '<div class="modal-back" data-ui="backdrop"><div class="modal panel" role="dialog" aria-modal="true">' + inner + "</div></div>";
   }
 
+  function passSync() {
+    try {
+      var u = Store.get(K.used, []); if (!Array.isArray(u)) u = [];
+      var played = bank.filter(function (it) { return u.indexOf(it.id) >= 0; }).length;
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("kh", bank.length, bank.length - played);
+    } catch (e) {}
+  }
   function render() {
+    passSync();
     try { renderInner(); } catch (err) {
       if (window.console) console.error(err);
       game = null; saveGame(); view = "home"; modal = null; renderInner(); toast("صار خلل في اللعبة المحفوظة، فبدأنا من جديد");
@@ -741,6 +768,7 @@
   function startGame() {
     setupErr = validate();
     if (setupErr) { view = "setup"; setupTab = "players"; render(); return; }
+    if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("kh")) return;
     saveSettings(); newGame(); view = "game"; ensureTimer(); commit();
   }
   function primary() {
@@ -764,6 +792,7 @@
       case "trial":
         setupErr = validate();
         if (setupErr) { view = "setup"; setupTab = "players"; render(); break; }
+        if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("kh")) break;
         var saved = clone(settings);
         settings.rounds = 1; settings.level = 1; settings.cats = []; settings.turnTime = 60; settings.memTime = 6;
         settings.double = false; settings.surprise = false; settings.random = false;

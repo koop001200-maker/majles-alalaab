@@ -192,6 +192,7 @@
   function openTile(idx) {
     if (game.phase !== "pick") return;
     var tile = game.tiles[idx]; if (!tile || tile.opened) return;
+    if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("rt")) return;
     var team = teamOfTurn(game.turn), special = chooseSpecial();
     tile.opened = true; tile.team = team;
     if (special) { game.specialsSeen++; game.lastSpecial = special; }
@@ -542,7 +543,15 @@
     return '<div class="modal-back" data-ui="backdrop"><div class="modal panel" role="dialog" aria-modal="true">' + inner + "</div></div>";
   }
 
+  function passSync() {
+    try {
+      var u = Store.get(K.used, []); if (!Array.isArray(u)) u = [];
+      var played = BANK.filter(function (x) { return u.indexOf(x.id) >= 0; }).length;
+      window.MAJLIS_PASS && MAJLIS_PASS.sets("rt", BANK.length, BANK.length - played);
+    } catch (e) {}
+  }
   function render() {
+    passSync();
     try { renderInner(); } catch (err) {
       if (window.console) console.error(err);
       game = null; saveGame(); view = "home"; modal = null; renderInner(); toast("صار خلل في المباراة المحفوظة، فبدأنا من جديد");

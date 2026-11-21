@@ -89,47 +89,76 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 #play { position: fixed; inset: 0; z-index: 10; background: var(--violet); }
 #play[hidden] { display: none; }
 #play iframe { width: 100%; height: 100%; border: 0; display: block; }
+.sets { align-self: center; background: #eef0ff; border: clamp(2px, .18vw, 4px) solid var(--ink); border-radius: 999px; padding: 0 .8em; font-weight: 800; font-size: clamp(12px, min(.95vw, 1.9vh), 22px); line-height: 1.6; white-space: nowrap; }
+.subbtn { position: fixed; top: clamp(10px, 1.6vh, 20px); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 5; font: 800 clamp(13px, min(1vw, 1.9vh), 20px)/1 var(--body); color: var(--ink); background: var(--yellow); border: var(--line); border-radius: 999px; padding: .55em 1em; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
+.subbtn.on { background: var(--mint); }
+.splash { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; text-align: center; padding: 16px; background: linear-gradient(135deg, var(--violet) 0%, var(--violet-2) 55%, var(--violet) 100%); transition: opacity .45s ease, transform .45s ease; overflow: hidden; }
+.splash.out { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.splash[hidden] { display: none; }
+.sp-box { display: flex; flex-direction: column; align-items: center; gap: clamp(12px, 3vh, 36px); position: relative; z-index: 1; }
+.sp-box h1 { font-size: clamp(54px, min(11vw, 18vh), 220px); }
+.sp-box p { margin: 0; font-weight: 800; font-size: clamp(16px, min(1.8vw, 3.2vh), 40px); }
+.sp-go { font: 400 clamp(30px, min(4vw, 7vh), 90px)/1.2 var(--display); color: #fff; background: var(--green); border: var(--line); border-radius: 999px; padding: .15em 1.2em 0; box-shadow: clamp(5px, .6vw, 12px) clamp(5px, .6vw, 12px) 0 var(--ink); cursor: pointer; animation: spbeat 1.4s ease-in-out infinite; }
+.sp-go:hover { transform: translate(-3px, -3px); }
+.sp-go:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--ink); }
+.sp-note { font-size: clamp(12px, min(1.1vw, 2vh), 22px) !important; opacity: .85; }
+.sp-float { position: absolute; font-size: clamp(30px, 6vw, 90px); opacity: .9; filter: drop-shadow(3px 3px 0 rgba(17,24,39,.5)); animation: spfloat 5s ease-in-out infinite; }
+@keyframes spbeat { 50% { transform: scale(1.06); } }
+@keyframes spfloat { 50% { transform: translateY(-18px) rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .sp-go, .sp-float { animation: none; } .splash { transition: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
-<body>
+<body data-hub>
 <button class="fs" id="fs" type="button">⛶ شاشة كاملة</button>
+<button class="subbtn" id="sub" type="button"></button>
+<div class="splash" id="splash" role="dialog" aria-label="ابدأ">
+  <span class="sp-float" style="top:10%;right:8%" aria-hidden="true">🎲</span><span class="sp-float" style="top:18%;left:9%;animation-delay:-1s" aria-hidden="true">🐪</span>
+  <span class="sp-float" style="bottom:12%;right:12%;animation-delay:-2s" aria-hidden="true">☕</span><span class="sp-float" style="bottom:16%;left:8%;animation-delay:-3s" aria-hidden="true">🧩</span>
+  <div class="sp-box">
+    <h1>مجلس<span>الألعاب!</span></h1>
+    <p>خمس ألعاب للعائلة… جاهزين؟</p>
+    <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
+    <p class="sp-note">زر البداية يفتح الشاشة الكاملة</p>
+  </div>
+</div>
 <main>
   <h1>مجلس<span>الألعاب!</span></h1>
   <nav class="games" aria-label="الألعاب">
-    <a class="game g1" href="min-akoon.html">
+    <a class="game g1" href="min-akoon.html" data-g="mak">
       <div class="art"><span class="qmark" aria-hidden="true">؟</span></div>
       <span class="chip">2 – 6 فرق</span><span class="live" id="resume-a" hidden>محفوظة</span>
-      <h2>مين أكون؟</h2>
+      <h2>مين أكون؟</h2><span class="sets"></span>
       <p>أربع معلومات وتعرف الشخصية</p>
     </a>
-    <a class="game g2" href="khammen.html">
+    <a class="game g2" href="khammen.html" data-g="kh">
       <div class="art"><span class="emo" aria-hidden="true">🐪☕🎲</span></div>
       <span class="chip">2 – 16 لاعب</span><span class="live" id="resume-b" hidden>محفوظة</span>
-      <h2>خمّن وش هو؟</h2>
+      <h2>خمّن وش هو؟</h2><span class="sets"></span>
       <p>اسأل «إيه أو لا» وخمّن الشيء</p>
     </a>
-    <a class="game g3" href="huruf.html">
+    <a class="game g3" href="huruf.html" data-g="hf">
       <div class="art"><div class="tiles letters" aria-hidden="true"><i>ح</i><i>ر</i><i>ف</i></div></div>
       <span class="chip">بلا حد</span><span class="live" id="resume-d" hidden>جارية</span>
-      <h2>تحدي الحروف</h2>
+      <h2>تحدي الحروف</h2><span class="sets"></span>
       <p>رتّب الحروف وقل الكلمة أول</p>
     </a>
-    <a class="game g4" href="rattebha.html">
+    <a class="game g4" href="rattebha.html" data-g="rt">
       <div class="art"><div class="tiles numbers" aria-hidden="true"><i>1</i><i>2</i><i>3</i></div></div>
       <span class="chip">2 – 6 فرق</span><span class="live" id="resume-c" hidden>محفوظة</span>
-      <h2>رتّبها صح</h2>
+      <h2>رتّبها صح</h2><span class="sets"></span>
       <p>رتّب البطاقات قبل الفرق الثانية</p>
     </a>
-    <a class="game g5" href="wsh.html">
+    <a class="game g5" href="wsh.html" data-g="wsh">
       <div class="art"><span class="emo" aria-hidden="true">📱🤥📺</span></div>
       <span class="chip">جوال لكل لاعب</span><span class="new" id="new-e">جديدة</span><span class="live" id="resume-e" hidden>جارية</span>
-      <h2>وش الصح؟</h2>
+      <h2>وش الصح؟</h2><span class="sets"></span>
       <p>اكتب كذبة مقنعة واكشف الحقيقة</p>
     </a>
   </nav>
 </main>
 <div id="play" hidden></div>
+<script src="js/majlis-pass.js"></script>
 <script>
 (function () {
   function saved(key, field, done) {
@@ -144,8 +173,39 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
     document.getElementById("resume-d").hidden = !on;
     var w = false; try { var ws = JSON.parse(localStorage.getItem("wsh_host_v1") || "null"); w = !!(ws && ws.phase && ws.phase !== "lobby" && ws.phase !== "final"); } catch (e) {}
     document.getElementById("resume-e").hidden = !w; document.getElementById("new-e").hidden = w;
+    refreshPass();
   }
+  function refreshPass() {
+    var P = window.MAJLIS_PASS; if (!P) return;
+    var small = innerWidth < 640;
+    [].forEach.call(document.querySelectorAll(".game[data-g]"), function (a) {
+      var i = P.setsInfo(a.getAttribute("data-g")), el = a.querySelector(".sets");
+      if (el) { el.textContent = "🎮 " + i.left + (small ? "" : " مجموعة متاحة"); el.title = i.left + " من " + i.all + " مجموعة (كل مجموعة " + i.size + " جولات)"; }
+    });
+    var b = document.getElementById("sub"), sb = P.sub();
+    b.classList.toggle("on", !!sb);
+    b.textContent = sb ? "✅ مشترك — " + P.PLANS[sb.plan].name.replace("اشتراك ", "") : "⭐ اشترك";
+    b.title = sb ? "اضغط لإلغاء الاشتراك (تجريبي)" : "افتح البنك كامل في كل الألعاب";
+  }
+  document.getElementById("sub").addEventListener("click", function () {
+    var P = window.MAJLIS_PASS; if (!P) return;
+    if (P.isSub()) { if (confirm("إلغاء الاشتراك التجريبي؟")) { P.unsubscribe(); refreshPass(); } }
+    else P.openPaywall("hub", true);
+  });
+  if (window.MAJLIS_PASS) MAJLIS_PASS.onChange(refreshPass);
+  window.addEventListener("resize", refreshPass);
   refresh();
+
+  /* the entrance screen: shown once per visit; the big button also turns on full screen */
+  var splash = document.getElementById("splash");
+  var started = false; try { started = sessionStorage.getItem("majlis_started") === "1" || /^#play=/.test(location.hash); } catch (e) {}
+  if (started) splash.hidden = true;
+  document.getElementById("go").addEventListener("click", function () {
+    try { sessionStorage.setItem("majlis_started", "1"); } catch (e) {}
+    try { var el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (f && !(document.fullscreenElement || document.webkitFullscreenElement)) { var pr = f.call(el); if (pr && pr.catch) pr.catch(function () {}); } } catch (e) {}
+    splash.classList.add("out"); setTimeout(function () { splash.hidden = true; var g = document.querySelector(".game"); if (g) g.focus(); }, 480);
+  });
+  setTimeout(function () { if (!splash.hidden) document.getElementById("go").focus(); }, 100);
 
   /* One continuous full screen: games open inside this page, so full screen never drops between games. */
   var play = document.getElementById("play"), frame = null, fsBtn = document.getElementById("fs");
