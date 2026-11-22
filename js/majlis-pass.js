@@ -106,7 +106,7 @@
       var host = null, sels = [".topbar .round-info", ".topbar .info", ".bar-r", ".d-top", ".c-top", ".page-head"], first = true;
       for (var k = 0; k < sels.length && !host; k++) { var h = document.querySelector(sels[k]); if (h && h.getClientRects().length > 0) { host = h; first = sels[k] !== ".page-head"; } }
       var pill = document.querySelector(".home-pill");
-      if (!pill) { pill = document.createElement("a"); pill.className = "home-pill"; pill.href = "index.html"; pill.textContent = "↩ رجوع"; pill.title = "الرجوع إلى مجلس الألعاب"; }
+      if (!pill) { pill = document.createElement("a"); pill.className = "home-pill"; pill.href = "index.html"; var hl = document.body.getAttribute("data-home-label"); pill.textContent = hl ? "🏠 " + hl : "↩ رجوع"; pill.title = "الرجوع إلى مجلس الألعاب"; }
       pill.classList.toggle("fixed", !host);
       var parent = host || document.body;
       if (pill.parentNode !== parent || (host && (first ? parent.firstElementChild !== pill : parent.lastElementChild !== pill))) { if (first && host) parent.insertBefore(pill, parent.firstChild); else parent.appendChild(pill); }
@@ -157,7 +157,7 @@
   /* ---------------- styles ---------------- */
   var css = document.createElement("style");
   css.textContent =
-    ".home-pill{display:inline-flex;align-items:center;gap:.3em;background:#fbbf24;color:#111827;border:2px solid #111827;border-radius:999px;padding:.1em .9em;font:800 clamp(14px,min(1.1vw,2vh),24px)/1.5 Changa,'Segoe UI',Tahoma,sans-serif;white-space:nowrap;text-decoration:none;box-shadow:2px 2px 0 #111827}.home-pill:hover{background:#fde68a}" +
+    ".home-pill{min-height:36px;display:inline-flex;align-items:center;gap:.3em;background:#fbbf24;color:#111827;border:2px solid #111827;border-radius:999px;padding:.1em .9em;font:800 clamp(14px,min(1.1vw,2vh),24px)/1.5 Changa,'Segoe UI',Tahoma,sans-serif;white-space:nowrap;text-decoration:none;box-shadow:2px 2px 0 #111827}.home-pill:hover{background:#fde68a}" +
     ".home-pill.fixed{position:fixed;top:clamp(8px,1.6vh,18px);right:clamp(8px,1.2vw,18px);z-index:2147482000}" +
     ".mp .gchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.mp .gc{min-height:30px;border:2px solid #111827;border-radius:999px;background:#fff;color:#111827;text-decoration:none;font-weight:800;padding:.1em .9em;font-size:clamp(12px,min(1.1vw,2vh),20px)}.mp .gc.on{background:#fbbf24}" +
     ".mp .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,1vw,14px)}" +
@@ -177,17 +177,18 @@
     ".mp .b{border:3px solid #111827;border-radius:999px;background:#fff;color:#111827;box-shadow:4px 4px 0 #111827;padding:.4em 1.3em;font:800 clamp(15px,min(1.5vw,2.8vh),30px)/1.3 Changa,sans-serif;cursor:pointer}" +
     "@media (hover:none){.mp .b:hover{transform:none;box-shadow:4px 4px 0 #111827}}.mp,.mp *{-webkit-tap-highlight-color:transparent}" +
     ".mp .b:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #111827}.mp .b:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #111827}" +
-    ".mp .b.go{background:#10b981;color:#fff}.mp .b.hot{background:#fbbf24}.mp .b:disabled{opacity:.5;box-shadow:none;cursor:default}" +
+    ".mp .b.go{background:#047857;color:#fff}.mp .b.hot{background:#fbbf24}.mp .b:disabled{opacity:.5;box-shadow:none;cursor:default}" +
     ".mp .b.link{border:0;background:none;box-shadow:none;text-decoration:underline;font-size:clamp(12px,min(1.1vw,2vh),20px);padding:.1em .6em;min-height:28px}" +
     ".mp .plans{display:grid;grid-template-columns:1fr 1.15fr;gap:clamp(10px,1.4vw,24px);align-items:stretch}" +
     ".mp .plan{position:relative;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;border:3px solid #111827;border-radius:20px;background:#f3f4f6;color:#4b5563;padding:clamp(10px,2vh,24px) 10px;cursor:pointer;font-family:inherit}" +
     ".mp .plan.on{background:#fef3c7;color:#111827;box-shadow:6px 6px 0 #111827;transform:translate(-2px,-2px)}" +
     ".mp .plan .nm{font-weight:800;font-size:clamp(14px,min(1.4vw,2.6vh),26px)}" +
     ".mp .plan .pr{font:400 clamp(30px,min(4vw,7.4vh),80px)/1 Lalezar,Changa,sans-serif}.mp .plan .pr small{font:800 max(.32em,11px) Changa,sans-serif;margin-inline-start:.3em}" +
+    ".mp .plan .pd{margin-top:.2em;background:#047857;color:#fff;border:2px solid #111827;border-radius:999px;padding:0 .8em;font-weight:800;font-size:clamp(12px,min(1.15vw,2.2vh),22px);white-space:nowrap;justify-self:center}.mp .plan .pd.off{background:#e5e7eb;color:#111827}.mp .pdnote{font-weight:800;background:#ecfdf5;border:2px solid #111827;border-radius:14px;padding:.1em .8em}" +
     ".mp .plan .nt{font-weight:700;font-size:clamp(11px,min(1vw,1.9vh),19px)}" +
     ".mp .plan .tag{position:absolute;top:-14px;inset-inline:0;margin-inline:auto;width:max-content;max-width:94%;background:#ef4444;color:#fff;border:2px solid #111827;border-radius:999px;padding:0 .9em;font-weight:800;font-size:clamp(11px,min(1.05vw,2vh),20px)}" +
     ".mp .plan .chk{position:absolute;top:8px;inset-inline-start:10px;width:1.4em;height:1.4em;border:2px solid #111827;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:clamp(11px,1.6vh,18px)}" +
-    ".mp .plan.on .chk{background:#10b981;color:#fff}" +
+    ".mp .plan.on .chk{background:#047857;color:#fff}" +
     ".mp .cardwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:clamp(10px,2vw,30px);align-items:center;text-align:start}" +
     ".mp .vcard{aspect-ratio:1.586;border:3px solid #111827;border-radius:18px;background:linear-gradient(135deg,#1e3a8a,#6366f1 60%,#818cf8);color:#fff;padding:clamp(10px,2vh,22px);display:flex;flex-direction:column;justify-content:space-between;direction:ltr;box-shadow:5px 5px 0 #111827;font-family:'Segoe UI',monospace}" +
     ".mp .vcard .vn{font-size:clamp(12px,min(1.55vw,3vh),30px);letter-spacing:.08em;font-weight:700;white-space:nowrap}.mp .vcard .vr{display:flex;justify-content:space-between;font-size:clamp(10px,min(1.1vw,2vh),20px);letter-spacing:.05em}.mp .vcard .vl{font:italic 900 clamp(18px,min(2.4vw,4.4vh),44px)/1 Georgia,serif;align-self:flex-end}" +
@@ -196,7 +197,7 @@
     ".mp .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mp .err{color:#b91c1c;font-weight:800;min-height:1.4em;font-size:clamp(12px,min(1.05vw,2vh),20px)}" +
     ".mp .dua{font-family:Lalezar,Changa,sans-serif;font-weight:400!important;font-size:clamp(22px,min(2.8vw,5vh),52px)!important;color:#047857}" +
     ".mp .fine{font-size:clamp(10px,min(.9vw,1.7vh),16px)!important;color:#4b5563;font-weight:700}" +
-    ".mp .ok{width:clamp(70px,min(12vh,12vw),140px);aspect-ratio:1;border-radius:50%;background:#10b981;border:4px solid #111827;color:#fff;display:grid;place-items:center;margin:0 auto;font-size:clamp(40px,8vh,90px);animation:mppop .5s cubic-bezier(.2,1.5,.4,1);box-shadow:5px 5px 0 #111827}" +
+    ".mp .ok{--okd:clamp(70px,min(12vh,12vw),140px);width:var(--okd);height:var(--okd);flex:none;align-self:center;justify-self:center;box-sizing:border-box;aspect-ratio:1;border-radius:50%;background:#10b981;border:4px solid #111827;color:#fff;display:grid;place-items:center;margin:0 auto;font-size:clamp(40px,8vh,90px);animation:mppop .5s cubic-bezier(.2,1.5,.4,1);box-shadow:5px 5px 0 #111827}" +
     ".mp .spin{width:clamp(40px,8vh,80px);aspect-ratio:1;border:6px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;margin:0 auto;animation:mpspin .8s linear infinite}@keyframes mpspin{to{transform:rotate(360deg)}}" +
     "@media (max-width:700px){.mp .cardwrap{grid-template-columns:1fr}.mp .vcard{display:none}}" +
     "@media (max-height:620px){.mp .lock{display:none}.mp .plan .nt{display:none}.mp .fine{display:none}}" +
@@ -236,7 +237,7 @@
     document.body.appendChild(overlay); document.addEventListener("keydown", onKey, true);
     draw();
   }
-  function startFromHome() { var b = document.querySelector("[data-act=quick],[data-ui=quick],#h-start,[data-a=start]"); if (b) b.click(); }
+  function startFromHome() { var b = document.querySelector("[data-act=homestart],[data-ui=homestart],[data-act=quick],[data-ui=quick],#h-start,[data-a=start]"); if (b) b.click(); }
   function openPaywall(game, plansFirst) {
     if (overlay) return;
     state = { step: plansFirst ? "plans" : "lock", game: game, plan: "month", err: "" };
@@ -252,14 +253,15 @@
     if (s.step === "lock") {
       h = '<div class="lock" aria-hidden="true">🔒</div><h2>خلصت مجموعاتك المجانية</h2>' +
         "<p>لعبت المجموعات المجانية الثلاث من «" + esc(NAMES[s.game] || "") + "». اشترك وافتح كل مجموعات البنك.</p>" +
+        '<p class="pdnote">الاشتراك الشهري ' + PLANS.month.price + ' ر.س — يعني <b>' + (19.99 / 30).toFixed(2) + ' ر.س باليوم</b> فقط</p>' +
         '<div class="row"><button class="b go" data-a="plans">اشترك ⭐</button></div><div class="row"><button class="b link" data-a="close">ليس الآن</button></div>';
     } else if (s.step === "plans") {
       var d = PLANS.day, m = PLANS.month, per = (19.99 / 30).toFixed(2), save = Math.round((1 - 19.99 / (9.99 * 30)) * 100);
       h = "<h2>اختر اشتراكك</h2><p>افتح كل الألعاب وكل المجموعات بدون حدود</p>" +
         '<div class="plans" role="radiogroup" aria-label="الاشتراك">' +
-        '<button class="plan' + (s.plan === "day" ? " on" : "") + '" data-plan="day" role="radio" aria-checked="' + (s.plan === "day") + '"><span class="chk">' + (s.plan === "day" ? "✓" : "") + '</span><span class="nm">' + d.name + '</span><span class="pr">' + d.price + "<small>ر.س</small></span><span class=\"nt\">تجديد كل يوم</span></button>" +
-        '<button class="plan' + (s.plan === "month" ? " on" : "") + '" data-plan="month" role="radio" aria-checked="' + (s.plan === "month") + '"><span class="tag">⭐ الأكثر اختيارًا · وفّر ' + save + '٪</span><span class="chk">' + (s.plan === "month" ? "✓" : "") + '</span><span class="nm">' + m.name + '</span><span class="pr">' + m.price + "<small>ر.س</small></span><span class=\"nt\">يعني " + per + " ر.س باليوم فقط</span></button></div>" +
-        '<div class="row"><button class="b go" data-a="card">متابعة — ' + PLANS[s.plan].name + " (" + PLANS[s.plan].price + " ر.س)</button></div>" +
+        '<button class="plan' + (s.plan === "day" ? " on" : "") + '" data-plan="day" role="radio" aria-checked="' + (s.plan === "day") + '"><span class="chk">' + (s.plan === "day" ? "✓" : "") + '</span><span class="nm">' + d.name + '</span><span class="pr">' + d.price + "<small>ر.س</small></span><span class=\"pd off\">" + d.price + " ر.س باليوم</span></button>" +
+        '<button class="plan' + (s.plan === "month" ? " on" : "") + '" data-plan="month" role="radio" aria-checked="' + (s.plan === "month") + '"><span class="tag">⭐ الأكثر اختيارًا · وفّر ' + save + '٪</span><span class="chk">' + (s.plan === "month" ? "✓" : "") + '</span><span class="nm">' + m.name + '</span><span class="pr">' + m.price + "<small>ر.س</small></span><span class=\"pd\">يعني " + per + " ر.س باليوم فقط</span></button></div>" +
+        '<div class="row"><button class="b go" data-a="card">متابعة — ' + PLANS[s.plan].name + " (" + PLANS[s.plan].price + " ر.س" + (s.plan === "month" ? " · " + (19.99 / 30).toFixed(2) + " باليوم" : "") + ")</button></div>" +
         '<div class="row"><button class="b link" data-a="close">ليس الآن</button></div>';
     } else if (s.step === "card") {
       h = "<h2>بيانات البطاقة</h2>" +

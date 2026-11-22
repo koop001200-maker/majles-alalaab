@@ -324,6 +324,7 @@
   }
 
   function nextRound() {
+    window.__mkRoundAt = Date.now(); // يمنع النقر المتكرر على «الجولة التالية» من كشف معلومة بالخطأ
     if (!game.round || !game.round.done) return;
     if (game.idx + 1 < game.plan.length) {
       if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("mak")) return;
@@ -413,7 +414,7 @@
       '<p class="subtitle">أربع معلومات تنكشف تباعاً، ومن يعرف الجواب أولاً يكسب النقاط الأعلى.</p>' +
       '<div class="home-stack">' +
       (resumable ? '<button class="btn primary big" data-act="resume">استئناف اللعبة (الجولة ' + (game.idx + 1) + ")</button>" : "") +
-      '<button class="btn ' + (resumable ? "" : "primary ") + 'big start" data-act="quick">ابدأ اللعب</button>' +
+      '<button class="btn ' + (resumable ? "" : "primary ") + 'big start" data-act="homestart">ابدأ اللعب</button>' +
       '<div class="row"><button class="btn big ghost" data-act="trial">تجربة سريعة</button><button class="btn big ghost" data-act="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-act="setup">الإعدادات</button>' +
       "</div></section>";
@@ -505,7 +506,7 @@
   function topbarHTML(badges) {
     return '<div class="topbar"><div class="round-info">' + badges + "</div>" +
       '<div class="top-actions"><button class="btn ghost" data-act="scores" title="تعديل النقاط">±<span class="lbl"> النقاط</span></button><button class="btn ghost" data-act="fullscreen" title="ملء الشاشة">⛶<span class="lbl"> ملء الشاشة</span></button>' +
-      '<button class="btn ghost" data-act="sound" title="الصوت">' + (settings.sound ? "🔊" : "🔇") + '<span class="lbl"> الصوت</span></button>' +
+      '<button class="btn ghost" data-act="sound" title="الصوت" aria-label="الصوت" aria-pressed="' + (settings.sound ? "true" : "false") + '">' + (settings.sound ? "🔊" : "🔇") + '<span class="lbl"> الصوت</span></button>' +
       '<button class="btn ghost" data-act="end-confirm" title="إنهاء اللعبة">✕<span class="lbl"> إنهاء</span></button></div></div>';
   }
 
@@ -808,6 +809,7 @@
       case "bank": go("bank"); break;
       case "resume": view = "game"; if (game.round && !game.round.done && game.round.revealed > 0 && game.round.timeLeft != null) startTimer(); render(); break;
       case "start": startGame(); break;
+      case "homestart": setupTab = "teams"; go("setup"); break;
       case "quick": startGame(); break;
       case "trial": startTrial(); break;
       case "cats-none": collectNames(); settings.cats = []; saveSettings(); render(); break;
@@ -815,7 +817,7 @@
       case "rounds-": collectNames(); settings.rounds = Math.max(3, settings.rounds - 1); saveSettings(); render(); break;
       case "rounds+": collectNames(); settings.rounds = Math.min(30, settings.rounds + 1); saveSettings(); render(); break;
       case "cats-all": collectNames(); settings.cats = CATS.map(function (c) { return c.id; }); saveSettings(); render(); break;
-      case "reveal": if (game && game.status === "playing") revealNext(); break;
+      case "reveal": if (game && game.status === "playing" && Date.now() - (window.__mkRoundAt || 0) > 450) revealNext(); break;
       case "answer": if (game && game.status === "playing" && game.round.revealed > 0) revealAnswer(); break;
       case "next": if (game && game.status === "playing") nextRound(); break;
       case "skip": game.round.done = true; nextRound(); break;

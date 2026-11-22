@@ -342,3 +342,17 @@ textarea.json { width: 100%; min-height: 200px; font-family: ui-monospace, Conso
   .trophy, .crown { font-size: clamp(36px, 8vh, 80px) !important; }
   .champ, .winner-name { font-size: clamp(30px, min(6vw, 8vh), 80px) !important; }
 }
+
+/* أزرار الإعداد ما تنضغط تحت حجم اللمس لما تضيق الشاشة */
+.setup-col > *, .field > *, .chips > .chip { flex-shrink: 0; }
+
+/* جوال أفقي (شاشة قصيرة): نعطي التلميحات مساحة تُقرأ فيها */
+@media (max-height: 520px) {
+  .qcard-head h3 { display: none; }
+  .qcard .status { font-size: .78em; padding-block: 0; }
+  .clue .num small { display: none; }
+  .clue .num { width: 30px; border-radius: 9px; }
+  .clue .text { font-size: 14px; line-height: 1.25; overflow: visible; padding-block: 0; }
+  .qcard { padding-block: 6px; }
+  .team-card { padding-block: 3px; }
+}

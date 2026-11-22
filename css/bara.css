@@ -10,7 +10,7 @@ button { cursor: pointer; }
 h1, h2, h3, p { margin: 0; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4em; border-radius: 999px; padding: .4em 1.4em; min-height: 46px; background: #fff; }
 .btn.go { background: #fbbf24; }
-.btn.good { background: #10b981; color: #fff; }
+.btn.good { background: #047857; color: #fff; }
 .btn.bad { background: #ef4444; color: #fff; }
 .btn.huge { font-family: "Lalezar", "Changa", sans-serif; font-weight: 400; font-size: clamp(28px, min(3.8vw, 7vh), 80px); padding: .25em 1.6em; min-height: clamp(64px, 11vh, 130px); }
 .btn.big { font-size: 1.15em; padding: .45em 1.6em; }
@@ -65,3 +65,30 @@ h1, h2, h3, p { margin: 0; }
 .modal { width: min(100%, 560px); border-radius: 24px; padding: 20px; display: grid; gap: 12px; text-align: center; }
 @media (max-width: 640px) { .btn.huge { padding-inline: 1em; } }
 @media (prefers-reduced-motion: reduce) { .ring.warn { animation: none; } }
+
+/* ظل أخف (للعبة هذه فقط) */
+body.g-br { --m-shadow: 3px 3px 0 var(--m-ink); --m-shadow-sm: 2px 2px 0 var(--m-ink); }
+body.g-br .btn, body.g-br .badge, body.g-br .panel, body.g-br .modal { box-shadow: 2px 2px 0 var(--m-ink); }
+body.g-br .panel, body.g-br .modal, body.g-br .card { box-shadow: 3px 3px 0 var(--m-ink); }
+body.g-br .btn:hover:not(:disabled) { box-shadow: 3px 3px 0 var(--m-ink); transform: translate(-1px, -1px); }
+body.g-br .btn:active:not(:disabled) { box-shadow: 0 0 0 var(--m-ink); transform: translate(2px, 2px); }
+body.g-br .board .line { box-shadow: 2px 2px 0 var(--m-ink); }
+body.g-br .home-pill { box-shadow: 2px 2px 0 var(--m-ink) !important; }
+
+.namepick { gap: 6px; }
+.namepick .chip { min-height: 36px; padding: .05em .9em; font-size: .9em; }
+.screen > .head { margin-top: clamp(0px, 4vh, 40px); }
+
+/* خانة اسم اللاعب: مستطيل أصغر */
+.names { display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: center; }
+.name { width: auto; }
+.name input { flex: none; width: clamp(110px, 9vw, 160px); min-height: 38px; padding: .1em .6em; font-size: .9em; }
+.name .x { width: 30px; min-height: 30px; font-size: .8em; }
+
+.namepick .brk { flex-basis: 100%; height: 0; }
+
+/* ٨ خيارات للتخمين: ٤ بالصف على الشاشة الكبيرة، ٢ على الجوال، وما تتجاوز الشاشة */
+.vote.opts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(6px, 1.2vh, 14px); }
+.vote.opts .btn { min-height: clamp(44px, 9vh, 110px); font-size: clamp(16px, 2.6vh, 34px); padding-block: .1em; }
+@media (max-width: 700px) { .vote.opts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vote.opts .btn { min-height: clamp(38px, 7vh, 60px); } }
+@media (max-height: 700px) { .vote.opts .btn { min-height: 38px; font-size: 16px; } .card .verdict { font-size: clamp(22px, 5vh, 36px); } }

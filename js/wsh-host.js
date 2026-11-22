@@ -57,8 +57,15 @@
   var defaults = { mode: "solo", cats: CATS.map(function (c) { return c.id; }), level: 0, rounds: 8, writeSec: 60, voteSec: 30, teamsN: 2, sound: true, joinBase: "" };
   var S = Store.get(KEY, null);
   if (!S || typeof S !== "object" || !Array.isArray(S.players)) S = null;
+  else {
+    /* تخزين تالف: نشيل أي لاعب ناقص بدل ما تنهار الصفحة */
+    S.players = S.players.filter(function (p) { return p && typeof p === "object" && typeof p.id === "string" && typeof p.name === "string"; });
+    if (!Array.isArray(S.used)) S.used = []; if (!Array.isArray(S.history)) S.history = [];
+  }
   function newRoomCode() { return String(10000 + Math.floor(Math.random() * 90000)); }
   if (!S) S = { code: newRoomCode(), settings: JSON.parse(JSON.stringify(defaults)), players: [], phase: "lobby", round: 0, used: [], history: [] };
+  if (typeof S.code !== "string" || !/^\d{5}$/.test(S.code)) S.code = newRoomCode();
+  if (typeof S.phase !== "string") S.phase = "lobby";
   S.settings = Object.assign({}, defaults, S.settings || {});
   var params = new URLSearchParams(location.search);
   if (params.get("newroom") === "1") { S.code = newRoomCode(); }
@@ -384,7 +391,7 @@
       (mult() === 2 && S.phase !== "lobby" && S.phase !== "final" ? '<span class="pill hot">الجولة الأخيرة · النقاط ×2 🔥</span>' : "") +
       '</div><div class="bar-l"><span class="pill code" title="رمز الغرفة">🔑 ' + S.code + "</span>" +
       (S.phase !== "lobby" && S.phase !== "final" ? '<button class="btn sm" data-a="pause">' + (S.paused ? "▶ استئناف" : "⏸ إيقاف") + '</button><button class="btn sm" data-a="skip">⏭ التالي</button><button class="btn sm" data-a="redo">🔁 إعادة الجولة</button><button class="btn sm" data-a="end">✕ إنهاء</button>' : "") +
-      '<button class="btn sm" data-a="sound">' + (S.settings.sound ? "🔊" : "🔇") + '</button><button class="btn sm" data-a="fs">⛶</button></div></header>';
+      '<button class="btn sm" data-a="sound" aria-label="الصوت" aria-pressed="' + (S.settings.sound ? "true" : "false") + '" title="الصوت">' + (S.settings.sound ? "🔊" : "🔇") + '</button><button class="btn sm" data-a="fs" aria-label="ملء الشاشة" title="ملء الشاشة">⛶</button></div></header>';
   }
   function statusText() {
     return { online: "🟢 الغرفة جاهزة", connecting: "🟡 جاري تجهيز الغرفة… (تأكد أن التلفزيون متصل بالإنترنت)", reconnecting: "🟡 إعادة الاتصال…", offline: "🔴 لا يوجد إنترنت — جاري المحاولة", taken: "🟡 الرمز مستخدم، جاري المحاولة…", local: "🟢 وضع النوافذ المحلية", unsupported: "🔴 المتصفح لا يدعم الاتصال", error: "🔴 تعذّر تجهيز الغرفة", closed: "" }[netStatus] || "";

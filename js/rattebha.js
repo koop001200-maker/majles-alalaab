@@ -366,8 +366,8 @@
     return '<div class="topbar"><div class="info">' + info + '</div><div class="top-actions">' +
       '<button class="btn ghost" data-ui="scores" title="تعديل النقاط">±<span class="lbl"> النقاط</span></button>' +
       '<button class="btn ghost" data-ui="music" title="الموسيقى (M)">' + (settings.music ? "🎵" : "🔕") + '<span class="lbl"> موسيقى</span></button>' +
-      '<button class="btn ghost" data-ui="sound" title="المؤثرات">' + (settings.sound ? "🔊" : "🔇") + "</button>" +
-      '<button class="btn ghost" data-ui="fullscreen" title="ملء الشاشة (F)">⛶</button>' +
+      '<button class="btn ghost" data-ui="sound" title="المؤثرات" aria-label="المؤثرات الصوتية" aria-pressed="' + (settings.sound ? "true" : "false") + '">' + (settings.sound ? "🔊" : "🔇") + "</button>" +
+      '<button class="btn ghost" data-ui="fullscreen" title="ملء الشاشة (F)" aria-label="ملء الشاشة">⛶</button>' +
       '<button class="btn ghost" data-ui="end" title="إنهاء">✕<span class="lbl"> إنهاء</span></button></div></div>';
   }
   function turnLabel() { var c = game.cur; if (c && c.tiebreak) return "جولة فاصلة"; return "الجولة " + (Math.floor(game.turn / game.teams.length) + 1) + " من " + game.settings.perTeam; }
@@ -488,7 +488,7 @@
     return '<canvas id="confetti" aria-hidden="true"></canvas><section class="final"><div class="trophy" aria-hidden="true">🏆</div>' +
       '<div class="muted" style="font-size:1.3em">' + (L.length > 1 ? "تعادل بعد الجولات الفاصلة — الفوز مشترك" : "الفريق الفائز") + "</div>" +
       '<div class="champ">' + L.map(function (i) { return esc(game.teams[i].name); }).join(" و ") + "</div>" +
-      '<div class="pts"><span class="tot">' + top + " " + ptsWord(top) + "</span><span>🎯 " + game.teams[L[0]].perfect + " ترتيب كامل</span></div>" + barsHTML() +
+      '<div class="pts"><span class="tot">' + top + " " + ptsWord(top) + "</span><span>🎯 " + Math.max.apply(null, L.map(function (i) { return game.teams[i].perfect; })) + " ترتيب كامل</span></div>" + barsHTML() +
       (game.trial ? '<p class="special"><b>خلصت التجربة 👌</b><span>جاهزين للمباراة الحقيقية؟</span></p>' : "") +
       '<div class="row">' + (game.trial ? '<button class="btn go big" data-ui="quick">ابدأ المباراة الحقيقية ▶</button>' : '<button class="btn go big" data-ui="rematch">مباراة جديدة بنفس الفرق 🔁</button>') + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الصفحة الأولى</button></div></section>';
   }
@@ -505,7 +505,7 @@
       '<p class="subtitle">بطاقات مبعثرة… وعليكم ترتيبها: من الأقدم للأحدث، من الأصغر للأكبر، من البداية للنهاية.</p>' +
       '<div class="home-stack">' +
       (resumable ? '<button class="btn hot big" data-ui="resume">كمّل المباراة</button>' : "") +
-      '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="quick">ابدأ اللعب ▶</button>' +
+      '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-ui="homestart">ابدأ اللعب ▶</button>' +
       '<div class="row"><button class="btn big ghost" data-ui="trial">تجربة سريعة</button><button class="btn big ghost" data-ui="howto">طريقة اللعب</button></div>' +
       '<button class="btn big" data-ui="setup">الإعدادات</button>' +
       "</div></section>";
@@ -676,6 +676,7 @@
         if (Date.now() - resetArm < 4000) { Store.set(K.used, []); resetArm = 0; toast("تم التصفير — كل الأسئلة صارت جديدة"); }
         else { resetArm = Date.now(); setTimeout(function () { if (view === "home") render(); }, 4100); }
         render(); break;
+      case "homestart": setupTab = "teams"; go("setup"); break;
       case "quick": case "start": startMatch(); break;
       case "trial": {
         keepNames(); saveSettings();

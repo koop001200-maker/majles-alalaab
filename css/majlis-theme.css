@@ -9,7 +9,7 @@
   --m-soft-2: #e0e7ff;
   --m-violet: #6366f1;
   --m-violet-2: #818cf8;
-  --m-green: #10b981;
+  --m-green: #047857;
   --m-green-d: #047857;
   --m-mint: #6ee7b7;
   --m-yellow: #fbbf24;
@@ -141,7 +141,7 @@ body.g-kh {
 /* ============ رتّب وفوز ============ */
 body.g-rt {
   --bg: #ffffff; --stage: #ffffff; --card: #ffffff; --card-2: #eef0ff; --line: #111827; --text: #111827; --muted: #4b5563;
-  --mint: #10b981; --tang: #f97316; --sky: #2563eb; --rose: #dc2626; --gold: #b45309; --on-mint: #ffffff; --on-tang: #111827;
+  --mint: #059669; --tang: #f97316; --sky: #2563eb; --rose: #dc2626; --gold: #b45309; --on-mint: #ffffff; --on-tang: #111827;
   --font-display: var(--m-display); --font-body: var(--m-body);
 }
 .g-rt .btn.go { background: var(--m-green); color: #fff; box-shadow: var(--m-shadow-sm); }
@@ -311,7 +311,7 @@ body .home-stack .row.small .btn { font-size: clamp(12px, min(.95vw, 1.8vh), 20p
 /* touch: a pressed or hovered button never turns black; no dark tap flash on phones */
 html, body, body * { -webkit-tap-highlight-color: transparent; }
 .g-hf .btn:hover:not(:disabled):not(.primary):not(.good):not(.danger) { background: #eef0ff; color: #111827; }
-.g-hf .btn.good:hover:not(:disabled) { background: #0d9f6f; color: #fff; }
+.g-hf .btn.good:hover:not(:disabled) { background: #059669; color: #fff; }
 .g-hf .icon-btn:hover { background: #e0e7ff; color: #111827; }
 .g-hf .who button:hover:not(:disabled) { background: #fef3c7; border-color: #111827; }
 @media (hover: none) {
@@ -351,3 +351,16 @@ body .home-stack .row.small .btn, body .home-stack .row.small .sets-pill { font-
 .g-hf .word .icon-btn, .g-hf .icon-btn { min-width: 34px; min-height: 34px; }
 .g-hf #a-zero, .g-hf .btn.danger { min-height: 34px; }
 .g-kh .toggle small, .g-kh .preset small, .g-kh .hint, .g-kh small { font-size: max(.74em, 10.5px); }
+
+/* تحدي الحروف — تبويب الكلمات على شاشة قصيرة: اللوحة تتمرر والقائمة لها ارتفاع مقروء */
+@media (max-height: 560px) {
+  .g-hf .c-grid .col[data-col="words"] { overflow-y: auto; }
+  .g-hf .c-grid .col[data-col="words"] > .card { flex: none; }
+  .g-hf .c-grid .col[data-col="words"] .words { flex: none; min-height: 200px; max-height: 60vh; }
+}
+
+/* اختصارات الكيبورد: بدون تباعد حروف (وإلا تظهر «مسا فة») */
+kbd, .kbd { letter-spacing: 0 !important; word-spacing: 0; }
+
+/* ملخص الإعدادات بجانب زر البدء: خلفية بيضاء عشان يُقرأ على التدرّج البنفسجي */
+body .setup-foot .summary { background: rgba(255, 255, 255, .92); color: #1f2937 !important; border-radius: 999px; padding: .1em .9em; font-weight: 700; }

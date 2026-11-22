@@ -88,8 +88,17 @@
       var ns = n.replace(/ /g, "");
       if (g === n || gs === ns) return true;
       var tol = ns.length >= 9 ? 2 : ns.length >= 5 ? 1 : 0;
-      return tol > 0 && lev(gs, ns) <= tol;
+      // التسامح الإملائي فقط لأخطاء الكتابة: أول حرف ثابت، والتخمين ما يكون اسماً أو مرادفاً لشيء ثاني في البنك (سيارة ≠ طيارة)
+      return tol > 0 && gs.charAt(0) === ns.charAt(0) && lev(gs, ns) <= tol && !ownedByOther(gs, it);
     });
+  }
+  function ownedByOther(gs, it) {
+    for (var i = 0; i < bank.length; i++) {
+      var b = bank[i]; if (b.id === it.id || b.name === it.name) continue;
+      var cs = [b.name].concat(b.syn || []);
+      for (var k = 0; k < cs.length; k++) if (norm(cs[k]).replace(/ /g, "") === gs) return true;
+    }
+    return false;
   }
   window.KH_MATCH = matches; // exposed for tests
 
@@ -488,7 +497,7 @@
     return '<div class="topbar"><div class="info">' + info + "</div>" +
       '<div class="top-actions"><button class="btn ghost" data-act="board" title="الترتيب">🏆<span class="lbl"> الترتيب</span></button>' +
       '<button class="btn ghost" data-ui="fullscreen" title="ملء الشاشة">⛶<span class="lbl"> ملء الشاشة</span></button>' +
-      '<button class="btn ghost" data-ui="sound" title="الصوت">' + (settings.sound ? "🔊" : "🔇") + "</button>" +
+      '<button class="btn ghost" data-ui="sound" title="الصوت" aria-label="الصوت" aria-pressed="' + (settings.sound ? "true" : "false") + '">' + (settings.sound ? "🔊" : "🔇") + "</button>" +
       '<button class="btn ghost" data-act="end" title="إنهاء">✕<span class="lbl"> إنهاء</span></button></div></div>';
   }
 

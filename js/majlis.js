@@ -233,4 +233,32 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
   window.MAJLIS = { refit: queue, inShell: inShell };
+
+  /* ---------------- 3) التركيز يبقى مكانه بعد إعادة رسم الشاشة (كيبورد / ريموت التلفزيون) ---------------- */
+  (function () {
+    var last = null, kb = false, timer = 0;
+    function cssEsc(v) { try { return CSS.escape(v); } catch (e) { return String(v).replace(/["\\]/g, "\\$&"); } }
+    function selOf(el) {
+      if (!el || el === document.body || el === document.documentElement) return null;
+      if (el.id) return "#" + cssEsc(el.id);
+      var sel = el.tagName.toLowerCase(), has = false, a = el.attributes;
+      for (var i = 0; i < a.length; i++) if (a[i].name.indexOf("data-") === 0 && a[i].name !== "data-mjid") { sel += "[" + a[i].name + '="' + String(a[i].value).replace(/["\\]/g, "\\$&") + '"]'; has = true; }
+      return has ? sel : null;
+    }
+    document.addEventListener("keydown", function (e) {
+      kb = true;
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") last = selOf(document.activeElement);
+    }, true);
+    document.addEventListener("pointerdown", function () { kb = false; last = null; }, true);
+    function restore() {
+      timer = 0;
+      if (!kb || !last) return;
+      var ae = document.activeElement;
+      if (ae && ae !== document.body && ae !== document.documentElement) return;
+      var el = null; try { el = document.querySelector(last); } catch (e) {}
+      if (el && !el.disabled && el.getClientRects().length) { try { el.focus({ preventScroll: true }); } catch (e) {} }
+    }
+    function arm() { new MutationObserver(function () { if (kb && last && !timer) timer = setTimeout(restore, 30); }).observe(document.body, { childList: true, subtree: true }); }
+    if (document.body) arm(); else document.addEventListener("DOMContentLoaded", arm);
+  })();
 })();

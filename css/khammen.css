@@ -304,3 +304,5 @@ a.btn { text-decoration: none; }
 
 .namepick { margin-top: 8px; gap: 5px; }
 .namepick .chip { min-height: 32px; padding: .05em .8em; font-size: .86em; }
+
+.pchip .x, .pchip .team-dot { flex-shrink: 0; min-width: 24px; min-height: 24px; }

@@ -8,14 +8,14 @@
 <meta name="description" content="ألعاب عائلية جماعية: من أنا؟ وخمّن وش هو؟ ورتّب وفوز وتحدي الحروف ووش الصح؟">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@600;700;800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@600;700;800&display=swap"></noscript>
 <style>
 /* One TV screen: a title, then four big game cards. Playful style: thick black outlines, offset shadows, flat bright colours. */
 :root {
   --ink: #111827;
   --violet: #6366f1;
   --violet-2: #818cf8;
-  --green: #10b981;
+  --green: #047857;
   --mint: #6ee7b7;
   --yellow: #fbbf24;
   --purple: #8b5cf6;
@@ -41,7 +41,7 @@ main {
 }
 h1 { margin: 0; text-align: center; font-family: var(--display); font-weight: 400; line-height: 1; font-size: clamp(40px, min(7vw, 11vh), 130px); }
 h1 span { display: inline-block; color: #fff; background: var(--green); border: var(--line); box-shadow: .08em .08em 0 var(--ink); padding: .06em .3em 0; transform: rotate(-2deg); margin-inline-start: .15em; }
-.games { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 30px); }
+.games { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 30px); }
 .game {
   position: relative; min-height: 0; display: flex; flex-direction: column; gap: clamp(6px, 1.4vh, 16px); text-decoration: none; color: var(--ink);
   background: #fff; border: var(--line); border-radius: clamp(16px, 1.6vw, 28px); box-shadow: clamp(5px, .5vw, 10px) clamp(5px, .5vw, 10px) 0 var(--ink);
@@ -74,21 +74,42 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 
 /* tablets and phones: 2 × 2 grid, still one screen */
 @media (max-width: 1200px) {
-  .games { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .games { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
   .game p { display: none; }
 }
 @media (max-width: 640px) {
-  .games { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
+  .games { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); }
   .live, .new { display: none; }
   .chip { font-size: 12px; padding: 0 .5em; }
   main { padding-top: 54px; }
 }
 @media (max-width: 1000px) and (max-height: 520px) {
-  .games { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); }
+  .games { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
 }
 .fs { position: fixed; top: clamp(10px, 1.6vh, 20px); left: max(12px, env(safe-area-inset-left, 0px)); z-index: 5; font: 800 clamp(13px, min(1vw, 1.9vh), 20px)/1 var(--body); color: var(--ink); background: #fff; border: var(--line); border-radius: 999px; padding: .55em 1em; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
 .fs:hover { background: var(--yellow); }
-.hm { left: auto; right: max(12px, env(safe-area-inset-right, 0px)); }
+.hm { left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 54px); }
+.gear { left: auto; right: max(12px, env(safe-area-inset-right, 0px)); width: clamp(34px, 3vw, 46px); height: clamp(34px, 3vw, 46px); padding: 0; display: grid; place-items: center; font-size: clamp(16px, 1.6vw, 24px); box-shadow: 3px 3px 0 var(--ink); }
+.game.locked { cursor: not-allowed; }
+.game.locked .art, .game.locked h2, .game.locked p { filter: grayscale(.75) saturate(.6); opacity: .75; }
+.game.locked:hover, .game.locked:focus-visible { transform: none; box-shadow: clamp(5px, .5vw, 10px) clamp(5px, .5vw, 10px) 0 var(--ink); }
+.game.locked .chip { display: none; }
+.soonbadge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-6deg); background: var(--yellow); color: var(--ink); border: var(--line); border-radius: 999px; padding: .1em .9em; font: 400 clamp(18px, min(2vw, 4vh), 44px)/1.3 var(--display); box-shadow: 3px 3px 0 var(--ink); z-index: 2; white-space: nowrap; }
+.game:not(.locked) .soonbadge { top: clamp(16px, 1.8vw, 30px); left: clamp(16px, 1.8vw, 30px); transform: rotate(-4deg); font: 800 clamp(12px, min(.9vw, 1.8vh), 20px)/1.4 var(--body); background: #c4b5fd; padding: 0 .8em; }
+.game.nudge { animation: shake .4s; }
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.g6 .art { background: repeating-linear-gradient(45deg, #a78bfa 0 18px, #8b5cf6 18px 36px); }
+.g7 .art { background: #fdba74; }
+.g8 .art { background: repeating-linear-gradient(-45deg, #5eead4 0 18px, #2dd4bf 18px 36px); }
+.devbox .dv-note { margin: 0; font-weight: 700; }
+.devbox form { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
+.devbox form[hidden] { display: none; }
+.devbox input { font: 800 20px/1.2 var(--body); border: 3px solid var(--ink); border-radius: 14px; padding: .35em .8em; text-align: center; width: 10em; letter-spacing: .3em; }
+.devbox .dv-err { margin: 0; color: #b91c1c; font-weight: 800; }
+.devbox .dv-err[hidden] { display: none; }
+.devbox .dv-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+.devbox .dv-lock { font: 800 16px/1 var(--body); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .5em 1.1em; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; }
+.devbox .dv-lock[hidden] { display: none; }
 #play { position: fixed; inset: 0; z-index: 10; background: var(--violet); }
 #play[hidden] { display: none; }
 #play iframe { width: 100%; height: 100%; border: 0; display: block; }
@@ -116,7 +137,7 @@ html, body, body * { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 /* v20: smaller cards, "coming soon" row, bigger start */
 main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
-.games { flex: 0 0 auto; height: clamp(200px, 38vh, 480px); }
+.games { flex: 0 0 auto; height: clamp(300px, 56vh, 760px); }
 .soonrow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 30px); width: min(44%, 760px); height: clamp(54px, 9vh, 110px); margin-inline: auto; }
 .soon { display: flex; align-items: center; justify-content: center; gap: .5em; border: clamp(3px, .25vw, 5px) dashed rgba(255,255,255,.75); border-radius: clamp(14px, 1.4vw, 24px); background: rgba(255,255,255,.14); color: #fff; font: 400 clamp(18px, min(1.9vw, 3.6vh), 42px)/1 var(--display); user-select: none; }
 .soon small { font: 800 max(.55em, 11px)/1 var(--body); background: var(--yellow); color: var(--ink); border-radius: 999px; padding: .25em .7em; }
@@ -152,6 +173,14 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <button type="button" class="done" id="namesdone">تم</button></div></div>
 <button class="fs" id="fs" type="button">⛶ شاشة كاملة</button>
 <button class="fs hm" id="hm" type="button">🏠 الرئيسية</button>
+<button class="fs gear" id="gear" type="button" aria-label="إعدادات المطورين" title="إعدادات المطورين">⚙</button>
+<div class="sp-names devbox" id="devbox" hidden role="dialog" aria-label="للمطورين"><div class="box">
+  <h2>🛠️ للمطورين</h2>
+  <p class="dv-note" id="dvnote">الألعاب الجديدة (برا السالفة، حروف وألوف، سين جيم) مقفلة حالياً. اكتب الرمز لفتحها.</p>
+  <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
+  <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
+  <div class="dv-row"><button type="button" class="dv-lock" id="dvlock" hidden>🔒 قفل الألعاب الجديدة</button><button type="button" class="done" id="dvclose">إغلاق</button></div>
+</div></div>
 <div class="splash" id="splash" role="dialog" aria-label="ابدأ">
   <span class="sp-float" style="top:10%;right:8%" aria-hidden="true">🎲</span><span class="sp-float" style="top:18%;left:9%;animation-delay:-1s" aria-hidden="true">🐪</span>
   <span class="sp-float" style="bottom:12%;right:12%;animation-delay:-2s" aria-hidden="true">☕</span><span class="sp-float" style="bottom:16%;left:8%;animation-delay:-3s" aria-hidden="true">🧩</span>
@@ -197,24 +226,25 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
       <h2>وش الصح؟</h2>
       <p>اكتب كذبة مقنعة واكشف الحقيقة</p>
     </a>
-    <!-- مخفية من الهاب حتى تكتمل: برا السالفة
-    <a class="game g6" href="bara.html" data-g="br">
+    <a class="game g6 locked" href="bara.html" data-g="br" data-dev="1" aria-disabled="true">
       <div class="art"><span class="emo" aria-hidden="true">🤫🕵️🎭</span></div>
-      <span class="chip sets"></span><span class="new" id="new-f">جديدة</span><span class="live" id="resume-f" hidden>محفوظة</span>
+      <span class="chip sets"></span><span class="soonbadge">🔜 قريباً</span>
       <h2>برا السالفة</h2>
       <p>واحد منكم ما يعرف الموضوع… اكشفوه!</p>
     </a>
-    -->
-    <!-- مخفية من الهاب حتى تكتمل: حروف وألوف
-    <a class="game g7" href="hurouf.html" data-g="hu">
+    <a class="game g7 locked" href="hurouf.html" data-g="hu" data-dev="1" aria-disabled="true">
       <div class="art"><div class="tiles letters" aria-hidden="true"><i>ح</i><i>ر</i><i>و</i></div></div>
-      <span class="new" id="new-g">جديدة</span><span class="live" id="resume-g" hidden>محفوظة</span>
+      <span class="soonbadge">🔜 قريباً</span>
       <h2>حروف وألوف</h2>
       <p>فريقان وأجراس ولوحة حروف سداسية</p>
     </a>
-    -->
+    <a class="game g8 locked" href="seenjeem.html" data-g="sj" data-dev="1" aria-disabled="true">
+      <div class="art"><span class="emo" aria-hidden="true">❓🏆⏱️</span></div>
+      <span class="soonbadge">🔜 قريباً</span>
+      <h2>سين جيم</h2>
+      <p>مسابقة عائلية بفئات وأسئلة وأجراس</p>
+    </a>
   </nav>
-  <div class="soonrow" aria-label="ألعاب قريباً"><div class="soon">🔜 لعبة جديدة <small>قريباً</small></div><div class="soon">🔜 لعبة جديدة <small>قريباً</small></div></div>
   <div class="subrow"><button class="subbtn" id="sub" type="button"></button></div>
   <div class="subrow"><button class="subbtn alt" id="setsbtn" type="button">🎮 المجموعات المتاحة</button></div>
 </main>
@@ -238,7 +268,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   }
   function refreshPass() {
     var P = window.MAJLIS_PASS; if (!P) return;
-    var small = innerWidth < 640;
+    var small = innerWidth < 640 || innerHeight < 460;
     [].forEach.call(document.querySelectorAll(".game[data-g]"), function (a) {
       var i = P.setsInfo(a.getAttribute("data-g")), el = a.querySelector(".sets");
       if (el) { el.textContent = "🎮 " + i.left + (small ? "" : " مجموعة متاحة"); el.title = i.left + " مجموعة متاحة (كل مجموعة " + i.size + " جولات)"; }
@@ -262,11 +292,20 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   var splash = document.getElementById("splash");
   var started = false; try { started = sessionStorage.getItem("majlis_started") === "1" || /^#play=/.test(location.hash); } catch (e) {}
   if (started) splash.hidden = true;
+  /* ما يوصل الكيبورد/الريموت لشي خلف شاشة البداية أو نافذة الأسماء */
+  function syncInert() {
+    var namesOpen = !document.getElementById("spnames").hidden, splashOn = !splash.hidden;
+    var setI = function (el, on) { if (!el) return; if (on) el.setAttribute("inert", ""); else el.removeAttribute("inert"); };
+    var devOpen = !document.getElementById("devbox").hidden;
+    setI(document.querySelector("main"), splashOn || namesOpen || devOpen); setI(document.getElementById("fs"), splashOn || namesOpen || devOpen); setI(document.getElementById("hm"), splashOn || namesOpen || devOpen); setI(document.getElementById("gear"), splashOn || namesOpen || devOpen);
+    setI(splash, namesOpen);
+  }
   document.getElementById("go").addEventListener("click", function () {
     try { sessionStorage.setItem("majlis_started", "1"); } catch (e) {}
     try { var el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (f && !(document.fullscreenElement || document.webkitFullscreenElement)) { var pr = f.call(el); if (pr && pr.catch) pr.catch(function () {}); } } catch (e) {}
-    splash.classList.add("out"); setTimeout(function () { splash.hidden = true; var g = document.querySelector(".game"); if (g) g.focus(); }, 480);
+    splash.classList.add("out"); setTimeout(function () { splash.hidden = true; syncInert(); var g = document.querySelector(".game"); if (g) g.focus(); }, 480);
   });
+  syncInert();
   setTimeout(function () { if (!splash.hidden) document.getElementById("go").focus(); }, 100);
   var modeBtns = document.querySelectorAll(".sp-mode [data-mode]");
   function paintMode() { var m = "tv"; try { m = localStorage.getItem("majlis_mode") === "phones" ? "phones" : "tv"; } catch (e) {} for (var i = 0; i < modeBtns.length; i++) modeBtns[i].setAttribute("aria-pressed", String(modeBtns[i].getAttribute("data-mode") === m)); }
@@ -280,18 +319,50 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     a.forEach(function (n, i) { var b = document.createElement("button"); b.type = "button"; b.textContent = n + " ✕"; b.addEventListener("click", function () { var x = getNames(); x.splice(i, 1); setNames(x); }); nmChips.appendChild(b); });
     document.getElementById("namescount").textContent = a.length ? "(" + a.length + ")" : "";
   }
-  document.getElementById("namesbtn").addEventListener("click", function () { nmBox.hidden = false; paintNames(); document.getElementById("nameinp").focus(); });
-  document.getElementById("namesdone").addEventListener("click", function () { nmBox.hidden = true; });
+  document.getElementById("namesbtn").addEventListener("click", function () { nmBox.hidden = false; syncInert(); paintNames(); document.getElementById("nameinp").focus(); });
+  function closeNames() { nmBox.hidden = true; syncInert(); var nb = document.getElementById("namesbtn"); if (nb) nb.focus(); }
+  document.getElementById("namesdone").addEventListener("click", closeNames);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !nmBox.hidden) { e.preventDefault(); closeNames(); } });
   document.getElementById("nameform").addEventListener("submit", function (e) {
     e.preventDefault(); var inp = document.getElementById("nameinp"), v = inp.value.trim().slice(0, 16), a = getNames();
     if (v && a.indexOf(v) < 0 && a.length < 16) { a.push(v); setNames(a); } inp.value = ""; inp.focus();
   });
   paintNames();
   document.getElementById("hm").addEventListener("click", function () {
-    splash.hidden = false; splash.classList.remove("out");
+    splash.hidden = false; splash.classList.remove("out"); syncInert();
     try { sessionStorage.removeItem("majlis_started"); } catch (e) {}
     document.getElementById("go").focus();
   });
+
+  /* الألعاب الجديدة: مقفلة («قريباً») حتى يُدخل المطوّر الرمز من زر ⚙ أعلى اليمين. هذا قفل واجهة فقط وليس حماية حقيقية. */
+  var DEV_CODE = "1122", devBox = document.getElementById("devbox");
+  function devOn() { try { return localStorage.getItem("majlis_dev") === "1"; } catch (e) { return false; } }
+  function paintDev() {
+    var on = devOn();
+    [].forEach.call(document.querySelectorAll("a.game[data-dev]"), function (a) {
+      a.classList.toggle("locked", !on);
+      if (on) a.removeAttribute("aria-disabled"); else a.setAttribute("aria-disabled", "true");
+      var b = a.querySelector(".soonbadge"); if (b) b.textContent = on ? "🛠️ للمطورين" : "🔜 قريباً";
+    });
+    document.getElementById("dvlock").hidden = !on;
+    document.getElementById("dvnote").textContent = on ? "الألعاب الجديدة مفتوحة للمطورين على هذا الجهاز." : "الألعاب الجديدة (برا السالفة، حروف وألوف، سين جيم) مقفلة حالياً. اكتب الرمز لفتحها.";
+    document.getElementById("dvform").hidden = on;
+  }
+  function closeDev() { devBox.hidden = true; syncInert(); var g = document.getElementById("gear"); if (g) g.focus(); }
+  document.getElementById("gear").addEventListener("click", function () {
+    document.getElementById("dverr").hidden = true; document.getElementById("dvcode").value = ""; paintDev(); devBox.hidden = false; syncInert();
+    setTimeout(function () { var el = document.getElementById(devOn() ? "dvclose" : "dvcode"); if (el) el.focus(); }, 30);
+  });
+  document.getElementById("dvclose").addEventListener("click", closeDev);
+  document.getElementById("dvform").addEventListener("submit", function (e) {
+    e.preventDefault(); var v = document.getElementById("dvcode").value.trim();
+    if (v === DEV_CODE) { try { localStorage.setItem("majlis_dev", "1"); } catch (er) {} paintDev(); refreshPass(); closeDev(); }
+    else { var er2 = document.getElementById("dverr"); er2.hidden = false; document.getElementById("dvcode").value = ""; document.getElementById("dvcode").focus(); }
+  });
+  document.getElementById("dvlock").addEventListener("click", function () { try { localStorage.removeItem("majlis_dev"); } catch (e) {} paintDev(); closeDev(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !devBox.hidden) { e.preventDefault(); closeDev(); } });
+  window.addEventListener("storage", function (e) { if (e.key === "majlis_dev") paintDev(); });
+  paintDev();
 
   /* One continuous full screen: games open inside this page, so full screen never drops between games. */
   var play = document.getElementById("play"), frame = null, fsBtn = document.getElementById("fs");
@@ -326,7 +397,9 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   }
   document.querySelector(".games").addEventListener("click", function (e) {
     var a = e.target.closest("a.game"); if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
-    e.preventDefault(); open(a.getAttribute("href"), true);
+    e.preventDefault();
+    if (a.classList.contains("locked")) { a.classList.remove("nudge"); void a.offsetWidth; a.classList.add("nudge"); setTimeout(function () { a.classList.remove("nudge"); }, 450); return; }
+    open(a.getAttribute("href"), true);
   });
   window.addEventListener("message", function (e) {
     if (!frame || e.source !== frame.contentWindow || !e.data || !e.data.majlis) return;
@@ -340,7 +413,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     if (e.state && e.state.play) open(e.state.play, false); else if (!play.hidden) close();
   });
   var m = /^#play=([\w.-]+\.html)$/.exec(location.hash);
-  if (m && document.querySelector('a.game[href="' + m[1] + '"]')) { try { history.replaceState({ play: m[1] }, "", location.hash); } catch (e) {} open(m[1], false); }
+  if (m && document.querySelector('a.game:not(.locked)[href="' + m[1] + '"]')) { try { history.replaceState({ play: m[1] }, "", location.hash); } catch (e) {} open(m[1], false); }
 })();
 </script>
 </body>

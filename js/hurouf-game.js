@@ -34,7 +34,8 @@
       return { phase: "board", board: newBoard(), turn: firstTurn, round: roundNo, wins: roundWins || [0, 0], points: points || [0, 0], cur: null, winPath: null, winTeam: -1, decider: false, paused: false, timeLeft: 0, readyLeft: 0, openLeft: 0, resultLeft: 0, log: [] };
     }
     if (!st) { st = fresh(1, [0, 0], [0, 0], 0); }
-    else if (st.phase === "answering" || st.phase === "open" || st.phase === "ready") st.paused = true;
+    else if (st.phase === "answering" || st.phase === "open") st.paused = true;
+    else if (st.phase === "ready") st.paused = false; // مرحلة «جاهزين» ما فيها زر استئناف، فلا نجمّدها
 
     /* ---------- الاختيار ---------- */
     function choose(idx) {
@@ -75,8 +76,8 @@
 
     /* ---------- الإجابة والتحكيم ---------- */
     function reveal() {
+      // «انتهت الإجابة» فقط: ينقل للتحكيم. لا تُكشف الإجابة للجميع هنا (المنافس قد يكون له دور بعدها)
       if (st.phase === "answering") { st.phase = "judge"; say("reveal"); changed(); return true; }
-      if (st.phase === "open") { giveUp("revealed"); return true; }
       return false;
     }
     function judge(ok) {
@@ -114,7 +115,7 @@
       var c = st.board[st.cur.idx], q = E.pickQuestion(data, c.l, S, used, st.decider);
       if (!q) { giveUp("revealed"); return true; }
       used[q.id] = 1; st.cur = { idx: st.cur.idx, q: q, tried: [], buzz: null, result: null, tiebreak: false, note: "" };
-      st.phase = "ready"; st.readyLeft = READY_MS; locks = {}; say("start"); changed(); return true;
+      st.phase = "ready"; st.readyLeft = READY_MS; st.paused = false; locks = {}; say("start"); changed(); return true;
     }
     function pause(on) {
       if (st.phase !== "answering" && st.phase !== "open") return;

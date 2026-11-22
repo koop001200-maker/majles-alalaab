@@ -13,6 +13,35 @@
   function catOf(id) { for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i]; return { icon: "❓", name: "" }; }
   function wordOf(id) { for (var i = 0; i < BANK.length; i++) if (BANK[i].id === id) return BANK[i]; return null; }
 
+  /* تخمين الكلمة بعد الانكشاف: ٨ خيارات = الكلمة الصحيحة + ٣ قريبة مرة (نفس المجموعة) + ٤ بعيدة شوي (نفس الفئة، مجموعة ثانية) */
+  var NEAR = {
+    food: ["b1 b2 b4 b5 b6 b19 b20", "b3 b9 b10 b11 b12 b13 b18", "b7 b8 b17 b22 b23 b24", "b14 b15 b16 b21"],
+    animals: ["b27 b28 b30 b31 b32 b33 b38 b43 b46", "b25 b29 b35 b36", "b26 b37 b39 b40 b42 b44", "b41 b45 b48", "b34 b47"],
+    places: ["b49 b50 b51 b52 b53 b54 b55 b56 b57", "b59 b60 b61 b65 b70 b69", "b58 b63 b64 b67 b68", "b62 b66 b71 b72"],
+    jobs: ["b73 b82 b95", "b74 b86 b87 b96 b83 b76", "b75 b81 b93", "b77 b89 b94", "b79 b80 b90 b91 b78", "b84 b85 b88 b92"],
+    home: ["b97 b98 b105 b106 b109 b117 b118 b115", "b99 b100 b101 b110 b114 b111 b112 b102", "b107 b108 b119 b120", "b103 b104 b113 b116"],
+    sport: ["b121 b133 b139 b128 b136", "b122 b134", "b131 b132 b130", "b123 b135 b137 b140 b144 b138 b129", "b124 b125 b126 b141 b142 b143 b127"],
+    nature: ["b145 b146 b147 b148 b149 b150 b167 b168", "b155 b156 b157 b158 b159 b160 b165 b166", "b151 b152 b153 b154 b161 b162 b163 b164"],
+    heritage: ["b169 b170 b171 b174 b175 b176 b177 b192 b189 b190", "b172 b173 b186 b182", "b183 b184 b185 b191", "b179 b180 b181 b188 b187 b178"]
+  };
+  function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function groupOf(w) {
+    var gs = NEAR[w.cat] || [];
+    for (var i = 0; i < gs.length; i++) if ((" " + gs[i] + " ").indexOf(" " + w.id + " ") >= 0) return gs[i].split(" ");
+    return [];
+  }
+  function makeOptions(id) {
+    var w = wordOf(id); if (!w) return [id];
+    var grp = groupOf(w), used = {}; used[id] = 1;
+    function take(list, n, out) { shuf(list).forEach(function (x) { if (out.length < n && !used[x]) { used[x] = 1; out.push(x); } }); }
+    var close = []; take(grp, 3, close);
+    var sameCat = BANK.filter(function (b) { return b.cat === w.cat; }).map(function (b) { return b.id; });
+    take(sameCat.filter(function (x) { return grp.indexOf(x) < 0; }), 3, close); // نقص المجموعة → نكمّل من الفئة
+    var far = []; take(sameCat.filter(function (x) { return grp.indexOf(x) < 0; }), 4, far);
+    take(BANK.filter(function (b) { return b.cat !== w.cat; }).map(function (b) { return b.id; }), 4, far);
+    return shuf([id].concat(close, far));
+  }
+
   /* ---------- sound ---------- */
   var ac = null;
   function tone(f, d, type, v, when) {
@@ -34,11 +63,21 @@
   };
 
   /* ---------- settings / state ---------- */
+  var BOYS = ["محمد", "أحمد", "عبدالله", "فهد", "خالد", "سلطان", "سعود", "تركي", "فيصل", "ناصر", "يوسف", "عمر", "بدر", "نواف", "عبدالعزيز"];
+  var GIRLS = ["نورة", "سارة", "ريم", "لمى", "هيا", "منى", "مها", "العنود", "دانة", "جود", "كادي", "ترف", "أسماء"];
+  function mixed(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // الأولاد أولاً ثم البنات (ترتيب كل مجموعة يتلخبط مرة وحدة عند فتح اللعبة)
+  var COMMON = mixed(BOYS).concat(mixed(GIRLS));
+  function regNames() { try { var r = JSON.parse(localStorage.getItem("majlis_names") || "[]"); return Array.isArray(r) ? r.map(function (x) { return String(x).trim().slice(0, 16); }).filter(Boolean).slice(0, 16) : []; } catch (e) { return []; } }
+  var REG = regNames(); if (REG.length) COMMON = REG;
+  function toast(t) { var d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2200); }
+  function isDefaultName(n) { return !String(n).trim() || /^لاعب \d+$/.test(String(n).trim()); }
   var DEF = { players: ["لاعب 1", "لاعب 2", "لاعب 3", "لاعب 4"], rounds: 5, talk: 120, sound: true };
   var settings = Object.assign(clone(DEF), Store.get(K.settings, {}) || {});
   if (!Array.isArray(settings.players)) settings.players = DEF.players.slice();
   settings.players = settings.players.map(function (n) { return String(n || "").slice(0, 16); }).slice(0, 10);
   while (settings.players.length < 3) settings.players.push("لاعب " + (settings.players.length + 1));
+  if (REG.length >= 3 && settings.players.every(function (n) { return isDefaultName(n); })) settings.players = REG.slice(0, 10);
   if ([3, 5, 8].indexOf(+settings.rounds) < 0) settings.rounds = 5; settings.rounds = +settings.rounds;
   if ([60, 120, 180].indexOf(+settings.talk) < 0) settings.talk = 120; settings.talk = +settings.talk;
   settings.sound = settings.sound !== false;
@@ -84,9 +123,9 @@
     SFX.tap();
     switch (a) {
       case "start": go("setup"); break;
-      case "resume": view = "game"; render(); break;
+      case "resume": view = "game"; if (game && game.phase === "pass") game.shown = false; render(); break;
       case "howto": go("howto"); break;
-      case "home": go("home"); break;
+      case "home": case "back": go("home"); break;
       case "play":
         var names = settings.players.map(function (n) { return n.trim(); }).filter(Boolean);
         var uniq = names.filter(function (n, i) { return names.indexOf(n) === i; });
@@ -94,6 +133,17 @@
         if (names.length !== settings.players.length) { setupErr = "اكتب اسم لكل لاعب"; render(); return; }
         if (uniq.length !== names.length) { setupErr = "الأسماء لازم تكون مختلفة"; render(); return; }
         saveSettings(); setupErr = ""; view = "game"; newGame(); break;
+      case "pickname":
+        var nm = el.getAttribute("data-v"), at = -1;
+        var had = -1;
+        settings.players.forEach(function (n, k) { if (had < 0 && n.trim() === nm) had = k; });
+        if (had >= 0) {
+          if (settings.players.length > 3) settings.players.splice(had, 1); else settings.players[had] = "لاعب " + (had + 1);
+          saveSettings(); render(); break;
+        }
+        for (var q = 0; q < settings.players.length && at < 0; q++) if (isDefaultName(settings.players[q])) at = q;
+        if (at < 0 && settings.players.length < 10) { settings.players.push(nm); at = settings.players.length - 1; } else if (at >= 0) settings.players[at] = nm; else { toast("وصلتم لـ١٠ لاعبين — عدّلوا اسماً موجوداً"); break; }
+        saveSettings(); render(); break;
       case "add": if (settings.players.length < 10) { settings.players.push("لاعب " + (settings.players.length + 1)); saveSettings(); render(); } break;
       case "del": var i = +el.getAttribute("data-i"); if (settings.players.length > 3) { settings.players.splice(i, 1); saveSettings(); render(); } break;
       case "rounds": settings.rounds = +el.getAttribute("data-v"); saveSettings(); render(); break;
@@ -104,7 +154,8 @@
       case "pause": game.paused = !game.paused; commit(); break;
       case "tovote": game.phase = "vote"; selected = -1; commit(); break;
       case "pick": selected = +el.getAttribute("data-i"); render(); break;
-      case "accuse": if (selected < 0) return; game.accused = selected; game.phase = "verdict"; if (selected !== game.out) finishRound(false, null); commit(); break;
+      case "accuse": if (selected < 0) return; game.accused = selected; game.phase = "verdict"; game.pick = null; game.opts = null; if (selected !== game.out) finishRound(false, null); else game.opts = makeOptions(game.word); commit(); break;
+      case "gopt": game.pick = el.getAttribute("data-id"); finishRound(true, game.pick === game.word); commit(); break;
       case "gok": finishRound(true, true); commit(); break;
       case "gno": finishRound(true, false); commit(); break;
       case "next": if (game.round >= game.total) { game.phase = "over"; SFX.win(); commit(); } else nextRound(); break;
@@ -156,7 +207,7 @@
   }
 
   function vHowto() {
-    return '<section class="screen"><div class="head"><h2>طريقة اللعب</h2><button class="btn" data-a="home">الصفحة الأولى</button></div>' +
+    return '<section class="screen"><div class="head"><h2>طريقة اللعب</h2><button class="btn" data-a="home">→ رجوع</button></div>' +
       '<div class="panel how"><ol>' +
       "<li>كل لاعب يشوف الشاشة لحاله ويعرف «الموضوع» (مثل: كبسة)… إلا واحد! هذا اللي <b>برا السالفة</b> ما يعرف شي إلا الفئة.</li>" +
       "<li>بعدها كل واحد يعطي <b>تلميحة وحدة</b> عن الموضوع بدون ما يقوله صريح. اللي برا السالفة يمثّل إنه عارف!</li>" +
@@ -167,19 +218,22 @@
 
   function vSetup() {
     var s = settings, names = s.players.map(function (n, i) {
-      return '<div class="name"><input data-name="' + i + '" maxlength="16" value="' + esc(n) + '" aria-label="اسم اللاعب ' + (i + 1) + '">' + (s.players.length > 3 ? '<button class="x" data-a="del" data-i="' + i + '" aria-label="حذف">✕</button>' : "") + "</div>";
+      return '<div class="name"><input data-name="' + i + '" maxlength="16" list="names-dl" value="' + esc(n) + '" aria-label="اسم اللاعب ' + (i + 1) + '">' + (s.players.length > 3 ? '<button class="x" data-a="del" data-i="' + i + '" aria-label="حذف">✕</button>' : "") + "</div>";
     }).join("");
     function chips(list, cur, a, fmtf) { return '<div class="chips">' + list.map(function (v) { return '<button class="chip" data-a="' + a + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + fmtf(v) + "</button>"; }).join("") + "</div>"; }
-    return '<section class="screen"><div class="head"><h2>إعداد اللعبة</h2><button class="btn" data-a="home">الصفحة الأولى</button></div>' +
+    return '<section class="screen"><div class="head"><h2>إعداد اللعبة</h2><button class="btn" data-a="home">→ رجوع</button></div>' +
       '<div class="panel"><div class="field"><span class="label">اللاعبون (' + s.players.length + ' من ١٠)</span><div class="names">' + names + "</div>" +
-      (s.players.length < 10 ? '<button class="btn small" data-a="add">+ لاعب</button>' : "") + "</div></div>" +
+      (s.players.length < 10 ? '<button class="btn small" data-a="add">+ لاعب</button> ' : "") + '</div>' +
+      '<datalist id="names-dl">' + COMMON.map(function (c) { return '<option value="' + esc(c) + '">'; }).join("") + "</datalist>" +
+      '<div class="field"><span class="label">اضغط الاسم يدخل، واضغطه مرة ثانية يُزال</span><div class="chips namepick">' +
+      COMMON.map(function (c, ci) { var used = s.players.some(function (n) { return n.trim() === c; }); return (!REG.length && ci === BOYS.length ? '<i class="brk" aria-hidden="true"></i>' : "") + '<button class="chip" data-a="pickname" data-v="' + esc(c) + '" aria-pressed="' + used + '"' + (used ? ' title="اضغط مرة ثانية لإزالته"' : "") + ">" + (used ? "✓ " : "") + esc(c) + "</button>"; }).join("") + "</div></div></div>" +
       '<div class="row"><div class="field"><span class="label">عدد الجولات</span>' + chips([3, 5, 8], s.rounds, "rounds", function (v) { return v + " جولات"; }) + "</div>" +
       '<div class="field"><span class="label">وقت النقاش</span>' + chips([60, 120, 180], s.talk, "talk", function (v) { return v / 60 + (v === 60 ? " دقيقة" : " دقائق"); }) + "</div></div>" +
       (setupErr ? '<p class="error" style="color:#b91c1c;font-weight:800">' + esc(setupErr) + "</p>" : "") +
       '<button class="btn go huge" data-a="play">ابدأ ▶</button></section>';
   }
 
-  function topbar() { return '<div class="head"><span class="badge">الجولة ' + game.round + " من " + game.total + '</span><span class="row"><button class="btn small" data-a="sound">' + (settings.sound ? "🔊" : "🔇") + '</button><button class="btn small" data-a="askquit">إنهاء</button></span></div>'; }
+  function topbar() { return '<div class="head"><span class="row"><button class="btn small" data-a="back">→ رجوع</button><span class="badge">الجولة ' + game.round + " من " + game.total + '</span></span><span class="row"><button class="btn small" data-a="sound">' + (settings.sound ? "🔊" : "🔇") + '</button><button class="btn small" data-a="askquit">إنهاء</button></span></div>'; }
 
   function vPass() {
     var p = game.players[game.idx], w = wordOf(game.word) || { w: "؟", cat: "" }, c = catOf(w.cat), isOut = game.idx === game.out;
@@ -210,11 +264,13 @@
   }
 
   function vVerdict() {
-    var out = game.players[game.out], w = wordOf(game.word) || { w: "؟" };
+    var out = game.players[game.out];
+    if (!game.opts || !game.opts.length) game.opts = makeOptions(game.word);
+    var opts = game.opts.map(function (id) { var w = wordOf(id); return w ? '<button class="btn" data-a="gopt" data-id="' + esc(id) + '">' + esc(w.w) + "</button>" : ""; }).join("");
     return '<section class="screen">' + topbar() + '<div class="card panel"><div class="verdict">صح! 🎯 <b>' + esc(out.name) + "</b> هو اللي برا السالفة</div>" +
-      '<p class="sub">الحين ' + esc(out.name) + " عنده فرصة يخمّن الموضوع.</p>" +
-      '<p class="sub">الموضوع كان: <b>' + esc(w.w) + '</b></p><p class="sub">خمّن صح؟</p>' +
-      '<div class="row"><button class="btn good huge" data-a="gok">✅ خمّنها</button><button class="btn bad huge" data-a="gno">❌ ما عرفها</button></div></div></section>';
+      '<p class="sub">الحين ' + esc(out.name) + " يخمّن الموضوع: اختر وحدة من ٨ خيارات.</p>" +
+      '<div class="vote opts">' + opts + "</div>" +
+      '<div class="row"><button class="btn bad big" data-a="gno">🤷 ما أعرف</button></div></div></section>';
   }
 
   function board(showGain) {
@@ -229,7 +285,7 @@
   function vScores() {
     var out = game.players[game.out], w = wordOf(game.word) || { w: "؟" };
     var msg = game.guess === "free" ? "ما انكشف! 😎 " + esc(out.name) + " أخذ ٣ نقاط" : game.guess === "ok" ? "انكشف وخمّن الموضوع! 🧠 " + esc(out.name) + " أخذ نقطتين" : "انكشف وما عرف! 🎉 نقطة لكل الباقين";
-    return '<section class="screen">' + topbar() + '<h2 class="verdict">' + msg + '</h2><p class="sub">الموضوع: <b>' + esc(w.w) + "</b> · اللي برا السالفة: <b>" + esc(out.name) + "</b></p>" + board(true) +
+    return '<section class="screen">' + topbar() + '<h2 class="verdict">' + msg + '</h2><p class="sub">الموضوع: <b>' + esc(w.w) + "</b> · اللي برا السالفة: <b>" + esc(out.name) + "</b>" + (game.guess !== "free" && game.pick && wordOf(game.pick) ? " · اختار: <b>" + esc(wordOf(game.pick).w) + "</b>" : "") + "</p>" + board(true) +
       '<button class="btn go huge" data-a="next">' + (game.round >= game.total ? "النتيجة النهائية 🏆" : "الجولة التالية ▶") + "</button></section>";
   }
 
@@ -266,7 +322,10 @@
 
   document.addEventListener("click", function (e) {
     var el = e.target.closest("[data-a]"); if (!el || el.disabled) return;
-    act(el.getAttribute("data-a"), el);
+    var A1 = el.getAttribute("data-a");
+    // النقر المزدوج السريع ما يمرّر النقرة الثانية على زر الشاشة التالية (كان يكشف سر اللاعب اللي بعده)
+    if (e.detail > 1 && ["show", "hide", "tovote", "pick", "accuse", "gopt", "gno", "next", "play", "start", "again"].indexOf(A1) >= 0) return;
+    act(A1, el);
   });
   document.addEventListener("input", function (e) {
     var t = e.target; if (t.hasAttribute && t.hasAttribute("data-name")) { settings.players[+t.getAttribute("data-name")] = t.value; saveSettings(); }

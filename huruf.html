@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap"></noscript>
 <style>
 /* تخطيط: شاشة عرض بمسرح حروف في الوسط ولوحة ترتيب جانبية، ولوحة منظّم شبكية منفصلة. هوية واحدة داكنة (حبر بحري + قطع خشبية زعفرانية). */
 :root{
@@ -251,6 +251,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
 .control{height:100vh;height:100dvh;max-width:none;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:12px;padding-block:12px;overflow:hidden}
 .c-grid{min-height:0;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr);align-items:stretch}
 .c-grid .col{min-height:0;overflow-y:auto;align-content:start;padding:2px 4px 8px}
+.chip{min-height:30px}.icon-btn{min-width:32px;min-height:32px}.field select,.field input:not([type=checkbox]):not([type=radio]){min-height:36px}
+@media (max-width:900px){.c-grid .col{-webkit-overflow-scrolling:touch}}
 .words{max-height:none}
 .c-tabs{display:none;gap:6px}
 .c-tabs button{flex:1;border:1px solid var(--line);background:var(--ink-2);border-radius:12px;min-height:42px;font-weight:700}
@@ -307,7 +309,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
 @media (max-width:600px){.c-top .sub,[data-col="words"] .note,[data-col="words"] details{display:none}.c-top{gap:6px}[data-col="words"] .row{flex-wrap:nowrap}[data-col="words"] .row .btn{flex:1;padding-inline:.5em}#c-words{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start}#c-words .word{flex:0 0 auto}#c-words .word select,#in-level,#c-open-display,#c-status{display:none}#f-word{display:flex;gap:8px}#f-word input{flex:1;min-width:0}}
 @media (max-width:600px){.home .btn.big,.home .btn.huge{width:100%}.home .row{width:100%}}
 </style>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Changa:wght@500;600;700;800&display=swap"></noscript>
 <link rel="stylesheet" href="css/majlis-theme.css">
 <script src="js/majlis.js"></script>
 <script src="js/majlis-pass.js"></script>
@@ -396,7 +398,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <button type="button" role="tab" data-ctab="words" aria-selected="false">الكلمات</button>
     </div>
     <div class="c-grid">
-      <div class="col on" data-col="round">
+      <div class="col on" data-col="round" data-free-scroll>
         <section class="card" aria-labelledby="h-round">
           <h2 id="h-round">الجولة الحالية</h2>
           <div class="round-box">
@@ -425,7 +427,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
           <p class="note">اضغط اسم أول من نطق الكلمة الصحيحة. السهل والمتوسط بنقطة، والصعب بنقطتين. أرقام الأزرار اختصارات من لوحة المفاتيح.</p>
         </section>
       </div>
-      <div class="col" data-col="people">
+      <div class="col" data-col="people" data-free-scroll>
         <section class="card" aria-labelledby="h-players">
           <h2 id="h-players">المتسابقون <span class="count" id="c-pcount"></span></h2>
           <form class="field" id="f-player" autocomplete="off">
@@ -460,7 +462,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
           </ul>
         </section>
       </div>
-      <div class="col" data-col="words">
+      <div class="col" data-col="words" data-free-scroll>
         <section class="card" aria-labelledby="h-words">
           <h2 id="h-words">الكلمات <span class="count" id="c-wcount"></span></h2>
           <form class="field" id="f-word" autocomplete="off">
@@ -564,7 +566,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
   function merge(s) {
     const d = defaults();
     const m = { ...d, ...s, settings: { ...d.settings, ...(s.settings || {}) }, game: { ...d.game, ...(s.game || {}) },
-      players: Array.isArray(s.players) ? s.players : [], words: Array.isArray(s.words) ? s.words : d.words };
+      players: (Array.isArray(s.players) ? s.players : []).filter((p) => p && typeof p === 'object' && p.id != null && typeof p.name === 'string').map((p) => ({ ...p, score: Number(p.score) || 0 })),
+      words: (Array.isArray(s.words) ? s.words : d.words).filter((w) => w && typeof w === 'object' && typeof w.text === 'string') };
     if ((s.bank || 1) < 4) {
       // v4: long words (7+ letters) are gone for good, and levels follow the new shorter scale
       const defs = new Set(DEFAULT_WORDS);
@@ -860,7 +863,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
 
     const win = player(g.winnerId), canAward = ['playing', 'paused', 'timeout'].includes(st);
     $('#c-who-banner').innerHTML = win
-      ? `<div class="banner"><span>الفائز بالجولة ${g.round}: <b>${esc(win.name)}</b> (+1)</span><button class="btn ghost" type="button" data-act="undo">تراجع عن التسجيل</button></div>`
+      ? `<div class="banner"><span>الفائز بالجولة ${g.round}: <b>${esc(win.name)}</b> (+${g.pts || 1})</span><button class="btn ghost" type="button" data-act="undo">تراجع عن التسجيل</button></div>`
       : st === 'timeout' ? '<div class="banner warn"><span>انتهى الوقت. إن سبق أحدهم قبل انتهائه سجّله، وإلا انتقل للجولة التالية بلا نقاط.</span></div>'
       : !inRound(st) ? '<p class="note">تظهر الأزرار مفعّلة عند بدء جولة.</p>' : '';
     $('#c-who').innerHTML = S.players.length
@@ -951,7 +954,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
   const showGame = () => { location.hash = 'display'; };
   // «ابدأ»: يبدأ مسابقة جديدة إذا ما فيه جولة جارية، وإلا يفتح شاشة اللعب على الجولة الحالية
   $('#c-here').onclick = () => (inRound(G().status) ? showGame() : A.start(showGame));
-  $('#h-start').onclick = () => A.start(showGame);
+  $('#h-start').onclick = () => { location.hash = 'control'; selectTab('people'); };
   $('#h-resume').onclick = showGame;
   $('#h-setup').onclick = () => { location.hash = 'control'; selectTab(S.players.length ? 'round' : 'people'); };
   $('#h-howto').onclick = () => { location.hash = 'howto'; };

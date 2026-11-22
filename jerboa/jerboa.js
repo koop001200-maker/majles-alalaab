@@ -18,7 +18,7 @@ const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i < 0 ?
 const QUICK = !!arg('quick', false), SEED = +arg('seed', Date.now() % 100000), ONLY = arg('page', null);
 const HOPS = QUICK ? 40 : 120;
 const ROOT = path.resolve(__dirname, '..');
-const PAGES = [['index', 'index.html'], ['min-akoon', 'min-akoon.html'], ['khammen', 'khammen.html'], ['rattebha', 'rattebha.html'], ['huruf', 'huruf.html'], ['wsh', 'wsh.html'], ['bara', 'bara.html'], ['hurouf', 'hurouf.html']]
+const PAGES = [['index', 'index.html'], ['min-akoon', 'min-akoon.html'], ['khammen', 'khammen.html'], ['rattebha', 'rattebha.html'], ['huruf', 'huruf.html'], ['wsh', 'wsh.html'], ['bara', 'bara.html'], ['hurouf', 'hurouf.html'], ['seenjeem', 'seenjeem.html']]
   .filter(([n]) => !ONLY || n.includes(ONLY));
 const ONLYSCR = arg('screen', null);
 const SCREENS = ONLYSCR ? [ONLYSCR.split('x').map(Number)] : QUICK ? [[1920, 1080], [390, 844]] : [[1920, 1080], [1366, 768], [1024, 768], [844, 390], [390, 844], [360, 640]];
