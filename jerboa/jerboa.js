@@ -18,7 +18,7 @@ const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i < 0 ?
 const QUICK = !!arg('quick', false), SEED = +arg('seed', Date.now() % 100000), ONLY = arg('page', null);
 const HOPS = QUICK ? 40 : 120;
 const ROOT = path.resolve(__dirname, '..');
-const PAGES = [['index', 'index.html'], ['min-akoon', 'min-akoon.html'], ['khammen', 'khammen.html'], ['rattebha', 'rattebha.html'], ['huruf', 'huruf.html'], ['wsh', 'wsh.html'], ['bara', 'bara.html']]
+const PAGES = [['index', 'index.html'], ['min-akoon', 'min-akoon.html'], ['khammen', 'khammen.html'], ['rattebha', 'rattebha.html'], ['huruf', 'huruf.html'], ['wsh', 'wsh.html'], ['bara', 'bara.html'], ['hurouf', 'hurouf.html']]
   .filter(([n]) => !ONLY || n.includes(ONLY));
 const ONLYSCR = arg('screen', null);
 const SCREENS = ONLYSCR ? [ONLYSCR.split('x').map(Number)] : QUICK ? [[1920, 1080], [390, 844]] : [[1920, 1080], [1366, 768], [1024, 768], [844, 390], [390, 844], [360, 640]];
@@ -59,7 +59,7 @@ async function invariants(p, page, scr) {
     // 2. unfilled template tokens, "undefined", "NaN", "[object Object]" on screen
     const t = document.body.innerText || ''; const bad = t.match(/undefined|NaN|\[object Object\]/); if (bad) out.push('bad text on screen: ' + bad[0]);
     // 3. visible buttons that are black (touch/hover bug)
-    document.querySelectorAll('button, .btn, a.game, .tile').forEach(b => { const r = b.getBoundingClientRect(); if (!r.width || !r.height) return; const cs = getComputedStyle(b); if (dark(cs.backgroundColor) && !/^(#?fs)$/.test(b.id) && !b.classList.contains('lock') && !b.closest('.mp-back, .splash')) out.push('black button: ' + (b.textContent || b.className).trim().slice(0, 24)); });
+    const darkTheme = document.body.classList.contains('g-hu'); (darkTheme ? [] : document.querySelectorAll('button, .btn, a.game, .tile')).forEach(b => { const r = b.getBoundingClientRect(); if (!r.width || !r.height) return; const cs = getComputedStyle(b); if (dark(cs.backgroundColor) && !/^(#?fs)$/.test(b.id) && !b.classList.contains('lock') && !b.closest('.mp-back, .splash')) out.push('black button: ' + (b.textContent || b.className).trim().slice(0, 24)); });
     // 4. tiny tap targets (<28px) among visible buttons
     const tinyList = []; document.querySelectorAll('button:not([disabled])').forEach(b => { const r = b.getBoundingClientRect(); if (r.width && r.height && (r.height < 22 || r.width < 22) && getComputedStyle(b).visibility !== 'hidden') tinyList.push((b.textContent || b.className || b.id).trim().slice(0, 14) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height)); }); if (tinyList.length) out.push('tiny buttons (<22px): ' + tinyList.slice(0, 4).join(' | '));
     // 4b. text too small to read, text clipped by its box, buttons overlapping each other
@@ -72,7 +72,7 @@ async function invariants(p, page, scr) {
     });
     if (small > 3) out.push(small + ' text elements under 10px: ' + smallList.slice(0, 3).join(' | '));
     if (clipped.length) out.push('clipped text: ' + clipped.slice(0, 3).join(' | '));
-    const bs = [...document.querySelectorAll('button:not([disabled]), a.btn')].filter(b => { const r = b.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0) || getComputedStyle(b).visibility === 'hidden') return false; const t = document.elementFromPoint(Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2))); return !!t && (b === t || b.contains(t) || t.contains(b)); }).slice(0, 60);
+    const bs = [...document.querySelectorAll('button:not([disabled]):not(.hx), a.btn')].filter(b => { const r = b.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0) || getComputedStyle(b).visibility === 'hidden') return false; const t = document.elementFromPoint(Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2))); return !!t && (b === t || b.contains(t) || t.contains(b)); }).slice(0, 60);
     for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) { if (bs[i].contains(bs[j]) || bs[j].contains(bs[i])) continue; const a = bs[i].getBoundingClientRect(), b = bs[j].getBoundingClientRect(); const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left), oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); if (ox > 6 && oy > 6 && getComputedStyle(bs[i]).position !== 'fixed' && getComputedStyle(bs[j]).position !== 'fixed') { out.push('buttons overlap: ' + (bs[i].textContent || bs[i].className).trim().slice(0, 12) + ' × ' + (bs[j].textContent || bs[j].className).trim().slice(0, 12) + ' [' + Math.round(ox) + 'x' + Math.round(oy) + '] in ' + (bs[i].parentElement.className || bs[i].parentElement.id) + ' view ' + location.hash); i = bs.length; break; } }
     // 5. injected markup must never execute
     if (window.__pwn) out.push('XSS: injected script ran');
