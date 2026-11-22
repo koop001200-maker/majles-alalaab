@@ -441,7 +441,7 @@
     var colTeams = '<div class="setup-col panel' + (setupTab === "teams" ? " on" : "") + '">' +
       '<div class="field"><span class="label">نمط اللعب</span><div class="chips">' +
       formats.map(function (f) { return '<button class="chip" data-format="' + f[0] + '" aria-pressed="' + (settings.format === f[0]) + '">' + f[1] + "</button>"; }).join("") + "</div></div>" +
-      '<div class="field"><span class="label">أسماء ' + (isP ? "اللاعبين" : "الفرق") + '</span><div class="team-inputs">' + names + "</div></div>" +
+      '<div class="field"><span class="label">أسماء ' + (isP ? "اللاعبين" : "الفرق") + '</span><div class="team-inputs">' + names + "</div>" + nmChips(settings.names.slice(0, n)) + "</div>" +
       '<div class="field"><span class="label">عدد الجولات</span><div class="stepper">' +
       '<button class="btn" data-act="rounds-" aria-label="إنقاص">−</button><output id="rounds-out">' + settings.rounds + "</output>" +
       '<button class="btn" data-act="rounds+" aria-label="زيادة">+</button></div><p class="hint">مضاعفات عدد الفرق تعطي كل فريق نفس عدد الأدوار.</p></div>' +
@@ -746,6 +746,16 @@
 
   /* ---------- events ---------- */
   function saveSettings() { Store.set(K.settings, settings); }
+  /* names list: the one registered on the entrance screen, else common names */
+  var NM_BOYS = ["محمد", "أحمد", "عبدالله", "فهد", "خالد", "سلطان", "سعود", "تركي", "فيصل", "ناصر", "يوسف", "عمر", "بدر", "نواف", "عبدالعزيز"];
+  var NM_GIRLS = ["نورة", "سارة", "ريم", "لمى", "هيا", "منى", "مها", "العنود", "دانة", "جود", "كادي", "ترف", "أسماء"];
+  function nmShuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  var NM_COMMON = nmShuf(NM_BOYS).concat(nmShuf(NM_GIRLS));
+  function nmList() { try { var r = JSON.parse(localStorage.getItem("majlis_names") || "[]"); r = Array.isArray(r) ? r.map(function (x) { return String(x).trim().slice(0, 16); }).filter(Boolean) : []; return r.length ? r : NM_COMMON; } catch (e) { return NM_COMMON; } }
+  function nmChips(inputs) { var all = nmList(); return '<div class="chips namepick">' + all.map(function (c) { var used = inputs.indexOf(c) >= 0; return '<button class="chip" data-pickname="' + esc(c) + '" aria-pressed="' + used + '">' + (used ? "✓ " : "") + esc(c) + "</button>"; }).join("") + "</div>"; }
+  /* pick: put the name in the first slot that is not already a listed name; pick again to clear it */
+  function nmPick(slots, nm, blank) { var all = nmList(), at = slots.indexOf(nm); if (at >= 0) { slots[at] = blank(at); return; } for (var i = 0; i < slots.length; i++) if (all.indexOf(slots[i]) < 0) { slots[i] = nm; return; } slots[slots.length - 1] = nm; }
+
   function collectNames() {
     document.querySelectorAll("[data-team-name]").forEach(function (inp) { settings.names[+inp.getAttribute("data-team-name")] = inp.value; });
   }
@@ -1013,5 +1023,12 @@
     }
   });
 
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-pickname]"); if (!b || view !== "setup") return;
+    collectNames(); var n = teamCount(), isP = settings.format === "players", slots = settings.names.slice(0, n);
+    nmPick(slots, b.getAttribute("data-pickname"), function (i) { return isP ? PLAYER_NAMES[i] : DEFAULT_NAMES[i]; });
+    for (var i = 0; i < n; i++) settings.names[i] = slots[i];
+    saveSettings(); render();
+  });
   render();
 })();

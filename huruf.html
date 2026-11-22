@@ -80,6 +80,7 @@ button{cursor:pointer}
 .stage{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,3vh,36px);text-align:center;position:relative}
 .stage .kicker{font-family:var(--display);font-size:clamp(1.3rem,4vmin,3rem);color:var(--muted);margin:0;line-height:1.2}
 .stage .meta{display:flex;gap:.6em;flex-wrap:wrap;justify-content:center;color:var(--muted);font-size:clamp(.95rem,2.2vmin,1.5rem)}
+.namepick{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.namepick .chip{cursor:pointer;font:inherit;color:inherit;padding:.1em .8em}.chip[aria-pressed=true]{background:var(--saffron);color:#111827;border-color:var(--saffron)}
 .chip{display:inline-flex;align-items:center;gap:.35em;border-radius:999px;padding:.1em .8em;border:1px solid var(--line);background:var(--ink-2);white-space:nowrap}
 .chip.easy{color:var(--mint);border-color:color-mix(in srgb,var(--mint) 45%,transparent)}
 .chip.medium{color:var(--saffron);border-color:color-mix(in srgb,var(--saffron) 45%,transparent)}
@@ -431,6 +432,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
             <input id="in-player" maxlength="24" placeholder="اسم المتسابق" aria-label="اسم المتسابق">
             <button class="btn primary" type="submit">إضافة</button>
           </form>
+          <div class="chips namepick" id="c-namepick" aria-label="أسماء جاهزة"></div>
           <ul class="list" id="c-players"></ul>
         </section>
 
@@ -900,6 +902,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     try { const seenN = S.words.filter((w) => S.seen.includes(w.id)).length; window.MAJLIS_PASS && MAJLIS_PASS.sets('hf', S.words.length, S.words.length - seenN, { ids: S.words.map((w) => w.id), used: S.seen, reset: () => commit((x) => { x.seen = []; }) }); } catch (e) {}
   }
   function render() {
+    try { renderNamePick(); } catch (e) {}
     passSync();
     if (view === 'display') renderDisplay(); else if (view === 'control') renderControl(); else if (view === 'home') renderHome();
     paintClock(); updateSoundBtn(); firstPaint = false;
@@ -1011,6 +1014,17 @@ textarea{width:100%;min-height:90px;resize:vertical}
     if (S.players.some((p) => p.name === n)) return toast('هذا الاسم موجود');
     commit((s) => s.players.push({ id: uid(), name: n, score: 0 }));
     inp.value = ''; inp.focus();
+  });
+  function nmList() { try { let r = JSON.parse(localStorage.getItem('majlis_names') || '[]'); r = Array.isArray(r) ? r.map((x) => clean(x).slice(0, 16)).filter(Boolean) : []; if (r.length) return r; } catch (e) {} const B = ['محمد','أحمد','عبدالله','فهد','خالد','سلطان','سعود','تركي','فيصل','ناصر','يوسف','عمر','بدر','نواف','عبدالعزيز'], G = ['نورة','سارة','ريم','لمى','هيا','منى','مها','العنود','دانة','جود','كادي','ترف','أسماء']; return B.concat(G); }
+  function renderNamePick() {
+    const box = $('#c-namepick'); if (!box) return;
+    box.innerHTML = nmList().map((c) => { const used = S.players.some((p) => p.name === c); return `<button type="button" class="chip" data-pickname="${esc(c)}" aria-pressed="${used}">${used ? '✓ ' : ''}${esc(c)}</button>`; }).join('');
+  }
+  $('#c-namepick').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pickname]'); if (!b) return;
+    const n = b.dataset.pickname, ex = S.players.find((p) => p.name === n);
+    if (ex) commit((s) => { s.players = s.players.filter((p) => p.id !== ex.id); });
+    else commit((s) => s.players.push({ id: uid(), name: n, score: 0 }));
   });
   $('#f-player').addEventListener('submit', (e) => {
     e.preventDefault();

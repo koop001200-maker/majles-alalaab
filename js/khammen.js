@@ -111,6 +111,13 @@
   settings.turnTime = [45, 60, 90, 120].indexOf(+settings.turnTime) >= 0 ? +settings.turnTime : 90;
   settings.memTime = [4, 6, 8, 10].indexOf(+settings.memTime) >= 0 ? +settings.memTime : 6;
   function saveSettings() { Store.set(K.settings, settings); }
+  /* names: the list registered on the entrance screen (shared across games), else common names */
+  var BOYS = ["محمد", "أحمد", "عبدالله", "فهد", "خالد", "سلطان", "سعود", "تركي", "فيصل", "ناصر", "يوسف", "عمر", "بدر", "نواف", "عبدالعزيز"];
+  var GIRLS = ["نورة", "سارة", "ريم", "لمى", "هيا", "منى", "مها", "العنود", "دانة", "جود", "كادي", "ترف", "أسماء"];
+  function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  var COMMON = shuf(BOYS).concat(shuf(GIRLS));
+  function regNames() { try { var r = JSON.parse(localStorage.getItem("majlis_names") || "[]"); return Array.isArray(r) ? r.map(function (x) { return String(x).trim().slice(0, 16); }).filter(Boolean).slice(0, 16) : []; } catch (e) { return []; } }
+  (function seed() { var r = regNames(), def = defaults.players.join("|"); if (r.length >= 2 && settings.players.join("|") === def) { settings.players = r.slice(); settings.teamOf = r.map(function (x, i) { return i % settings.teamCount; }); } })();
 
   var view = location.hash === "#bank" ? "bank" : "home", setupTab = "players", setupErr = "", modal = null, bankF = { cat: "", lvl: "", q: "" }, pendingDel = null;
   var game = validGame(Store.get(K.game, null));
@@ -596,6 +603,7 @@
       '<p class="hint">' + { solo: "كل لاعب يلعب لنفسه ويجمع نقاطه.", teams: "الفرق تتناوب، وأعضاء كل فريق يتناوبون على التخمين.", duel: "لاعبين اثنين، وكل واحد يخمّن أكبر عدد من الأشياء في وقته." }[s.mode] + "</p></div>" +
       (isTeams ? '<div class="field"><span class="label">عدد الفرق</span><div class="chips">' + [2, 3, 4].map(function (n) { return '<button class="chip" data-teams="' + n + '" aria-pressed="' + (s.teamCount === n) + '">' + n + "</button>"; }).join("") + '</div><p class="hint">اضغط الدائرة الملونة جنب الاسم لتغيير فريقه.</p></div>' : "") +
       '<div class="field"><span class="label">اللاعبين (' + s.players.length + ')</span><form class="add-row" id="add-player"><input id="new-player" maxlength="16" placeholder="اكتب الاسم واضغط إضافة"><button class="btn go" type="submit">إضافة</button></form>' +
+      '<div class="chips namepick">' + (regNames().length ? regNames() : COMMON).map(function (c) { var used = s.players.some(function (n) { return n.trim() === c; }); return '<button class="chip" data-pickname="' + esc(c) + '" aria-pressed="' + used + '">' + (used ? "✓ " : "") + esc(c) + "</button>"; }).join("") + "</div>" +
       '<div class="player-list">' + pl + "</div></div></div>";
     var col2 = '<div class="setup-col panel' + (setupTab === "items" ? " on" : "") + '">' +
       '<div class="field"><span class="label">التصنيفات</span><div class="chips"><button class="chip" data-cat="all" aria-pressed="' + (!s.cats.length) + '">🎲 الكل</button>' +
@@ -779,7 +787,8 @@
         else { resetArm = Date.now(); setTimeout(function () { if (view === "home") render(); }, 4100); }
         render(); break;
       case "bank": go("bank"); break;
-      case "quick": case "start": case "replay": startGame(); break;
+      case "quick": view = "setup"; setupTab = "players"; setupErr = ""; render(); break;
+      case "start": case "replay": startGame(); break;
       case "trial":
         setupErr = validate();
         if (setupErr) { view = "setup"; setupTab = "players"; render(); break; }
@@ -808,7 +817,7 @@
   }
 
   document.addEventListener("click", function (e) {
-    var el = e.target.closest("[data-act],[data-ui],[data-mode],[data-teams],[data-cat],[data-level],[data-time],[data-mem],[data-tab],[data-del-player],[data-team-cycle],[data-vote],[data-edit],[data-del],[data-del-yes],[data-del-no]");
+    var el = e.target.closest("[data-act],[data-ui],[data-mode],[data-teams],[data-cat],[data-level],[data-time],[data-mem],[data-tab],[data-del-player],[data-pickname],[data-team-cycle],[data-vote],[data-edit],[data-del],[data-del-yes],[data-del-no]");
     if (!el) return;
     var d = el.dataset;
     if (e.detail > 1 && (d.act || (d.ui && d.ui !== "rounds-" && d.ui !== "rounds+"))) return;
@@ -825,6 +834,13 @@
     if (d.time) { settings.turnTime = +d.time; saveSettings(); render(); return; }
     if (d.mem) { settings.memTime = +d.mem; saveSettings(); render(); return; }
     if (d.tab) { setupTab = d.tab; render(); return; }
+    if (d.pickname) {
+      var pn = d.pickname, ix = -1; settings.players.forEach(function (n, q) { if (ix < 0 && n.trim() === pn) ix = q; });
+      if (ix >= 0) { settings.players.splice(ix, 1); settings.teamOf.splice(ix, 1); }
+      else if (settings.players.length >= 16) { setupErr = "الحد الأقصى 16 لاعب."; }
+      else { settings.players.push(pn); settings.teamOf.push((settings.players.length - 1) % settings.teamCount); setupErr = ""; }
+      saveSettings(); render(); return;
+    }
     if (d.delPlayer != null) { var k = +d.delPlayer; settings.players.splice(k, 1); settings.teamOf.splice(k, 1); saveSettings(); render(); return; }
     if (d.teamCycle != null) { var j = +d.teamCycle; settings.teamOf[j] = ((settings.teamOf[j] || 0) + 1) % settings.teamCount; saveSettings(); setupErr = ""; render(); return; }
     if (d.vote) { var v = d.vote.split(":"); modal.votes[v[0]] = v[1] === "1"; render(); return; }

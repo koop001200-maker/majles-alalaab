@@ -301,3 +301,6 @@ a.btn { text-decoration: none; }
   .trophy, .crown { font-size: clamp(36px, 8vh, 80px) !important; }
   .champ, .winner-name { font-size: clamp(30px, min(6vw, 8vh), 80px) !important; }
 }
+
+.namepick { margin-top: 8px; gap: 5px; }
+.namepick .chip { min-height: 32px; padding: .05em .8em; font-size: .86em; }

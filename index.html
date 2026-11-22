@@ -88,6 +88,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 }
 .fs { position: fixed; top: clamp(10px, 1.6vh, 20px); left: max(12px, env(safe-area-inset-left, 0px)); z-index: 5; font: 800 clamp(13px, min(1vw, 1.9vh), 20px)/1 var(--body); color: var(--ink); background: #fff; border: var(--line); border-radius: 999px; padding: .55em 1em; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
 .fs:hover { background: var(--yellow); }
+.hm { left: auto; right: max(12px, env(safe-area-inset-right, 0px)); }
 #play { position: fixed; inset: 0; z-index: 10; background: var(--violet); }
 #play[hidden] { display: none; }
 #play iframe { width: 100%; height: 100%; border: 0; display: block; }
@@ -126,10 +127,31 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
 .subbtn { min-height: 34px; }
 .live, .new { top: clamp(46px, 3.4vw, 70px); bottom: auto; left: auto; right: clamp(16px, 1.8vw, 30px); }
 .sp-note { margin-top: clamp(4px, 1.2vh, 16px); }
+.sp-mode { display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 1.2vh, 14px); }
+.sp-mode .sp-q { font-size: clamp(15px, min(1.5vw, 2.8vh), 30px); font-weight: 900; }
+.sp-mode .opts { display: flex; gap: clamp(8px, 1vw, 18px); flex-wrap: wrap; justify-content: center; }
+.sp-mode button { font: 800 clamp(14px, min(1.3vw, 2.6vh), 26px)/1.2 var(--body); color: var(--ink); background: #fff; border: var(--line); border-radius: 999px; padding: .55em 1.2em; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; }
+.sp-names { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(17,24,39,.55); padding: 16px; }
+.sp-names[hidden] { display: none; }
+.sp-names .box { background: #fff; border: var(--line); border-radius: 20px; box-shadow: 6px 6px 0 var(--ink); padding: clamp(14px, 2.2vh, 28px); width: min(640px, 100%); max-height: 92vh; overflow: auto; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.sp-names h2 { margin: 0; font: 400 clamp(22px, 3.4vh, 40px)/1.2 var(--display); }
+.sp-names form { display: flex; gap: 8px; justify-content: center; }
+.sp-names input { font: 700 16px var(--body); border: var(--line); border-radius: 999px; padding: .4em 1em; min-width: 0; flex: 1; max-width: 260px; }
+.sp-names .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.sp-names .chips button, .sp-names form button, .sp-names .done { font: 800 15px var(--body); color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .3em .9em; cursor: pointer; }
+.sp-names .chips button { background: var(--yellow); }
+.sp-names .done { background: var(--green); color: #fff; align-self: center; font-size: 18px; padding: .35em 1.6em; }
+.sp-names .hint { margin: 0; font-size: 13px; opacity: .75; }
+.sp-mode button[aria-pressed="true"] { background: var(--yellow); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
 </style>
 </head>
 <body data-hub>
+<div class="sp-names" id="spnames" hidden role="dialog" aria-label="أسماء اللاعبين"><div class="box"><h2>👥 مين اللاعبين؟</h2>
+  <form id="nameform"><input id="nameinp" maxlength="16" placeholder="اكتب اسم وأضف" autocomplete="off"><button type="submit">+ إضافة</button></form>
+  <div class="chips" id="namechips"></div><p class="hint">تنعكس هذي الأسماء على الألعاب اللي فيها أسماء لاعبين (خمّن وش هو؟، برا السالفة). اضغط الاسم لإزالته.</p>
+  <button type="button" class="done" id="namesdone">تم</button></div></div>
 <button class="fs" id="fs" type="button">⛶ شاشة كاملة</button>
+<button class="fs hm" id="hm" type="button">🏠 الرئيسية</button>
 <div class="splash" id="splash" role="dialog" aria-label="ابدأ">
   <span class="sp-float" style="top:10%;right:8%" aria-hidden="true">🎲</span><span class="sp-float" style="top:18%;left:9%;animation-delay:-1s" aria-hidden="true">🐪</span>
   <span class="sp-float" style="bottom:12%;right:12%;animation-delay:-2s" aria-hidden="true">☕</span><span class="sp-float" style="bottom:16%;left:8%;animation-delay:-3s" aria-hidden="true">🧩</span>
@@ -137,7 +159,9 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     <h1>مجلس<span>الألعاب!</span></h1>
     <p>ست ألعاب للعائلة… جاهزين؟</p>
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
-    <p class="sp-note">زر البداية يفتح الشاشة الكاملة</p>
+    <div class="sp-mode" role="group" aria-label="طريقة اللعب"><span class="sp-q">كيف تلعبون؟</span>
+      <div class="opts"><button type="button" data-mode="tv" aria-pressed="true">📺 شاشة واحدة للجميع</button><button type="button" data-mode="phones" aria-pressed="false">📱 كل واحد بجواله</button><button type="button" id="namesbtn">👥 الأسماء <span id="namescount"></span></button></div>
+      <p class="sp-note">اختيارك يُطبَّق على الألعاب اللي تدعم الجوالات · زر البداية يفتح الشاشة الكاملة</p></div>
   </div>
 </div>
 <main>
@@ -244,6 +268,30 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     splash.classList.add("out"); setTimeout(function () { splash.hidden = true; var g = document.querySelector(".game"); if (g) g.focus(); }, 480);
   });
   setTimeout(function () { if (!splash.hidden) document.getElementById("go").focus(); }, 100);
+  var modeBtns = document.querySelectorAll(".sp-mode [data-mode]");
+  function paintMode() { var m = "tv"; try { m = localStorage.getItem("majlis_mode") === "phones" ? "phones" : "tv"; } catch (e) {} for (var i = 0; i < modeBtns.length; i++) modeBtns[i].setAttribute("aria-pressed", String(modeBtns[i].getAttribute("data-mode") === m)); }
+  for (var mi = 0; mi < modeBtns.length; mi++) modeBtns[mi].addEventListener("click", function (e) { try { localStorage.setItem("majlis_mode", e.currentTarget.getAttribute("data-mode")); } catch (er) {} paintMode(); });
+  paintMode();
+  var nmBox = document.getElementById("spnames"), nmChips = document.getElementById("namechips");
+  function getNames() { try { var r = JSON.parse(localStorage.getItem("majlis_names") || "[]"); return Array.isArray(r) ? r : []; } catch (e) { return []; } }
+  function setNames(a) { try { localStorage.setItem("majlis_names", JSON.stringify(a)); } catch (e) {} paintNames(); }
+  function paintNames() {
+    var a = getNames(); nmChips.textContent = "";
+    a.forEach(function (n, i) { var b = document.createElement("button"); b.type = "button"; b.textContent = n + " ✕"; b.addEventListener("click", function () { var x = getNames(); x.splice(i, 1); setNames(x); }); nmChips.appendChild(b); });
+    document.getElementById("namescount").textContent = a.length ? "(" + a.length + ")" : "";
+  }
+  document.getElementById("namesbtn").addEventListener("click", function () { nmBox.hidden = false; paintNames(); document.getElementById("nameinp").focus(); });
+  document.getElementById("namesdone").addEventListener("click", function () { nmBox.hidden = true; });
+  document.getElementById("nameform").addEventListener("submit", function (e) {
+    e.preventDefault(); var inp = document.getElementById("nameinp"), v = inp.value.trim().slice(0, 16), a = getNames();
+    if (v && a.indexOf(v) < 0 && a.length < 16) { a.push(v); setNames(a); } inp.value = ""; inp.focus();
+  });
+  paintNames();
+  document.getElementById("hm").addEventListener("click", function () {
+    splash.hidden = false; splash.classList.remove("out");
+    try { sessionStorage.removeItem("majlis_started"); } catch (e) {}
+    document.getElementById("go").focus();
+  });
 
   /* One continuous full screen: games open inside this page, so full screen never drops between games. */
   var play = document.getElementById("play"), frame = null, fsBtn = document.getElementById("fs");
