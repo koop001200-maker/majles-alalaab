@@ -20,7 +20,8 @@ const HOPS = QUICK ? 40 : 120;
 const ROOT = path.resolve(__dirname, '..');
 const PAGES = [['index', 'index.html'], ['min-akoon', 'min-akoon.html'], ['khammen', 'khammen.html'], ['rattebha', 'rattebha.html'], ['huruf', 'huruf.html'], ['wsh', 'wsh.html'], ['bara', 'bara.html']]
   .filter(([n]) => !ONLY || n.includes(ONLY));
-const SCREENS = QUICK ? [[1920, 1080], [390, 844]] : [[1920, 1080], [1366, 768], [1024, 768], [844, 390], [390, 844], [360, 640]];
+const ONLYSCR = arg('screen', null);
+const SCREENS = ONLYSCR ? [ONLYSCR.split('x').map(Number)] : QUICK ? [[1920, 1080], [390, 844]] : [[1920, 1080], [1366, 768], [1024, 768], [844, 390], [390, 844], [360, 640]];
 
 let s = SEED; const rnd = () => (s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296; const pick = a => a[Math.floor(rnd() * a.length)];
 const NASTY = ['', ' ', '   ', 'a'.repeat(400), '😀🐪☕', '<script>window.__pwn=1</script>', '"><img src=x onerror=window.__pwn=1>', "'; DROP TABLE users;--", 'مرحبا'.repeat(60), '‮evil‬', 'null', '0', '-1', '١٢٣٤٥', '\n\n\n', '%00', '{{7*7}}', '𒀀𒀁𒀂', 'ـــــــــــ'];
@@ -40,7 +41,7 @@ async function hop(p, page, scr, i, rec) {
     else if (act === 'type') { const ins = (await p.$$('input[type=text],input:not([type]),input[type=search],input[type=number],textarea')); const v = []; for (const e of ins) if (await e.isVisible().catch(() => false)) v.push(e); if (v.length) { const e = pick(v); await e.fill(pick(NASTY)).catch(() => {}); await e.press('Enter').catch(() => {}); } }
     else if (act === 'key') await p.keyboard.press(pick(['Escape', 'Enter', 'Space', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Backspace', 'Delete', 'F5', 'Control+a']));
     else if (act === 'hover' && vis.length) await pick(vis).hover({ timeout: 500 }).catch(() => {});
-    else if (act === 'resize') await p.setViewportSize({ width: pick([360, 390, 844, 1024, 1366, 1920]), height: pick([390, 640, 768, 844, 1080]) });
+    else if (act === 'resize') { await p.setViewportSize({ width: pick([360, 390, 844, 1024, 1366, 1920]), height: pick([390, 640, 768, 844, 1080]) }); await p.waitForTimeout(500); }
     else if (act === 'reload') await p.reload({ waitUntil: 'domcontentloaded' });
     else if (act === 'back') { await p.goBack({ timeout: 800 }).catch(() => {}); }
     else if (act === 'corrupt') await p.evaluate(() => { const ks = Object.keys(localStorage); if (ks.length) localStorage.setItem(ks[Math.floor(Math.random() * ks.length)], ['{', 'null', '[]', '"x"', '{"a":', '123'][Math.floor(Math.random() * 6)]); });
@@ -72,7 +73,7 @@ async function invariants(p, page, scr) {
     if (small > 3) out.push(small + ' text elements under 10px: ' + smallList.slice(0, 3).join(' | '));
     if (clipped.length) out.push('clipped text: ' + clipped.slice(0, 3).join(' | '));
     const bs = [...document.querySelectorAll('button:not([disabled]), a.btn')].filter(b => { const r = b.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0) || getComputedStyle(b).visibility === 'hidden') return false; const t = document.elementFromPoint(Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2))); return !!t && (b === t || b.contains(t) || t.contains(b)); }).slice(0, 60);
-    for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) { if (bs[i].contains(bs[j]) || bs[j].contains(bs[i])) continue; const a = bs[i].getBoundingClientRect(), b = bs[j].getBoundingClientRect(); const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left), oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); if (ox > 6 && oy > 6 && getComputedStyle(bs[i]).position !== 'fixed' && getComputedStyle(bs[j]).position !== 'fixed') { out.push('buttons overlap: ' + (bs[i].textContent || '').trim().slice(0, 12) + ' × ' + (bs[j].textContent || '').trim().slice(0, 12)); i = bs.length; break; } }
+    for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) { if (bs[i].contains(bs[j]) || bs[j].contains(bs[i])) continue; const a = bs[i].getBoundingClientRect(), b = bs[j].getBoundingClientRect(); const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left), oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); if (ox > 6 && oy > 6 && getComputedStyle(bs[i]).position !== 'fixed' && getComputedStyle(bs[j]).position !== 'fixed') { out.push('buttons overlap: ' + (bs[i].textContent || bs[i].className).trim().slice(0, 12) + ' × ' + (bs[j].textContent || bs[j].className).trim().slice(0, 12) + ' [' + Math.round(ox) + 'x' + Math.round(oy) + '] in ' + (bs[i].parentElement.className || bs[i].parentElement.id) + ' view ' + location.hash); i = bs.length; break; } }
     // 5. injected markup must never execute
     if (window.__pwn) out.push('XSS: injected script ran');
     // 6. elements hanging off-screen

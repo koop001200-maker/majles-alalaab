@@ -345,3 +345,9 @@ body .home-stack .row.small .btn, body .home-stack .row.small .sets-pill { font-
 /* never below 10px */
 .clue .num small { font-size: max(.55em, 10px) !important; }
 @media (max-width: 520px) { .g-mak .clue .num small { display: none; } }
+
+/* v25 fixes from the full الجربوع pass */
+.g-hf .tabs { margin-bottom: 10px; }
+.g-hf .word .icon-btn, .g-hf .icon-btn { min-width: 34px; min-height: 34px; }
+.g-hf #a-zero, .g-hf .btn.danger { min-height: 34px; }
+.g-kh .toggle small, .g-kh .preset small, .g-kh .hint, .g-kh small { font-size: max(.74em, 10.5px); }

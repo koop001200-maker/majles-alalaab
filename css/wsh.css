@@ -295,3 +295,6 @@ html, body, body * { -webkit-tap-highlight-color: transparent; }
 /* v22: category/option chips big enough to tap */
 .chk, .cat, .chip, .catbtn, .opts button, .cats button, .cats label { min-height: 34px; }
 @media (max-width: 520px) { .cats button, .cats label, .opts button { padding-block: .45em; font-size: 14px; } }
+
+html, body { overflow-x: hidden; max-width: 100vw; }
+#app, main { min-width: 0; max-width: 100vw; }
