@@ -14,7 +14,7 @@
   var FILES = { mak: "min-akoon.html", kh: "khammen.html", hf: "huruf.html", rt: "rattebha.html", wsh: "wsh.html", br: "bara.html" };
   var FREE_SETS = 3; // sets that open before subscribing; after subscribing every set in the bank is open
   var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8, br: 5 };
-  var NAMES = { mak: "من أنا؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟", br: "برا السالفة" };
+  var NAMES = { mak: "من أنا؟", kh: "خمّن وش هو؟", rt: "رتّب وفوز", hf: "تحدي الحروف", wsh: "وش الصح؟", br: "برا السالفة" };
   var DEFAULT_TOTAL = { mak: 96, kh: 411, rt: 192, hf: 582, wsh: 152, br: 192 }; // shown on the hub before a game has ever been opened
   var PLANS = {
     day: { id: "day", name: "اشتراك يوم واحد", price: "9.99", unit: "لليوم", ms: 864e5 },
