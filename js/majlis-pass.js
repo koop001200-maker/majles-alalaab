@@ -10,11 +10,11 @@
 (function () {
   "use strict";
   var SUB_KEY = "majlis_sub_v1", FREE_KEY = "majlis_free_v1", SETS_KEY = "majlis_sets_v1", PICK_KEY = "majlis_pick_v1";
-  var FILES = { mak: "min-akoon.html", kh: "khammen.html", hf: "huruf.html", rt: "rattebha.html", wsh: "wsh.html" };
+  var FILES = { mak: "min-akoon.html", kh: "khammen.html", hf: "huruf.html", rt: "rattebha.html", wsh: "wsh.html", br: "bara.html" };
   var FREE_SETS = 3; // sets that open before subscribing; after subscribing every set in the bank is open
-  var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8 };
-  var NAMES = { mak: "من أنا؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟" };
-  var DEFAULT_TOTAL = { mak: 96, kh: 411, rt: 192, hf: 582, wsh: 152 }; // shown on the hub before a game has ever been opened
+  var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8, br: 5 };
+  var NAMES = { mak: "من أنا؟", kh: "خمّن وش هو؟", rt: "رتّبها صح", hf: "تحدي الحروف", wsh: "وش الصح؟", br: "برا السالفة" };
+  var DEFAULT_TOTAL = { mak: 96, kh: 411, rt: 192, hf: 582, wsh: 152, br: 192 }; // shown on the hub before a game has ever been opened
   var PLANS = {
     day: { id: "day", name: "اشتراك يوم واحد", price: "9.99", unit: "لليوم", ms: 864e5 },
     month: { id: "month", name: "اشتراك شهر", price: "19.99", unit: "للشهر", ms: 30 * 864e5 }
@@ -130,7 +130,7 @@
     for (k = 0; k * size < total; k++) { n = Math.min(size, total - k * size); out.push({ k: k, n: n, u: Math.min(n, +prog[k] || 0), locked: game !== "wsh" && !isSub() && k >= FREE_SETS }); }
     return out;
   }
-  var RESET_KEYS = { mak: "mak_used_v1", kh: "kh_used_v1", rt: "rt_used_v1" };
+  var RESET_KEYS = { mak: "mak_used_v1", kh: "kh_used_v1", rt: "rt_used_v1", br: "br_used_v1" };
   function resetHistory(game) {
     try {
       if (meta[game] && meta[game].reset) { meta[game].reset(); return; }

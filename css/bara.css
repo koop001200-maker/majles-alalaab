@@ -1,0 +1,67 @@
+/* «برا السالفة» — same look as the hub: violet page, white panels, thick outlines, offset shadows. */
+:root { --gap: clamp(8px, 1.6vh, 20px); }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; font-family: "Changa", "Segoe UI", Tahoma, sans-serif; font-size: clamp(14px, min(1.2vw, 2vh) + 4px, 26px); line-height: 1.5; color: #111827; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+#app { height: 100%; display: flex; flex-direction: column; padding: clamp(10px, 2vh, 26px) max(16px, env(safe-area-inset-right, 0px)) clamp(10px, 2vh, 26px) max(16px, env(safe-area-inset-left, 0px)); max-width: 1500px; margin: 0 auto; }
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--gap); align-items: center; justify-content: center; text-align: center; }
+h1, h2, h3, p { margin: 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .4em; border-radius: 999px; padding: .4em 1.4em; min-height: 46px; background: #fff; }
+.btn.go { background: #fbbf24; }
+.btn.good { background: #10b981; color: #fff; }
+.btn.bad { background: #ef4444; color: #fff; }
+.btn.huge { font-family: "Lalezar", "Changa", sans-serif; font-weight: 400; font-size: clamp(28px, min(3.8vw, 7vh), 80px); padding: .25em 1.6em; min-height: clamp(64px, 11vh, 130px); }
+.btn.big { font-size: 1.15em; padding: .45em 1.6em; }
+.btn.small { font-size: .85em; min-height: 34px; padding: .2em 1em; }
+.row { display: flex; flex-wrap: wrap; gap: clamp(8px, 1.2vw, 18px); justify-content: center; align-items: center; }
+.title { font-family: "Lalezar", "Changa", sans-serif; font-weight: 400; font-size: clamp(44px, min(8vw, 14vh), 150px); line-height: 1.05; }
+.sub { max-width: 40em; font-weight: 700; font-size: 1.05em; color: #1f2937; }
+.emoji-row { font-size: clamp(36px, 8vh, 90px); display: flex; gap: .3em; }
+.panel { border-radius: 24px; padding: clamp(12px, 2vh, 26px); width: 100%; }
+.head { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.head h2 { font-size: clamp(26px, 4.4vh, 52px); }
+.badge { background: #fff; border: 3px solid #111827; border-radius: 999px; padding: .1em 1em; font-weight: 800; }
+/* setup */
+.names { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; width: 100%; }
+.name { display: flex; gap: 6px; align-items: center; }
+.name input { flex: 1; min-width: 0; border-radius: 14px; padding: .3em .8em; min-height: 42px; }
+.name .x { width: 38px; min-height: 38px; border-radius: 50%; padding: 0; border: 2px solid #111827; background: #fff; font-weight: 800; }
+.field { display: grid; gap: 6px; justify-items: center; width: 100%; }
+.label { font-weight: 800; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.chip { border-radius: 999px; padding: .15em 1.1em; min-height: 40px; }
+/* pass the device */
+.card { width: min(100%, 760px); border-radius: 32px; padding: clamp(18px, 4vh, 48px); display: grid; gap: clamp(8px, 2vh, 22px); justify-items: center; }
+.who { font-family: "Lalezar", "Changa", sans-serif; font-size: clamp(40px, min(7vw, 12vh), 120px); line-height: 1.1; }
+.secret { font-family: "Lalezar", "Changa", sans-serif; font-size: clamp(48px, min(9vw, 16vh), 170px); line-height: 1.1; color: #047857; }
+.secret.out { color: #b91c1c; }
+.cat { font-weight: 800; background: #eef0ff; border: 3px solid #111827; border-radius: 999px; padding: .1em 1em; }
+/* talk */
+.ring { width: clamp(150px, min(22vw, 34vh), 380px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 4px solid #111827; background: conic-gradient(#10b981 calc(var(--p) * 360deg), #e5e7eb 0); box-shadow: 6px 6px 0 #111827; }
+.ring span { width: 78%; aspect-ratio: 1; border-radius: 50%; background: #fff; display: grid; place-items: center; font-family: "Lalezar", sans-serif; font-size: clamp(40px, min(7vw, 12vh), 120px); }
+.ring.warn { background: conic-gradient(#ef4444 calc(var(--p) * 360deg), #e5e7eb 0); animation: pulse .8s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.05); } }
+.order { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.order span { background: #fff; border: 3px solid #111827; border-radius: 999px; padding: .1em .9em; font-weight: 800; }
+.order span.now { background: #fbbf24; transform: scale(1.12); }
+/* vote */
+.vote { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: clamp(8px, 1.4vw, 18px); width: 100%; }
+.vote .btn { min-height: clamp(56px, 11vh, 120px); font-size: 1.2em; white-space: normal; }
+.vote .btn[aria-pressed="true"] { background: #fbbf24; transform: translate(-2px, -2px); }
+/* scores */
+.board { display: grid; gap: 8px; width: min(100%, 640px); }
+.board .line { display: flex; align-items: center; gap: 12px; background: #fff; border: 3px solid #111827; border-radius: 16px; padding: .25em 1em; font-weight: 800; box-shadow: 3px 3px 0 #111827; }
+.board .line b { flex: 1; text-align: start; }
+.board .line .pts { font-family: "Lalezar", sans-serif; font-size: 1.5em; }
+.board .line .plus { color: #047857; }
+.board .line.first { background: #fef3c7; }
+.verdict { font-family: "Lalezar", "Changa", sans-serif; font-size: clamp(30px, min(5vw, 9vh), 90px); line-height: 1.15; }
+.how { text-align: start; display: grid; gap: 10px; font-weight: 700; }
+.how li { margin-inline-start: 1.2em; }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); padding: .5em 1.3em; border-radius: 999px; font-weight: 800; z-index: 60; }
+.modal-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; }
+.modal { width: min(100%, 560px); border-radius: 24px; padding: 20px; display: grid; gap: 12px; text-align: center; }
+@media (max-width: 640px) { .btn.huge { padding-inline: 1em; } }
+@media (prefers-reduced-motion: reduce) { .ring.warn { animation: none; } }

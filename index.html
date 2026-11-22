@@ -41,7 +41,7 @@ main {
 }
 h1 { margin: 0; text-align: center; font-family: var(--display); font-weight: 400; line-height: 1; font-size: clamp(40px, min(7vw, 11vh), 130px); }
 h1 span { display: inline-block; color: #fff; background: var(--green); border: var(--line); box-shadow: .08em .08em 0 var(--ink); padding: .06em .3em 0; transform: rotate(-2deg); margin-inline-start: .15em; }
-.games { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 30px); }
+.games { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(12px, 1.2vw, 26px); }
 .game {
   position: relative; min-height: 0; display: flex; flex-direction: column; gap: clamp(6px, 1.4vh, 16px); text-decoration: none; color: var(--ink);
   background: #fff; border: var(--line); border-radius: clamp(16px, 1.6vw, 28px); box-shadow: clamp(5px, .5vw, 10px) clamp(5px, .5vw, 10px) 0 var(--ink);
@@ -59,6 +59,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .g2 .art { background: repeating-conic-gradient(from 0deg at 50% 60%, var(--purple) 0 12deg, #7c3aed 12deg 24deg); }
 .g3 .art { background: var(--mint); }
 .g4 .art { background: linear-gradient(135deg, var(--peri), var(--blue)); }
+.g6 .art { background: repeating-conic-gradient(from 0deg at 50% 50%, #fb923c 0 15deg, #f97316 15deg 30deg); }
 .g5 .art { background: repeating-linear-gradient(-45deg, #f472b6 0 18px, #ec4899 18px 36px); }
 .new { position: absolute; top: clamp(16px, 1.8vw, 30px); left: clamp(16px, 1.8vw, 30px); background: var(--yellow); border: var(--line); border-radius: 999px; padding: 0 .8em; font-weight: 800; font-size: clamp(12px, min(.9vw, 1.8vh), 20px); transform: rotate(-4deg); }
 .new[hidden] { display: none; }
@@ -83,7 +84,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
   main { padding-top: 54px; }
 }
 @media (max-width: 1000px) and (max-height: 520px) {
-  .games { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); }
+  .games { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); }
 }
 .fs { position: fixed; top: clamp(10px, 1.6vh, 20px); left: max(12px, env(safe-area-inset-left, 0px)); z-index: 5; font: 800 clamp(13px, min(1vw, 1.9vh), 20px)/1 var(--body); color: var(--ink); background: #fff; border: var(--line); border-radius: 999px; padding: .55em 1em; box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
 .fs:hover { background: var(--yellow); }
@@ -115,7 +116,7 @@ html, body, body * { -webkit-tap-highlight-color: transparent; }
 /* v20: smaller cards, "coming soon" row, bigger start */
 main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
 .games { flex: 0 0 auto; height: clamp(200px, 38vh, 480px); }
-.soonrow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 30px); width: min(44%, 760px); height: clamp(54px, 9vh, 110px); margin-inline: auto; }
+.soonrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(12px, 1.6vw, 30px); width: min(26%, 420px); height: clamp(54px, 9vh, 110px); margin-inline: auto; }
 .soon { display: flex; align-items: center; justify-content: center; gap: .5em; border: clamp(3px, .25vw, 5px) dashed rgba(255,255,255,.75); border-radius: clamp(14px, 1.4vw, 24px); background: rgba(255,255,255,.14); color: #fff; font: 400 clamp(18px, min(1.9vw, 3.6vh), 42px)/1 var(--display); user-select: none; }
 .soon small { font: 800 max(.55em, 11px)/1 var(--body); background: var(--yellow); color: var(--ink); border-radius: 999px; padding: .25em .7em; }
 @media (max-width: 1200px), (max-height: 520px) { .games { flex: 1; height: auto; } .soonrow { width: min(90%, 760px); height: clamp(36px, 7vh, 60px); } }
@@ -123,6 +124,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
 .sp-box { gap: clamp(22px, 5.5vh, 70px); }
 .sp-go { font-size: clamp(46px, min(6.4vw, 11.5vh), 140px); padding: .22em 1.7em .05em; box-shadow: clamp(6px, .7vw, 14px) clamp(6px, .7vw, 14px) 0 var(--ink); margin-block: clamp(6px, 2vh, 28px); }
 .subbtn { min-height: 34px; }
+.live, .new { top: auto; bottom: clamp(10px, 1.2vw, 20px); left: clamp(10px, 1.2vw, 20px); }
 .sp-note { margin-top: clamp(4px, 1.2vh, 16px); }
 </style>
 </head>
@@ -133,7 +135,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <span class="sp-float" style="bottom:12%;right:12%;animation-delay:-2s" aria-hidden="true">☕</span><span class="sp-float" style="bottom:16%;left:8%;animation-delay:-3s" aria-hidden="true">🧩</span>
   <div class="sp-box">
     <h1>مجلس<span>الألعاب!</span></h1>
-    <p>خمس ألعاب للعائلة… جاهزين؟</p>
+    <p>ست ألعاب للعائلة… جاهزين؟</p>
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
     <p class="sp-note">زر البداية يفتح الشاشة الكاملة</p>
   </div>
@@ -171,8 +173,14 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
       <h2>وش الصح؟</h2>
       <p>اكتب كذبة مقنعة واكشف الحقيقة</p>
     </a>
+    <a class="game g6" href="bara.html" data-g="br">
+      <div class="art"><span class="emo" aria-hidden="true">🤫🕵️🎭</span></div>
+      <span class="chip sets"></span><span class="new" id="new-f">جديدة</span><span class="live" id="resume-f" hidden>محفوظة</span>
+      <h2>برا السالفة</h2>
+      <p>واحد منكم ما يعرف الموضوع… اكشفوه!</p>
+    </a>
   </nav>
-  <div class="soonrow" aria-label="ألعاب قريباً"><div class="soon">🔜 لعبة جديدة <small>قريباً</small></div><div class="soon">🔜 لعبة جديدة <small>قريباً</small></div></div>
+  <div class="soonrow" aria-label="ألعاب قريباً"><div class="soon">🔜 لعبة جديدة <small>قريباً</small></div></div>
   <div class="subrow"><button class="subbtn" id="sub" type="button"></button></div>
   <div class="subrow"><button class="subbtn alt" id="setsbtn" type="button">🎮 المجموعات المتاحة</button></div>
 </main>
@@ -192,6 +200,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     document.getElementById("resume-d").hidden = !on;
     var w = false; try { var ws = JSON.parse(localStorage.getItem("wsh_host_v1") || "null"); w = !!(ws && ws.phase && ws.phase !== "lobby" && ws.phase !== "final"); } catch (e) {}
     document.getElementById("resume-e").hidden = !w; document.getElementById("new-e").hidden = w;
+    var rb = saved("br_game_v1", "phase", "over"); document.getElementById("resume-f").hidden = !rb; document.getElementById("new-f").hidden = rb;
     refreshPass();
   }
   function refreshPass() {
