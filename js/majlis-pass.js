@@ -10,6 +10,7 @@
 (function () {
   "use strict";
   var SUB_KEY = "majlis_sub_v1", FREE_KEY = "majlis_free_v1", SETS_KEY = "majlis_sets_v1", PICK_KEY = "majlis_pick_v1";
+  var HUB_HIDDEN = { br: 1 }; // ألعاب غير معروضة في الهاب بعد
   var FILES = { mak: "min-akoon.html", kh: "khammen.html", hf: "huruf.html", rt: "rattebha.html", wsh: "wsh.html", br: "bara.html" };
   var FREE_SETS = 3; // sets that open before subscribing; after subscribing every set in the bank is open
   var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8, br: 5 };
@@ -274,7 +275,7 @@
       var list = setList(s.game), per = window.innerHeight < 560 ? 8 : 12, pages = Math.max(1, Math.ceil(list.length / per)); s.page = Math.min(s.page || 0, pages - 1);
       var shown = list.slice(s.page * per, s.page * per + per), done = list.filter(function (x) { return x.u >= x.n && x.n; }).length;
       h = "<h2>🎮 المجموعات</h2>" +
-        '<div class="gchips">' + Object.keys(FILES).map(function (g) { return '<button class="gc' + (g === s.game ? " on" : "") + '" data-g="' + g + '" type="button">' + esc(NAMES[g]) + "</button>"; }).join("") + "</div>" +
+        '<div class="gchips">' + Object.keys(FILES).filter(function (g) { return !HUB_HIDDEN[g]; }).map(function (g) { return '<button class="gc' + (g === s.game ? " on" : "") + '" data-g="' + g + '" type="button">' + esc(NAMES[g]) + "</button>"; }).join("") + "</div>" +
         "<p>اختر المجموعة اللي تبي تبدأ منها (" + done + " من " + list.length + " انلعبت) — تفتح اللعبة وتضغط «ابدأ»</p>" +
         '<div class="tiles">' + shown.map(function (x) {
           var st = x.locked ? "🔒 بعد الاشتراك" : x.u >= x.n ? "✅ لعبتها" : x.u ? "🟡 " + x.u + "/" + x.n : "⚪ جديدة";
