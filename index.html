@@ -258,6 +258,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.15:</b> شلنا عنوان «كيف تلعبون؟» من شاشة البداية.</li>
     <li><b>نسخة 0.14:</b> ترتيب إعدادات البداية في بطاقة واحدة بمقاطع متساوية، وتوحيد الخط في الإعدادات والنوافذ.</li>
     <li><b>نسخة 0.13:</b> إعدادات اللعب الموحّدة في شاشة البداية (الفرق، الصعوبة، طول اللعبة، وقت الجواب) وتنطبق على كل الألعاب · شلنا «شاشة واحدة / كل واحد بجواله».</li>
     <li><b>نسخة 0.12:</b> شاشة البداية: زر «🏆 جولة العائلة» بدل «الأسماء».</li>
@@ -282,7 +283,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
     <h1>مجلس<span>الألعاب!</span></h1>
     <p>ألعاب جماعية للعائلة… جاهزين؟</p>
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
-    <div class="sp-mode" role="group" aria-label="طريقة اللعب"><span class="sp-q">كيف تلعبون؟</span>
+    <div class="sp-mode" role="group" aria-label="طريقة اللعب">
       <div class="sp-set" id="spset">
         <div class="sp-r"><b>الفرق</b><span class="opts" data-pk="n"><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button></span><span class="sp-names-in" id="spteams"></span></div>
         <div class="sp-r"><b>الصعوبة</b><span class="opts" data-pk="level"><button type="button" data-v="easy">سهل</button><button type="button" data-v="mix">منوّع</button><button type="button" data-v="hard">صعب</button></span></div>
