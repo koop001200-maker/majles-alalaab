@@ -113,6 +113,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .devbox .dv-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
 .devbox .dv-lock { font: 800 16px/1 var(--body); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .5em 1.1em; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; }
 .devbox .dv-lock[hidden] { display: none; }
+.devbox .dv-reset { background: #fee2e2; }
 .subrow { gap: clamp(8px, 1vw, 16px); flex-wrap: wrap; }
 .subbtn.fambtn { background: var(--yellow); }
 .fam .box { text-align: center; }
@@ -223,7 +224,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <p class="dv-note" id="dvnote">الألعاب الجديدة (برا السالفة، حروف وألوف، سين جيم) مقفلة حالياً. اكتب الرمز لفتحها.</p>
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
-  <div class="dv-row"><button type="button" class="dv-lock" id="dvlock" hidden>🔒 قفل الألعاب الجديدة</button><button type="button" class="done" id="dvclose">إغلاق</button></div>
+  <div class="dv-row"><button type="button" class="dv-lock" id="dvlock" hidden>🔒 قفل الألعاب الجديدة</button><button type="button" class="dv-lock dv-reset" id="dvreset" hidden>🧹 تصفير الجلسة بالكامل</button><button type="button" class="done" id="dvclose">إغلاق</button></div>
 </div></div>
 <div class="splash" id="splash" role="dialog" aria-label="ابدأ">
   <span class="sp-float" style="top:10%;right:8%" aria-hidden="true">🎲</span><span class="sp-float" style="top:18%;left:9%;animation-delay:-1s" aria-hidden="true">🐪</span>
@@ -391,7 +392,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
       if (on) a.removeAttribute("aria-disabled"); else a.setAttribute("aria-disabled", "true");
       var b = a.querySelector(".soonbadge"); if (b) b.textContent = on ? "🛠️ للمطورين" : "🔜 قريباً";
     });
-    document.getElementById("dvlock").hidden = !on;
+    document.getElementById("dvlock").hidden = !on; document.getElementById("dvreset").hidden = !on; document.getElementById("dvreset").textContent = "🧹 تصفير الجلسة بالكامل";
     document.getElementById("dvnote").textContent = on ? "الألعاب الجديدة مفتوحة للمطورين على هذا الجهاز." : "الألعاب الجديدة (برا السالفة، حروف وألوف، سين جيم) مقفلة حالياً. اكتب الرمز لفتحها.";
     document.getElementById("dvform").hidden = on;
   }
@@ -405,6 +406,16 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     e.preventDefault(); var v = document.getElementById("dvcode").value.trim();
     if (v === DEV_CODE) { try { localStorage.setItem("majlis_dev", "1"); } catch (er) {} paintDev(); refreshPass(); closeDev(); }
     else { var er2 = document.getElementById("dverr"); er2.hidden = false; document.getElementById("dvcode").value = ""; document.getElementById("dvcode").focus(); }
+  });
+  /* للمطورين: يمسح كل بيانات المجلس والألعاب (كأنه أول دخول) مع إبقاء الألعاب الجديدة مفتوحة؛ ضغطتين للتأكيد */
+  var resetArm = 0;
+  document.getElementById("dvreset").addEventListener("click", function () {
+    var b = document.getElementById("dvreset");
+    if (Date.now() - resetArm > 4000) { resetArm = Date.now(); b.textContent = "⚠️ اضغط مرة ثانية: يمسح كل شي"; setTimeout(function () { if (Date.now() - resetArm >= 4000) b.textContent = "🧹 تصفير الجلسة بالكامل"; }, 4100); return; }
+    try { localStorage.clear(); localStorage.setItem("majlis_dev", "1"); } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    location.reload();
   });
   document.getElementById("dvlock").addEventListener("click", function () { try { localStorage.removeItem("majlis_dev"); } catch (e) {} paintDev(); closeDev(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !devBox.hidden) { e.preventDefault(); closeDev(); } });
