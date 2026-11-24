@@ -242,6 +242,14 @@ button, input, select, textarea, summary { font-family: var(--body); }
 @media (max-width: 520px) { .sp-set .sp-r, .sp-set .sp-r:first-child { grid-template-columns: 1fr; } .sp-set .sp-r b { text-align: center; } }
 @media (max-height: 520px) { .sp-set { width: min(760px, 96vw); grid-template-columns: 1fr 1fr !important; } .sp-set .sp-r:first-child { grid-column: 1 / -1; } .sp-set .sp-r { grid-template-columns: 5.5em 1fr; } }
 .devbox .box, .fam .box { font-family: var(--body); }
+
+/* نافذة المطورين: خط موحّد وألوان أزرار مقروءة */
+.devbox, .devbox * { font-family: "Changa", "Segoe UI", Tahoma, sans-serif !important; }
+.devbox h2 { font-family: "Lalezar", "Changa", "Segoe UI", Tahoma, sans-serif !important; font-weight: 400; }
+.devbox .dv-lock { color: var(--ink) !important; background: #fff !important; font-size: 17px !important; font-weight: 800 !important; padding: .55em 1.2em !important; }
+.devbox .dv-reset { background: #fee2e2 !important; color: #7f1d1d !important; }
+.devbox .done { color: #fff !important; font-size: 18px !important; font-weight: 800 !important; }
+.devbox .dv-note, .devbox .dv-notes li, .devbox summary { color: var(--ink); }
 </style>
 </head>
 <body data-hub>
@@ -259,7 +267,6 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
     <li><b>نسخة 0.15:</b> شلنا قسم «كيف تلعبون؟» من شاشة البداية بكل اللي فيه (الإعدادات وزر جولة العائلة). جولة العائلة تبقى من أسفل المجلس.</li>
-    <li><b>نسخة 0.15:</b> شلنا عنوان «كيف تلعبون؟» من شاشة البداية.</li>
     <li><b>نسخة 0.14:</b> ترتيب إعدادات البداية في بطاقة واحدة بمقاطع متساوية، وتوحيد الخط في الإعدادات والنوافذ.</li>
     <li><b>نسخة 0.13:</b> إعدادات اللعب الموحّدة في شاشة البداية (الفرق، الصعوبة، طول اللعبة، وقت الجواب) وتنطبق على كل الألعاب · شلنا «شاشة واحدة / كل واحد بجواله».</li>
     <li><b>نسخة 0.12:</b> شاشة البداية: زر «🏆 جولة العائلة» بدل «الأسماء».</li>
