@@ -266,6 +266,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.16:</b> «يلا نلعب!» ما يدخل الشاشة الكاملة تلقائياً؛ زر «⛶ شاشة كاملة» يبقى لمن يبيها.</li>
     <li><b>نسخة 0.15:</b> شلنا قسم «كيف تلعبون؟» من شاشة البداية بكل اللي فيه (الإعدادات وزر جولة العائلة). جولة العائلة تبقى من أسفل المجلس.</li>
     <li><b>نسخة 0.14:</b> ترتيب إعدادات البداية في بطاقة واحدة بمقاطع متساوية، وتوحيد الخط في الإعدادات والنوافذ.</li>
     <li><b>نسخة 0.13:</b> إعدادات اللعب الموحّدة في شاشة البداية (الفرق، الصعوبة، طول اللعبة، وقت الجواب) وتنطبق على كل الألعاب · شلنا «شاشة واحدة / كل واحد بجواله».</li>
@@ -406,7 +407,6 @@ button, input, select, textarea, summary { font-family: var(--body); }
   }
   document.getElementById("go").addEventListener("click", function () {
     try { sessionStorage.setItem("majlis_started", "1"); } catch (e) {}
-    try { var el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (f && !(document.fullscreenElement || document.webkitFullscreenElement)) { var pr = f.call(el); if (pr && pr.catch) pr.catch(function () {}); } } catch (e) {}
     splash.classList.add("out"); setTimeout(function () { splash.hidden = true; syncInert(); var g = document.querySelector(".game"); if (g) g.focus(); }, 480);
   });
   syncInert();
