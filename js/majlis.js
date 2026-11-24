@@ -33,6 +33,38 @@
       Document.prototype.exitFullscreen = function () { return ask("fs-off"); };
     } catch (e) {}
     send("hello");
+    /* جولة العائلة: لما تخلص اللعبة وتظهر النتيجة، نرجع تلقائياً لجدول الجولة بعد ثوانٍ */
+    (function () {
+      var done = false;
+      function over() {
+        var pg = location.pathname.split("/").pop();
+        var st = function (k) { try { return JSON.parse(localStorage.getItem(k) || "null") || {}; } catch (e) { return {}; } };
+        if (pg === "min-akoon.html") return !!document.querySelector(".winner");
+        if (pg === "khammen.html" || pg === "rattebha.html") return !!document.querySelector(".final");
+        if (pg === "huruf.html") return !!document.querySelector(".champ");
+        if (pg === "seenjeem.html") return !!document.querySelector(".win");
+        if (pg === "hurouf.html") { var t = document.querySelector(".win .trophy"); return !!(t && t.textContent.indexOf("🏆") >= 0); }
+        if (pg === "bara.html") return st("br_game_v1").phase === "over";
+        if (pg === "wsh.html") return st("wsh_host_v1").phase === "final";
+        return false;
+      }
+      function back() {
+        if (done) return; done = true;
+        var left = 6, box = document.createElement("div");
+        box.setAttribute("role", "status");
+        box.style.cssText = "position:fixed;z-index:2147483001;left:50%;bottom:18px;transform:translateX(-50%);background:#fbbf24;color:#111827;border:3px solid #111827;border-radius:999px;box-shadow:4px 4px 0 #111827;padding:.4em 1em;font:800 18px/1.3 Changa,sans-serif;display:flex;gap:10px;align-items:center;direction:rtl";
+        var txt = document.createElement("span"), go = document.createElement("button"), stay = document.createElement("button");
+        go.textContent = "ارجعوا الحين"; stay.textContent = "خلّونا هنا";
+        [go, stay].forEach(function (b) { b.type = "button"; b.style.cssText = "font:800 15px Changa,sans-serif;border:2px solid #111827;border-radius:999px;padding:.2em .8em;background:#fff;cursor:pointer"; });
+        box.appendChild(txt); box.appendChild(go); box.appendChild(stay); document.body.appendChild(box);
+        var tick = function () { txt.textContent = "🏆 جولة العائلة: نرجع لجدول النقاط بعد " + left + " ث"; };
+        tick();
+        var iv = setInterval(function () { left--; if (left <= 0) { clearInterval(iv); send("home"); } else tick(); }, 1000);
+        go.onclick = function () { clearInterval(iv); send("home"); };
+        stay.onclick = function () { clearInterval(iv); box.remove(); };
+      }
+      setInterval(function () { if (!done && window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS() && over()) back(); }, 1000);
+    })();
     // links to the hub close the frame instead of loading the hub inside it
     document.addEventListener("click", function (e) {
       var a = e.target.closest && e.target.closest('a[href="index.html"], a[href="./index.html"]');
