@@ -109,6 +109,7 @@
     double: true, surprise: true, random: false, sound: true, photos: true
   };
   var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
+  (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) { settings.mode = "solo"; settings.players = P.teams.slice(0, 16); settings.teamOf = P.teams.map(function (x, i) { return i % 2; }); } settings.level = pick("level", { easy: 1, mix: 0, hard: 3 }); settings.rounds = pick("length", { short: 1, normal: 2, long: 3 }); settings.turnTime = pick("time", { fast: 60, normal: 90, slow: 120 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { settings.mode = "solo"; settings.players = FT.slice(0, 16); settings.teamOf = FT.map(function (x, i) { return i % 2; }); } })(); // فرق جولة العائلة: كل فريق يلعب كلاعب
   if (["solo", "teams", "duel"].indexOf(settings.mode) < 0) settings.mode = "solo";
   if (!Array.isArray(settings.players)) settings.players = defaults.players.slice();

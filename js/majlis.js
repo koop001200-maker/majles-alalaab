@@ -268,6 +268,15 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
   window.MAJLIS = { refit: queue, inShell: inShell };
   /* جولة العائلة: لو اللعبة مفتوحة ضمن جولة، ترجع أسماء الفرق عشان اللعبة تعبّيها تلقائياً بدل ما يكتبونها من جديد */
+  /* إعدادات اللعب الموحّدة من شاشة البداية: الفرق والصعوبة وطول اللعبة ووقت الجواب */
+  window.MAJLIS_PREFS = function () {
+    try {
+      var p = JSON.parse(localStorage.getItem("majlis_prefs") || "null"); if (!p || typeof p !== "object") return null;
+      var teams = Array.isArray(p.teams) ? p.teams.map(function (t) { return String(t || "").trim().slice(0, 20); }).filter(Boolean) : [];
+      var ft = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (ft) teams = ft;
+      return { teams: teams.length >= 2 ? teams : null, level: ["easy", "mix", "hard"].indexOf(p.level) >= 0 ? p.level : "mix", length: ["short", "normal", "long"].indexOf(p.length) >= 0 ? p.length : "normal", time: ["fast", "normal", "slow"].indexOf(p.time) >= 0 ? p.time : "normal" };
+    } catch (e) { return null; }
+  };
   window.MAJLIS_FAM_TEAMS = function () {
     try {
       var f = JSON.parse(localStorage.getItem("majlis_fam") || "null");

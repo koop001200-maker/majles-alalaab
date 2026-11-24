@@ -78,6 +78,7 @@
   settings.players = settings.players.map(function (n) { return String(n || "").slice(0, 16); }).slice(0, 10);
   while (settings.players.length < 3) settings.players.push("لاعب " + (settings.players.length + 1));
   if (REG.length >= 3 && settings.players.every(function (n) { return isDefaultName(n); })) settings.players = REG.slice(0, 10);
+  (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; settings.rounds = pick("length", { short: 3, normal: 5, long: 8 }); settings.talk = pick("time", { fast: 60, normal: 120, slow: 180 }); })(); // إعدادات المجلس
   if ([3, 5, 8].indexOf(+settings.rounds) < 0) settings.rounds = 5; settings.rounds = +settings.rounds;
   if ([60, 120, 180].indexOf(+settings.talk) < 0) settings.talk = 120; settings.talk = +settings.talk;
   settings.sound = settings.sound !== false;

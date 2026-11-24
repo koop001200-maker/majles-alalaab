@@ -42,6 +42,7 @@
   /* ---------- settings ---------- */
   var defaults = { format: "2", names: ["فريق الصقور", "فريق النخيل", "فريق النجوم", "فريق القمر", "فريق الفرسان", "فريق الواحة"], level: 1, perTeam: 3, timer: 45, host: "auto", specials: true, speedBonus: true, music: false, sound: true };
   var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
+  (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) { settings.format = String(Math.min(6, P.teams.length)); settings.names = P.teams.concat(defaults.names.slice(P.teams.length)); } settings.level = pick("level", { easy: 1, mix: 2, hard: 3 }); settings.perTeam = pick("length", { short: 2, normal: 3, long: 4 }); settings.timer = pick("time", { fast: 30, normal: 45, slow: 60 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { var t = FT.slice(0, 6); settings.format = String(t.length); settings.names = t.concat(defaults.names.slice(t.length)); } })(); // فرق جولة العائلة
   if (["pvp", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
   if ([1, 2, 3].indexOf(+settings.level) < 0) settings.level = 1; settings.level = +settings.level;

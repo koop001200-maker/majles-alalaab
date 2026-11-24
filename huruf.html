@@ -585,6 +585,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
   }
   function load() { try { const r = localStorage.getItem(KEY); if (r) return merge(JSON.parse(r)); } catch (e) {} return defaults(); }
   let S = load();
+  (function () { const P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; if (P.teams && !(window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS())) { const cur = S.players.map((p) => p.name).join('|'); if (cur !== P.teams.join('|') && !['playing', 'paused', 'won', 'timeout', 'revealed'].includes(S.game.status)) S.players = P.teams.map((n) => ({ id: uid(), name: n, score: 0 })); } S.settings.level = { easy: 'easy', mix: 'all', hard: 'hard' }[P.level]; S.settings.rounds = { short: 10, normal: 15, long: 20 }[P.length]; S.settings.timer = { fast: 30, normal: 60, slow: 90 }[P.time]; })(); // إعدادات المجلس
   (function () { const FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { const cur = S.players.map((p) => p.name).join('|'); if (cur !== FT.join('|')) S.players = FT.map((n) => ({ id: uid(), name: n, score: 0 })); } })(); // فرق جولة العائلة كمتسابقين
   let bc = null; try { bc = new BroadcastChannel(KEY); } catch (e) {}
 

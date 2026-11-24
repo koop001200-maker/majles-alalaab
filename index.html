@@ -114,6 +114,19 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .devbox .dv-lock { font: 800 16px/1 var(--body); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .5em 1.1em; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; }
 .devbox .dv-lock[hidden] { display: none; }
 .devbox .dv-reset { background: #fee2e2; }
+.sp-set { display: grid; gap: clamp(6px, 1vh, 12px); background: rgba(255,255,255,.18); border: 3px solid var(--ink); border-radius: 20px; padding: clamp(8px, 1.4vh, 16px) clamp(10px, 1.6vw, 22px); }
+.sp-r { display: flex; align-items: center; gap: clamp(6px, .8vw, 14px); flex-wrap: wrap; justify-content: center; }
+.sp-r b { font-weight: 900; min-width: 6.5em; text-align: start; font-size: clamp(14px, min(1.3vw, 2.4vh), 24px); }
+.sp-r .opts { display: flex; gap: 6px; }
+.sp-r .opts button { padding: .35em .9em !important; font-size: clamp(13px, min(1.15vw, 2.2vh), 22px) !important; }
+.sp-r .opts button[aria-pressed="true"] { background: var(--yellow); }
+.sp-names-in { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.sp-box { gap: clamp(8px, 2.2vh, 30px) !important; }
+.sp-box h1 { font-size: clamp(40px, min(9vw, 14vh), 190px) !important; }
+.sp-go { font-size: clamp(32px, min(5vw, 8.5vh), 116px) !important; margin-block: clamp(2px, 1vh, 14px) !important; }
+@media (min-width: 760px) { .sp-set { grid-template-columns: 1fr 1fr; } .sp-set .sp-r:first-child { grid-column: 1 / -1; } }
+@media (max-height: 520px) { .sp-box > p, .sp-float, .sp-mode .sp-q { display: none !important; } .sp-box h1 { font-size: clamp(30px, 11vh, 60px) !important; } .sp-go { font-size: 28px !important; } .sp-set { padding: 6px 10px; gap: 4px; } .sp-r b { min-width: 0; } .sp-r .opts button { padding: .2em .6em !important; } }
+.sp-names-in input { width: 8.5em; font: 800 clamp(13px, min(1.1vw, 2.1vh), 20px)/1.2 var(--body); border: 3px solid var(--ink); border-radius: 12px; padding: .3em .6em; }
 .art .dev-tag { position: absolute; bottom: 6px; left: 6px; z-index: 2; font: 800 clamp(11px, min(.9vw, 1.7vh), 17px)/1.3 var(--body); background: #eef2ff; border: 2px solid var(--ink); border-radius: 999px; padding: .1em .7em; white-space: nowrap; }
 .devbox .dv-notes { text-align: start; border: 3px solid var(--ink); border-radius: 14px; padding: .4em .8em; background: #f8fafc; }
 .devbox .dv-notes summary { font-weight: 800; cursor: pointer; }
@@ -229,6 +242,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.13:</b> إعدادات اللعب الموحّدة في شاشة البداية (الفرق، الصعوبة، طول اللعبة، وقت الجواب) وتنطبق على كل الألعاب · شلنا «شاشة واحدة / كل واحد بجواله».</li>
     <li><b>نسخة 0.12:</b> شاشة البداية: زر «🏆 جولة العائلة» بدل «الأسماء».</li>
     <li><b>نسخة 0.11:</b> كل لعبة عليها وش تحتاج (📺 شاشة · 📱 جوال · كلها) · الإعدادات تبقى مفتوحة بعد إدخال الرمز · حذف نص الملاحظة تحت «كيف تلعبون؟».</li>
     <li><b>نسخة 0.10:</b> برا السالفة: اللي برا السالفة يخمّن الموضوع دايماً، حتى لو ما انكشف (صح ٣ نقاط، غلط نقطة).</li>
@@ -252,7 +266,13 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     <p>ألعاب جماعية للعائلة… جاهزين؟</p>
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
     <div class="sp-mode" role="group" aria-label="طريقة اللعب"><span class="sp-q">كيف تلعبون؟</span>
-      <div class="opts"><button type="button" data-mode="tv" aria-pressed="true">📺 شاشة واحدة للجميع</button><button type="button" data-mode="phones" aria-pressed="false">📱 كل واحد بجواله</button><button type="button" id="spfam">🏆 جولة العائلة</button><span id="namesbtn" hidden></span><span id="namescount" hidden></span></div>
+      <div class="sp-set" id="spset">
+        <div class="sp-r"><b>الفرق</b><span class="opts" data-pk="n"><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button></span><span class="sp-names-in" id="spteams"></span></div>
+        <div class="sp-r"><b>الصعوبة</b><span class="opts" data-pk="level"><button type="button" data-v="easy">سهل</button><button type="button" data-v="mix">منوّع</button><button type="button" data-v="hard">صعب</button></span></div>
+        <div class="sp-r"><b>طول اللعبة</b><span class="opts" data-pk="length"><button type="button" data-v="short">قصيرة</button><button type="button" data-v="normal">عادية</button><button type="button" data-v="long">طويلة</button></span></div>
+        <div class="sp-r"><b>وقت الجواب</b><span class="opts" data-pk="time"><button type="button" data-v="fast">سريع</button><button type="button" data-v="normal">عادي</button><button type="button" data-v="slow">مريح</button></span></div>
+      </div>
+      <div class="opts"><button type="button" id="spfam">🏆 جولة العائلة</button><span id="namesbtn" hidden></span><span id="namescount" hidden></span></div>
       </div>
   </div>
 </div>
@@ -373,6 +393,26 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   });
   syncInert();
   setTimeout(function () { if (!splash.hidden) document.getElementById("go").focus(); }, 100);
+  /* إعدادات اللعب الموحّدة (majlis_prefs): تنحفظ فوراً وتطبّقها كل لعبة عند فتحها */
+  var PREF_DEF = { teams: ["فريق الصقور", "فريق النخيل"], level: "mix", length: "normal", time: "normal" };
+  function prefGet() { try { var p = JSON.parse(localStorage.getItem("majlis_prefs") || "null"); if (p && Array.isArray(p.teams) && p.teams.length >= 2) return Object.assign({}, PREF_DEF, p); } catch (e) {} return JSON.parse(JSON.stringify(PREF_DEF)); }
+  function prefSet(p) { try { localStorage.setItem("majlis_prefs", JSON.stringify(p)); } catch (e) {} }
+  var TEAM_DEF = ["فريق الصقور", "فريق النخيل", "فريق الذيب", "فريق القمر"];
+  function paintPrefs() {
+    var p = prefGet(), box = document.getElementById("spteams");
+    [].forEach.call(document.querySelectorAll("#spset [data-pk]"), function (g) { var k = g.getAttribute("data-pk"), cur = k === "n" ? String(p.teams.length) : p[k]; [].forEach.call(g.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-v") === cur)); }); });
+    box.innerHTML = p.teams.map(function (t, i) { return '<input data-ti="' + i + '" maxlength="20" aria-label="اسم الفريق ' + (i + 1) + '">'; }).join("");
+    [].forEach.call(box.querySelectorAll("input"), function (inp, i) { inp.value = p.teams[i]; });
+  }
+  document.getElementById("spset").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-v]"); if (!b) return; var k = b.parentNode.getAttribute("data-pk"), v = b.getAttribute("data-v"), p = prefGet();
+    if (k === "n") { var n = +v; p.teams = p.teams.slice(0, n); while (p.teams.length < n) p.teams.push(TEAM_DEF[p.teams.length]); } else p[k] = v;
+    prefSet(p); paintPrefs();
+  });
+  document.getElementById("spset").addEventListener("input", function (e) {
+    var t = e.target; if (!t.hasAttribute("data-ti")) return; var p = prefGet(); p.teams[+t.getAttribute("data-ti")] = t.value.slice(0, 20) || TEAM_DEF[+t.getAttribute("data-ti")]; prefSet(p);
+  });
+  paintPrefs();
   var modeBtns = document.querySelectorAll(".sp-mode [data-mode]");
   function paintMode() { var m = "tv"; try { m = localStorage.getItem("majlis_mode") === "phones" ? "phones" : "tv"; } catch (e) {} for (var i = 0; i < modeBtns.length; i++) modeBtns[i].setAttribute("aria-pressed", String(modeBtns[i].getAttribute("data-mode") === m)); }
   for (var mi = 0; mi < modeBtns.length; mi++) modeBtns[mi].addEventListener("click", function (e) { try { localStorage.setItem("majlis_mode", e.currentTarget.getAttribute("data-mode")); } catch (er) {} paintMode(); });

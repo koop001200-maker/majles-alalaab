@@ -22,6 +22,7 @@
     n: 5, target: 2, level: "mixed", cats: [], time: 10, final7: true, sound: true, mode: "device", judge: "auto"
   };
   var settings = Object.assign({}, DEF, Store.get(K.settings, {}) || {});
+  (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams && settings.teams) { settings.teams = settings.teams.map(function (t, i) { return i < 2 ? Object.assign({}, t, { name: P.teams[i] }) : t; }); } settings.level = pick("level", { easy: "medium", mix: "mixed", hard: "hard" }); settings.target = pick("length", { short: 1, normal: 2, long: 3 }); settings.time = pick("time", { fast: 7, normal: 10, slow: 15 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT && settings.teams && settings.teams.length >= 2) { settings.teams = settings.teams.map(function (t, i) { return i < 2 ? Object.assign({}, t, { name: FT[i] }) : t; }); } })(); // فرق جولة العائلة (أول فريقين)
   (function sanitize() {
     if (!Array.isArray(settings.teams) || settings.teams.length !== 2) settings.teams = DEF.teams.map(function (t) { return Object.assign({}, t); });

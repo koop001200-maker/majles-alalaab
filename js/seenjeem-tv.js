@@ -26,6 +26,7 @@
   /* ---------- الإعدادات ---------- */
   var DEF = { n0: "الفريق الأول", n1: "الفريق الثاني", cats: ["ksa", "gen", "sport", "film", "geo", "islam"], time: 30, diff: "mix", sound: true, music: false };
   var settings = Object.assign({}, DEF, Store.get(K.settings, {}) || {});
+  (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) { settings.n0 = P.teams[0]; settings.n1 = P.teams[1]; } settings.diff = pick("level", { easy: "easy", mix: "mix", hard: "hard" }); settings.time = pick("time", { fast: 20, normal: 30, slow: 45 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { settings.n0 = FT[0]; settings.n1 = FT[1]; } })(); // فرق جولة العائلة (أول فريقين)
   (function sanitize() {
     settings.n0 = String(settings.n0 || DEF.n0).slice(0, 18); settings.n1 = String(settings.n1 || DEF.n1).slice(0, 18);
