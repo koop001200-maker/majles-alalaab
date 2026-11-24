@@ -66,7 +66,10 @@
     var used = Store.get(K.used, {}) || {};
     var st = E.newState({ n0: settings.n0, n1: settings.n1, cats: settings.cats, time: settings.time, diff: settings.diff }, D, used, custom.q);
     G = E.Game(st); T = { left: 0, running: false, call: false, callLeft: 0 }; fi = firstOpen(); view = "play"; modal = null; gain = null;
-    A.play("intro"); persist(); render();
+    A.play("intro"); persist();
+    // لو اختاروا في المجلس «كل واحد بجواله»: نفتح رمز الـQR مباشرة عشان يربطون جوال التحكم
+    try { if (localStorage.getItem("majlis_mode") === "phones") { startNet(); modal = "qr"; } } catch (e) {}
+    render();
   }
   function resume() {
     var m = saved(); if (!m) return;
@@ -182,6 +185,7 @@
       '<div class="field"><span class="lbl">السؤال</span><input type="text" id="ed-q" maxlength="200" value="' + esc(ed ? ed.q : "") + '"></div><div class="field"><span class="lbl">الجواب (قصير وواضح)</span><input type="text" id="ed-a" maxlength="80" value="' + esc(ed ? ed.a : "") + '"></div>' +
       '<button class="btn go" data-a="saveq">' + (ed ? "حفظ التعديل" : "➕ إضافة") + "</button></div>" +
       '<div class="edform"><div class="field"><span class="lbl">فئة جديدة (الاسم)</span><input type="text" id="nc-n" maxlength="26"></div><div class="field"><span class="lbl">رمز</span><input type="text" id="nc-i" maxlength="4" value="📚"></div><div></div><div></div><button class="btn" data-a="addcat">➕ إضافة فئة</button></div>' +
+      '<div class="row" style="justify-content:flex-start"><button class="btn" data-a="share"' + (custom.q.length || custom.cats.length ? "" : " disabled") + '>📤 شارك أسئلتكم (' + custom.q.length + ')</button><button class="btn" data-a="import">📥 أضف حزمة أسئلة</button></div>' +
       (edMsg ? '<p class="err" role="status">' + esc(edMsg) + "</p>" : "") +
       '<div class="field"><span class="lbl">عرض</span><select id="ed-f"><option value="all">كل الفئات</option>' + cats.map(function (c) { return '<option value="' + esc(c.id) + '"' + (edCat === c.id ? " selected" : "") + ">" + esc(c.name) + "</option>"; }).join("") + "</select></div></div>" +
       '<div class="scroll panel">' + (rows || '<p class="hint">لا أسئلة.</p>') + "</div></section>";
@@ -247,7 +251,43 @@
       var url = joinUrl(), n = Object.keys(roster).length;
       return '<div class="modal"><div class="box" role="dialog"><h2>📱 تحكم من الجوال</h2><div class="qr">' + qrSvg(url) + '</div><div class="url">' + esc(url) + '</div><p id="net">' + netText() + " · الجوالات المتصلة: " + n + '</p><p class="hint">اختياري: من الجوال تقدر تختار الأسئلة وتكشف الإجابة وتحتسب النقاط، والتلفزيون يبقى للعرض.</p><button class="btn big" data-a="close">تم</button></div></div>';
     }
+    if (modal === "share") {
+      var link = packLink();
+      return '<div class="modal"><div class="box" role="dialog"><h2>📤 شارك أسئلتكم</h2><p>أرسلوا هذا الرابط لأي عائلة. لما يفتحونه تنضاف أسئلتكم (' + custom.q.length + " سؤال" + (custom.cats.length ? " و" + custom.cats.length + " فئة" : "") + ') عندهم.</p>' +
+        '<textarea id="pk-out" readonly rows="4" style="width:100%;direction:ltr;font:12px monospace">' + esc(link) + '</textarea><div class="row"><button class="btn go big" data-a="copypack">📋 نسخ الرابط</button><button class="btn big" data-a="close">إغلاق</button></div>' + (edMsg ? '<p role="status">' + esc(edMsg) + "</p>" : "") + "</div></div>";
+    }
+    if (modal === "import") {
+      return '<div class="modal"><div class="box" role="dialog"><h2>📥 أضف حزمة أسئلة</h2><p>الصقوا الرابط أو الرمز اللي وصلكم.</p><textarea id="pk-in" rows="4" style="width:100%;direction:ltr;font:12px monospace">' + esc(pendingPack || "") + '</textarea>' +
+        (packMsg ? '<p class="err" role="status">' + esc(packMsg) + "</p>" : "") + '<div class="row"><button class="btn go big" data-a="dopack">إضافة</button><button class="btn big" data-a="close">إلغاء</button></div></div></div>';
+    }
     return "";
+  }
+
+  /* مشاركة حزم الأسئلة: الأسئلة والفئات المضافة تتحول لرمز داخل رابط؛ اللي يفتح الرابط تنضاف عنده (بدون تكرار) */
+  var pendingPack = "", packMsg = "";
+  function packCode() {
+    var json = JSON.stringify({ v: 1, cats: custom.cats.map(function (c) { return { id: c.id, name: c.name, icon: c.icon }; }), q: custom.q.map(function (x) { return { c: x.c, p: x.p, q: x.q, a: x.a }; }) });
+    return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function packLink() { return location.href.split("#")[0].split("?")[0] + "#pack=" + packCode(); }
+  function readPack(txt) {
+    var code = String(txt || "").trim(), m = code.match(/#pack=([A-Za-z0-9_-]+)/); if (m) code = m[1];
+    code = code.replace(/-/g, "+").replace(/_/g, "/"); while (code.length % 4) code += "=";
+    var obj = JSON.parse(decodeURIComponent(escape(atob(code))));
+    if (!obj || !Array.isArray(obj.q)) throw new Error("bad");
+    return obj;
+  }
+  function importPack(txt) {
+    var obj; try { obj = readPack(txt); } catch (e) { packMsg = "الرمز غير صحيح أو ناقص. تأكدوا إنكم نسختوا الرابط كامل."; return false; }
+    var known = {}; allCats().forEach(function (c) { known[c.id] = 1; });
+    var addedC = 0; (obj.cats || []).forEach(function (c) { if (c && typeof c.id === "string" && typeof c.name === "string" && !known[c.id]) { custom.cats.push({ id: c.id.slice(0, 30), name: c.name.slice(0, 26), icon: String(c.icon || "📚").slice(0, 4) }); known[c.id] = 1; addedC++; } });
+    var have = {}; allQ().forEach(function (x) { have[x.q.trim()] = 1; });
+    var addedQ = 0; obj.q.forEach(function (x) {
+      if (!x || typeof x.q !== "string" || typeof x.a !== "string" || !known[x.c] || [200, 400, 600].indexOf(+x.p) < 0) return;
+      var qq = x.q.trim().slice(0, 200), aa = x.a.trim().slice(0, 80); if (!qq || !aa || have[qq]) return;
+      custom.q.push({ id: "u" + Date.now().toString(36) + Math.floor(Math.random() * 9999), c: x.c, p: +x.p, q: qq, a: aa }); have[qq] = 1; addedQ++;
+    });
+    saveCustom(); edMsg = "تمت إضافة " + addedQ + " سؤال" + (addedC ? " و" + addedC + " فئة" : "") + " من الحزمة."; packMsg = ""; return true;
   }
 
   var KEEP = "";
@@ -340,6 +380,10 @@
         if (armed === "q" + v) { custom.q = custom.q.filter(function (x) { return x.id !== v; }); saveCustom(); armed = ""; if (edId === v) edId = null; } else { armed = "q" + v; setTimeout(function () { if (armed === "q" + v) { armed = ""; if (view === "editor") render(); } }, 3000); }
         render(); break;
       case "addcat": addCategory(); break;
+      case "share": edMsg = ""; modal = "share"; render(); break;
+      case "copypack": try { var ta = $("#pk-out"); ta.select(); var ok = false; try { ok = document.execCommand("copy"); } catch (e) {} if (navigator.clipboard) navigator.clipboard.writeText(ta.value).catch(function () {}); edMsg = "انتسخ الرابط ✔"; } catch (e) {} render(); break;
+      case "import": pendingPack = ""; packMsg = ""; modal = "import"; render(); break;
+      case "dopack": var tin = $("#pk-in"); if (importPack(tin ? tin.value : "")) { modal = null; view = "editor"; } else pendingPack = tin ? tin.value : ""; render(); break;
     }
   }
   function collectTeams() { var a = $("#tn0"), b = $("#tn1"); if (a) settings.n0 = a.value.trim().slice(0, 18) || DEF.n0; if (b) settings.n1 = b.value.trim().slice(0, 18) || DEF.n1; }
@@ -398,6 +442,8 @@
   // اختبار/تشغيل مباشر: ?demo=1 يبدأ مباراة بإعدادات افتراضية
   // لو سبق ربط جوال بهذه الغرفة، نعيد فتح الغرفة تلقائياً بعد تحديث الصفحة عشان يرجع التحكم من الجوال
   try { if (Store.get(K.room, null) && Net) startNet(); } catch (e) {}
+  // فتح رابط حزمة أسئلة: نعرض نافذة الإضافة مباشرة
+  if (/^#pack=/.test(location.hash)) { pendingPack = location.hash; packMsg = ""; view = "editor"; modal = "import"; try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
   if (qs.get("start") === "1") { startNew(); } else render();
   window.SJ_TV = { get G() { return G; }, startNew: startNew, T: function () { return T; } };
 })();

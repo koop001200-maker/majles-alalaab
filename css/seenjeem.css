@@ -250,3 +250,4 @@ kbd, .kbd { letter-spacing: 0; word-spacing: 0; }
 @media (max-width: 900px) {
   .setup-foot { position: sticky; bottom: 0; z-index: 5; padding: 12px 0 6px; background: linear-gradient(180deg, rgba(99,102,241,0), rgba(99,102,241,.96) 30%); }
 }
+@media (prefers-reduced-motion: reduce) { .tc .plus { display: none; } }

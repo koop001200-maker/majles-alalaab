@@ -59,6 +59,12 @@
   if (["players", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
   if (!Array.isArray(settings.names)) settings.names = DEFAULT_NAMES.slice();
   if (!Array.isArray(settings.cats)) settings.cats = CATS.map(function (c) { return c.id; });
+  // الأقسام الجديدة (السعودية، علماء، طبيعة، أشياء من بيتنا): تنضاف تلقائياً لمن كان مختاراً «كل الأقسام» القديمة
+  (function () {
+    var OLD8 = ["prophets", "sahaba", "seerah", "quran", "places", "worship", "general", "whoami"], NEW4 = ["ksa", "science", "nature", "home"];
+    if (OLD8.every(function (c) { return settings.cats.indexOf(c) >= 0; }) && !NEW4.some(function (c) { return settings.cats.indexOf(c) >= 0; }))
+      settings.cats = settings.cats.concat(NEW4.filter(function (c) { return CATS.some(function (x) { return x.id === c; }); }));
+  })();
   settings.rounds = Math.min(30, Math.max(3, Math.round(+settings.rounds) || 8));
   settings.level = [1, 2, 3].indexOf(+settings.level) >= 0 ? +settings.level : 2;
   settings.modes = Object.assign(clone(defaultSettings.modes), settings.modes || {});

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>تحدي الحروف</title>
+<title>لخبطة حروف</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -318,8 +318,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
 <div class="app" id="app">
   <!-- ========== الرئيسية (نفس ترتيب «رتّب وفوز») ========== -->
   <section class="home" id="view-home" hidden aria-label="الرئيسية">
-    <div class="logo" aria-hidden="true"><span>ت</span><span>ح</span><span>د</span><span>ي</span></div>
-    <h1 class="title">تحدي <em>الحروف</em></h1>
+    <div class="logo" aria-hidden="true"><span>ل</span><span>خ</span><span>ب</span><span>ط</span><span>ة</span></div>
+    <h1 class="title">لخبطة <em>حروف</em></h1>
     <p class="subtitle">حروف مبعثرة على الشاشة… أول واحد يرتّبها ويقول الكلمة بصوت عالي ياخذ النقطة!</p>
     <div class="home-stack">
       <button class="btn primary big" id="h-resume" type="button" hidden>كمّل المسابقة</button>
@@ -351,7 +351,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
   <!-- ========== شاشة العرض ========== -->
   <section class="display" id="view-display" hidden aria-label="شاشة العرض">
     <header class="d-top">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">ح</span><h1>تحدي الحروف</h1></div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true">ل</span><h1>لخبطة حروف</h1></div>
       <div class="round-pill" id="d-round">الجولة <b>0</b></div>
       <div class="timer" id="d-timer" hidden>
         <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bg" cx="50" cy="50" r="44"></circle><circle class="fg" cx="50" cy="50" r="44" stroke-dasharray="276.46" stroke-dashoffset="0"></circle></svg>
@@ -822,7 +822,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
         st.innerHTML = `<div class="results">
           <p class="kicker rise">النتائج النهائية</p>
           ${champs.length ? `<div class="champ pop">${ICON.crown.replace('<svg', '<svg class="crown"')}
-            <p class="title">${champs.length > 1 ? 'أبطال تحدي الحروف' : 'بطل تحدي الحروف'}</p>
+            <p class="title">${champs.length > 1 ? 'أبطال لخبطة حروف' : 'بطل لخبطة حروف'}</p>
             <p class="names">${champs.map((c) => esc(c.name)).join(' و')}</p>
             <span class="pts">${champs[0].score} نقطة</span></div>` : '<p class="big-msg">لم يسجّل أحد نقاطًا</p>'}
           <ol class="rank">${board.map((p, k) => (k && p.score !== board[k - 1].score ? '<li class="tie-sep" aria-hidden="true"></li>' : '') + `<li class="${p.rank === 1 && p.score > 0 ? 'first' : ''} rise"><span class="rk">${p.rank}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></li>`).join('')}</ol>
@@ -916,7 +916,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     view = VIEWS.includes(h) ? h : 'home';
     VIEWS.forEach((v) => { $('#view-' + v).hidden = view !== v; });
     stageKey = ''; firstPaint = true; fxKey = '';
-    document.title = view === 'control' ? 'تحدي الحروف · المنظّم' : 'تحدي الحروف';
+    document.title = view === 'control' ? 'لخبطة حروف · المنظّم' : 'لخبطة حروف';
     render();
     if (view === 'display') wake();
   }

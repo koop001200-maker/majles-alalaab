@@ -501,7 +501,7 @@
   function vHome() {
     var resumable = game && game.phase !== "over";
     return '<section class="home"><div class="logo" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>' +
-      '<h1 class="title">رتّبها <em>صح</em></h1>' +
+      '<h1 class="title">رتّب <em>وفوز</em></h1>' +
       '<p class="subtitle">بطاقات مبعثرة… وعليكم ترتيبها: من الأقدم للأحدث، من الأصغر للأكبر، من البداية للنهاية.</p>' +
       '<div class="home-stack">' +
       (resumable ? '<button class="btn hot big" data-ui="resume">كمّل المباراة</button>' : "") +
