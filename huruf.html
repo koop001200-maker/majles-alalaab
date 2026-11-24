@@ -585,6 +585,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
   }
   function load() { try { const r = localStorage.getItem(KEY); if (r) return merge(JSON.parse(r)); } catch (e) {} return defaults(); }
   let S = load();
+  (function () { const FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { const cur = S.players.map((p) => p.name).join('|'); if (cur !== FT.join('|')) S.players = FT.map((n) => ({ id: uid(), name: n, score: 0 })); } })(); // فرق جولة العائلة كمتسابقين
   let bc = null; try { bc = new BroadcastChannel(KEY); } catch (e) {}
 
   function persist() {

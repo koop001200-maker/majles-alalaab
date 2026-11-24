@@ -22,6 +22,7 @@
     n: 5, target: 2, level: "mixed", cats: [], time: 10, final7: true, sound: true, mode: "device", judge: "auto"
   };
   var settings = Object.assign({}, DEF, Store.get(K.settings, {}) || {});
+  (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT && settings.teams && settings.teams.length >= 2) { settings.teams = settings.teams.map(function (t, i) { return i < 2 ? Object.assign({}, t, { name: FT[i] }) : t; }); } })(); // فرق جولة العائلة (أول فريقين)
   (function sanitize() {
     if (!Array.isArray(settings.teams) || settings.teams.length !== 2) settings.teams = DEF.teams.map(function (t) { return Object.assign({}, t); });
     settings.teams = settings.teams.map(function (t, i) { t = t || {}; return { name: String(t.name || DEF.teams[i].name).slice(0, 16), color: COLORS.indexOf(t.color) >= 0 ? t.color : DEF.teams[i].color, players: Math.min(6, Math.max(1, +t.players || 2)) }; });

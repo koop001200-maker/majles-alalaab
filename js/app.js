@@ -56,6 +56,7 @@
     timer: false, timerSec: 45, sound: true
   };
   var settings = Object.assign(clone(defaultSettings), Store.get(K.settings, {}) || {});
+  (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { var t = FT.slice(0, 6); settings.format = String(t.length); settings.names = t.concat((settings.names || []).slice(t.length)); } })(); // فرق جولة العائلة
   if (["players", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
   if (!Array.isArray(settings.names)) settings.names = DEFAULT_NAMES.slice();
   if (!Array.isArray(settings.cats)) settings.cats = CATS.map(function (c) { return c.id; });

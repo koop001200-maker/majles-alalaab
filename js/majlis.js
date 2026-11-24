@@ -235,6 +235,15 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
   window.MAJLIS = { refit: queue, inShell: inShell };
+  /* جولة العائلة: لو اللعبة مفتوحة ضمن جولة، ترجع أسماء الفرق عشان اللعبة تعبّيها تلقائياً بدل ما يكتبونها من جديد */
+  window.MAJLIS_FAM_TEAMS = function () {
+    try {
+      var f = JSON.parse(localStorage.getItem("majlis_fam") || "null");
+      if (!f || !f.waiting || !Array.isArray(f.teams) || f.idx >= (f.games || []).length) return null;
+      var n = f.teams.map(function (t) { return String(t && t.name || "").trim().slice(0, 20); }).filter(Boolean);
+      return n.length >= 2 ? n : null;
+    } catch (e) { return null; }
+  };
 
   /* ---------------- 3) التركيز يبقى مكانه بعد إعادة رسم الشاشة (كيبورد / ريموت التلفزيون) ---------------- */
   (function () {

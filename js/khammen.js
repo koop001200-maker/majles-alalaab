@@ -109,6 +109,7 @@
     double: true, surprise: true, random: false, sound: true, photos: true
   };
   var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
+  (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { settings.mode = "solo"; settings.players = FT.slice(0, 16); settings.teamOf = FT.map(function (x, i) { return i % 2; }); } })(); // فرق جولة العائلة: كل فريق يلعب كلاعب
   if (["solo", "teams", "duel"].indexOf(settings.mode) < 0) settings.mode = "solo";
   if (!Array.isArray(settings.players)) settings.players = defaults.players.slice();
   settings.players = settings.players.map(function (x) { return String(x == null ? "" : x).slice(0, 16); }).slice(0, 16);

@@ -42,6 +42,7 @@
   /* ---------- settings ---------- */
   var defaults = { format: "2", names: ["فريق الصقور", "فريق النخيل", "فريق النجوم", "فريق القمر", "فريق الفرسان", "فريق الواحة"], level: 1, perTeam: 3, timer: 45, host: "auto", specials: true, speedBonus: true, music: false, sound: true };
   var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
+  (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { var t = FT.slice(0, 6); settings.format = String(t.length); settings.names = t.concat(defaults.names.slice(t.length)); } })(); // فرق جولة العائلة
   if (["pvp", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
   if ([1, 2, 3].indexOf(+settings.level) < 0) settings.level = 1; settings.level = +settings.level;
   settings.perTeam = Math.min(8, Math.max(1, Math.round(+settings.perTeam) || 3));
