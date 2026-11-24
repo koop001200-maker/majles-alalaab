@@ -154,10 +154,10 @@
       case "pause": game.paused = !game.paused; commit(); break;
       case "tovote": game.phase = "vote"; selected = -1; commit(); break;
       case "pick": selected = +el.getAttribute("data-i"); render(); break;
-      case "accuse": if (selected < 0) return; game.accused = selected; game.phase = "verdict"; game.pick = null; game.opts = null; if (selected !== game.out) finishRound(false, null); else game.opts = makeOptions(game.word); commit(); break;
-      case "gopt": game.pick = el.getAttribute("data-id"); finishRound(true, game.pick === game.word); commit(); break;
+      case "accuse": if (selected < 0) return; game.accused = selected; game.phase = "verdict"; game.pick = null; game.opts = null; game.escaped = selected !== game.out; game.opts = makeOptions(game.word); commit(); break;
+      case "gopt": game.pick = el.getAttribute("data-id"); finishRound(!game.escaped, game.pick === game.word); commit(); break;
       case "gok": finishRound(true, true); commit(); break;
-      case "gno": finishRound(true, false); commit(); break;
+      case "gno": finishRound(!game.escaped, false); commit(); break;
       case "next": if (game.round >= game.total) { game.phase = "over"; SFX.win(); commit(); } else nextRound(); break;
       case "again": game = null; saveGame(); newGame(); break;
       case "quit": game = null; saveGame(); go("home"); break;
@@ -169,10 +169,10 @@
   /* scoring: not caught → the odd one scores 3. Caught and then guesses the topic → 2 for them. Caught and fails → 1 for everyone else. */
   function finishRound(caught, guessed) {
     var gain = game.players.map(function () { return 0; });
-    if (!caught) { gain[game.out] = 3; SFX.wah(); }
+    if (!caught) { gain[game.out] = guessed ? 3 : 1; SFX.wah(); }
     else if (guessed) { gain[game.out] = 2; SFX.wah(); }
     else { game.players.forEach(function (p, i) { if (i !== game.out) gain[i] = 1; }); SFX.win(); }
-    game.gain = gain; game.guess = caught ? (guessed ? "ok" : "no") : "free";
+    game.gain = gain; game.guess = caught ? (guessed ? "ok" : "no") : (guessed ? "free" : "free-miss");
     game.players.forEach(function (p, i) { p.score += gain[i]; });
     game.history.push({ round: game.round, word: game.word, out: game.out, accused: game.accused, guess: game.guess });
     game.phase = "scores";
@@ -212,7 +212,7 @@
       "<li>كل لاعب يشوف الشاشة لحاله ويعرف «الموضوع» (مثل: كبسة)… إلا واحد! هذا اللي <b>برا السالفة</b> ما يعرف شي إلا الفئة.</li>" +
       "<li>بعدها كل واحد يعطي <b>تلميحة وحدة</b> عن الموضوع بدون ما يقوله صريح. اللي برا السالفة يمثّل إنه عارف!</li>" +
       "<li>لما يخلص الوقت اختاروا مين تشكّون فيه.</li>" +
-      "<li>إذا ما انكشف: برا السالفة يأخذ <b>٣ نقاط</b>. وإذا انكشف يحاول يخمّن الموضوع: يصيب ← <b>نقطتين</b> له، يغلط ← <b>نقطة</b> لكل الباقين.</li>" +
+      "<li>بعد التصويت اللي برا السالفة دايم يخمّن الموضوع من ٨ خيارات. إذا ما انكشف: يصيب ← <b>٣ نقاط</b>، يغلط ← <b>نقطة</b>. وإذا انكشف: يصيب ← <b>نقطتين</b> له، يغلط ← <b>نقطة</b> لكل الباقين.</li>" +
       "</ol></div></section>";
   }
 
@@ -267,8 +267,8 @@
     var out = game.players[game.out];
     if (!game.opts || !game.opts.length) game.opts = makeOptions(game.word);
     var opts = game.opts.map(function (id) { var w = wordOf(id); return w ? '<button class="btn" data-a="gopt" data-id="' + esc(id) + '">' + esc(w.w) + "</button>" : ""; }).join("");
-    return '<section class="screen">' + topbar() + '<div class="card panel"><div class="verdict">صح! 🎯 <b>' + esc(out.name) + "</b> هو اللي برا السالفة</div>" +
-      '<p class="sub">الحين ' + esc(out.name) + " يخمّن الموضوع: اختر وحدة من ٨ خيارات.</p>" +
+    return '<section class="screen">' + topbar() + '<div class="card panel"><div class="verdict">' + (game.escaped ? "غلط! 😎 <b>" + esc(out.name) + "</b> هو اللي برا السالفة وما انكشف" : "صح! 🎯 <b>" + esc(out.name) + "</b> هو اللي برا السالفة") + "</div>" +
+      '<p class="sub">الحين ' + esc(out.name) + " يخمّن الموضوع: اختر وحدة من ٨ خيارات." + (game.escaped ? " (لو صاب ٣ نقاط، لو غلط نقطة وحدة)" : "") + "</p>" +
       '<div class="vote opts">' + opts + "</div>" +
       '<div class="row"><button class="btn bad big" data-a="gno">🤷 ما أعرف</button></div></div></section>';
   }
@@ -284,8 +284,8 @@
 
   function vScores() {
     var out = game.players[game.out], w = wordOf(game.word) || { w: "؟" };
-    var msg = game.guess === "free" ? "ما انكشف! 😎 " + esc(out.name) + " أخذ ٣ نقاط" : game.guess === "ok" ? "انكشف وخمّن الموضوع! 🧠 " + esc(out.name) + " أخذ نقطتين" : "انكشف وما عرف! 🎉 نقطة لكل الباقين";
-    return '<section class="screen">' + topbar() + '<h2 class="verdict">' + msg + '</h2><p class="sub">الموضوع: <b>' + esc(w.w) + "</b> · اللي برا السالفة: <b>" + esc(out.name) + "</b>" + (game.guess !== "free" && game.pick && wordOf(game.pick) ? " · اختار: <b>" + esc(wordOf(game.pick).w) + "</b>" : "") + "</p>" + board(true) +
+    var msg = game.guess === "free" ? "ما انكشف وعرف الموضوع! 😎 " + esc(out.name) + " أخذ ٣ نقاط" : game.guess === "free-miss" ? "ما انكشف بس ما عرف الموضوع! " + esc(out.name) + " أخذ نقطة" : game.guess === "ok" ? "انكشف وخمّن الموضوع! 🧠 " + esc(out.name) + " أخذ نقطتين" : "انكشف وما عرف! 🎉 نقطة لكل الباقين";
+    return '<section class="screen">' + topbar() + '<h2 class="verdict">' + msg + '</h2><p class="sub">الموضوع: <b>' + esc(w.w) + "</b> · اللي برا السالفة: <b>" + esc(out.name) + "</b>" + (game.pick && wordOf(game.pick) ? " · اختار: <b>" + esc(wordOf(game.pick).w) + "</b>" : "") + "</p>" + board(true) +
       '<button class="btn go huge" data-a="next">' + (game.round >= game.total ? "النتيجة النهائية 🏆" : "الجولة التالية ▶") + "</button></section>";
   }
 
