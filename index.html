@@ -258,6 +258,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.15:</b> شلنا قسم «كيف تلعبون؟» من شاشة البداية بكل اللي فيه (الإعدادات وزر جولة العائلة). جولة العائلة تبقى من أسفل المجلس.</li>
     <li><b>نسخة 0.15:</b> شلنا عنوان «كيف تلعبون؟» من شاشة البداية.</li>
     <li><b>نسخة 0.14:</b> ترتيب إعدادات البداية في بطاقة واحدة بمقاطع متساوية، وتوحيد الخط في الإعدادات والنوافذ.</li>
     <li><b>نسخة 0.13:</b> إعدادات اللعب الموحّدة في شاشة البداية (الفرق، الصعوبة، طول اللعبة، وقت الجواب) وتنطبق على كل الألعاب · شلنا «شاشة واحدة / كل واحد بجواله».</li>
@@ -283,15 +284,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
     <h1>مجلس<span>الألعاب!</span></h1>
     <p>ألعاب جماعية للعائلة… جاهزين؟</p>
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
-    <div class="sp-mode" role="group" aria-label="طريقة اللعب">
-      <div class="sp-set" id="spset">
-        <div class="sp-r"><b>الفرق</b><span class="opts" data-pk="n"><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button></span><span class="sp-names-in" id="spteams"></span></div>
-        <div class="sp-r"><b>الصعوبة</b><span class="opts" data-pk="level"><button type="button" data-v="easy">سهل</button><button type="button" data-v="mix">منوّع</button><button type="button" data-v="hard">صعب</button></span></div>
-        <div class="sp-r"><b>طول اللعبة</b><span class="opts" data-pk="length"><button type="button" data-v="short">قصيرة</button><button type="button" data-v="normal">عادية</button><button type="button" data-v="long">طويلة</button></span></div>
-        <div class="sp-r"><b>وقت الجواب</b><span class="opts" data-pk="time"><button type="button" data-v="fast">سريع</button><button type="button" data-v="normal">عادي</button><button type="button" data-v="slow">مريح</button></span></div>
-      </div>
-      <div class="opts"><button type="button" id="spfam">🏆 جولة العائلة</button><span id="namesbtn" hidden></span><span id="namescount" hidden></span></div>
-      </div>
+    
   </div>
 </div>
 <main>
@@ -422,15 +415,15 @@ button, input, select, textarea, summary { font-family: var(--body); }
     box.innerHTML = p.teams.map(function (t, i) { return '<input data-ti="' + i + '" maxlength="20" aria-label="اسم الفريق ' + (i + 1) + '">'; }).join("");
     [].forEach.call(box.querySelectorAll("input"), function (inp, i) { inp.value = p.teams[i]; });
   }
-  document.getElementById("spset").addEventListener("click", function (e) {
+  var spSet = document.getElementById("spset"); if (spSet) spSet.addEventListener("click", function (e) {
     var b = e.target.closest("[data-v]"); if (!b) return; var k = b.parentNode.getAttribute("data-pk"), v = b.getAttribute("data-v"), p = prefGet();
     if (k === "n") { var n = +v; p.teams = p.teams.slice(0, n); while (p.teams.length < n) p.teams.push(TEAM_DEF[p.teams.length]); } else p[k] = v;
     prefSet(p); paintPrefs();
   });
-  document.getElementById("spset").addEventListener("input", function (e) {
+  if (spSet) spSet.addEventListener("input", function (e) {
     var t = e.target; if (!t.hasAttribute("data-ti")) return; var p = prefGet(); p.teams[+t.getAttribute("data-ti")] = t.value.slice(0, 20) || TEAM_DEF[+t.getAttribute("data-ti")]; prefSet(p);
   });
-  paintPrefs();
+  if (document.getElementById("spset")) paintPrefs();
   var modeBtns = document.querySelectorAll(".sp-mode [data-mode]");
   function paintMode() { var m = "tv"; try { m = localStorage.getItem("majlis_mode") === "phones" ? "phones" : "tv"; } catch (e) {} for (var i = 0; i < modeBtns.length; i++) modeBtns[i].setAttribute("aria-pressed", String(modeBtns[i].getAttribute("data-mode") === m)); }
   for (var mi = 0; mi < modeBtns.length; mi++) modeBtns[mi].addEventListener("click", function (e) { try { localStorage.setItem("majlis_mode", e.currentTarget.getAttribute("data-mode")); } catch (er) {} paintMode(); });
@@ -441,9 +434,9 @@ button, input, select, textarea, summary { font-family: var(--body); }
   function paintNames() {
     var a = getNames(); nmChips.textContent = "";
     a.forEach(function (n, i) { var b = document.createElement("button"); b.type = "button"; b.textContent = n + " ✕"; b.addEventListener("click", function () { var x = getNames(); x.splice(i, 1); setNames(x); }); nmChips.appendChild(b); });
-    document.getElementById("namescount").textContent = a.length ? "(" + a.length + ")" : "";
+    var ncEl = document.getElementById("namescount"); if (ncEl) ncEl.textContent = a.length ? "(" + a.length + ")" : "";
   }
-  document.getElementById("namesbtn").addEventListener("click", function () { nmBox.hidden = false; syncInert(); paintNames(); document.getElementById("nameinp").focus(); });
+  var nbEl = document.getElementById("namesbtn"); if (nbEl) nbEl.addEventListener("click", function () { nmBox.hidden = false; syncInert(); paintNames(); document.getElementById("nameinp").focus(); });
   function closeNames() { nmBox.hidden = true; syncInert(); var nb = document.getElementById("namesbtn"); if (nb) nb.focus(); }
   document.getElementById("namesdone").addEventListener("click", closeNames);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !nmBox.hidden) { e.preventDefault(); closeNames(); } });
@@ -583,7 +576,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
     }
   });
   famBox.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.matches("[data-ft]")) { e.preventDefault(); var g = famBox.querySelector("[data-f=start]"); if (g) g.click(); } });
-  document.getElementById("spfam").addEventListener("click", function () {
+  var spFam = document.getElementById("spfam"); if (spFam) spFam.addEventListener("click", function () {
     try { sessionStorage.setItem("majlis_started", "1"); } catch (e) {}
     splash.hidden = true; syncInert(); document.getElementById("fambtn").click();
   });
