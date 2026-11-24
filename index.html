@@ -114,6 +114,9 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .devbox .dv-lock { font: 800 16px/1 var(--body); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .5em 1.1em; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; }
 .devbox .dv-lock[hidden] { display: none; }
 .devbox .dv-reset { background: #fee2e2; }
+.devbox .dv-notes { text-align: start; border: 3px solid var(--ink); border-radius: 14px; padding: .4em .8em; background: #f8fafc; }
+.devbox .dv-notes summary { font-weight: 800; cursor: pointer; }
+.devbox .dv-notes ul { margin: .4em 0 0; padding-inline-start: 1.2em; display: grid; gap: 4px; font-size: 14px; font-weight: 600; max-height: 38vh; overflow-y: auto; }
 .subrow { gap: clamp(8px, 1vw, 16px); flex-wrap: wrap; }
 .subbtn.fambtn { background: var(--yellow); }
 .fam .box { text-align: center; }
@@ -224,6 +227,16 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <p class="dv-note" id="dvnote">الألعاب الجديدة (برا السالفة، حروف وألوف، سين جيم) مقفلة حالياً. اكتب الرمز لفتحها.</p>
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
+  <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>24 نوفمبر:</b> زر «تصفير الجلسة» للمطورين · فرق جولة العائلة تنتقل تلقائياً لكل لعبة.</li>
+    <li><b>24 نوفمبر:</b> 🏆 جولة العائلة و🏅 لوحة الشرف · مشاركة أسئلة سين جيم برابط · محتوى جديد: سين جيم 342 سؤالاً (+ رمضان واليوم الوطني)، حروف وألوف 776، من أنا؟ 128 بطاقة · «تحدي الحروف» صارت «لخبطة حروف».</li>
+    <li><b>23 نوفمبر:</b> ضبط المجلس والألعاب للآيباد (صفّين بالطول وخط أكبر).</li>
+    <li><b>23 نوفمبر:</b> إصلاحات الجربوع: زر الرئيسية في سين جيم، شارة «قريباً» ما تغطي الاسم، أزرار ▲▼ في رتّب وفوز، أزرار الإعداد بحجم اللمس.</li>
+    <li><b>22 نوفمبر:</b> الألعاب الجديدة (برا السالفة، حروف وألوف، سين جيم) في المجلس بعلامة «قريباً» ومقفلة برمز المطورين.</li>
+    <li><b>22 نوفمبر:</b> فحص بخمس وكلاء: تصحيح أسئلة خاطئة أو غامضة، تخزين تالف ما يكسر الألعاب، تركيز الكيبورد والريموت، خطوط ما تعلّق الصفحة، تباين الأزرار.</li>
+    <li><b>21 نوفمبر:</b> «ابدأ» يفتح الفرق أولاً · سعر الاشتراك الشهري باليوم · برا السالفة: 8 خيارات للتخمين.</li>
+    <li><b>20 نوفمبر:</b> زر الرئيسية · اختيار طريقة اللعب · سجل الأسماء ينعكس على الألعاب.</li>
+  </ul></details>
   <div class="dv-row"><button type="button" class="dv-lock" id="dvlock" hidden>🔒 قفل الألعاب الجديدة</button><button type="button" class="dv-lock dv-reset" id="dvreset" hidden>🧹 تصفير الجلسة بالكامل</button><button type="button" class="done" id="dvclose">إغلاق</button></div>
 </div></div>
 <div class="splash" id="splash" role="dialog" aria-label="ابدأ">
