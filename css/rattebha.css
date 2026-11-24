@@ -292,3 +292,22 @@ kbd { background: var(--card-2); border: 1px solid var(--line); border-radius: 6
   .trophy, .crown { font-size: clamp(36px, 8vh, 80px) !important; }
   .champ, .winner-name { font-size: clamp(30px, min(6vw, 8vh), 80px) !important; }
 }
+
+/* جوال أفقي (شاشة قصيرة): أزرار ▲▼ على قد ارتفاع البطاقة بدل ما تتراكب فوق بعض */
+@media (max-height: 520px) {
+  .card { gap: 6px; }
+  .card .rk { width: 26px; border-radius: 8px; }
+  .card .tx { font-size: 14px; line-height: 1.2; }
+  .card .mv { align-self: stretch; align-items: center; gap: 4px; }
+  .card .mv button { aspect-ratio: auto; width: 34px; height: min(100%, 30px); min-height: 22px; border-radius: 8px; font-size: 12px; }
+}
+@media (max-height: 520px) {
+  .screen .strip { display: none; }
+  .qhead h2 { font-size: 16px; }
+  .qhead .rule { font-size: 13px; }
+  .qhead .timer { font-size: 18px; min-width: 2.2em; padding: 0 .3em; }
+  .end { font-size: 11px; }
+  .actionbar .kbd-hint { display: none; }
+  .actionbar .btn.huge { min-height: 40px; font-size: 18px; padding-block: .1em; }
+  .actionbar .btn.big { min-height: 40px; }
+}

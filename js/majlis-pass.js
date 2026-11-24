@@ -100,7 +100,7 @@
   }
   var hp = false;
   function placeHome() {
-    if (hp || document.body.hasAttribute("data-hub") || !curGame) return;
+    if (hp || document.body.hasAttribute("data-hub") || document.body.classList.contains("phone") || (!curGame && !document.body.hasAttribute("data-home-label"))) return;
     hp = true;
     try {
       var host = null, sels = [".topbar .round-info", ".topbar .info", ".bar-r", ".d-top", ".c-top", ".page-head"], first = true;
@@ -357,7 +357,7 @@
     sets: sets, setsInfo: setsInfo, openPaywall: openPaywall, openSets: openSets, takeScope: takeScope, scoped: scoped, arabicName: arabicName, luhnOk: luhnOk, randCard: randCard,
     onChange: function (f) { listeners.push(f); }
   };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { new MutationObserver(queuePlace).observe(document.body, { childList: true, subtree: true }); });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { new MutationObserver(queuePlace).observe(document.body, { childList: true, subtree: true }); queuePlace(); });
   else new MutationObserver(queuePlace).observe(document.body, { childList: true, subtree: true });
   window.addEventListener("resize", queuePlace);
   window.addEventListener("storage", function (e) { if (e.key === SUB_KEY || e.key === FREE_KEY || e.key === SETS_KEY) { queuePlace(); changed(); } });

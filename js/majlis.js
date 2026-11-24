@@ -53,6 +53,8 @@
   }
   function scrollable(el) {
     if (el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.hasAttribute("data-free-scroll")) return false;
+    // شاشات الإعداد: تمرير عادي بدل التصغير، عشان أزرار الاختيار ما تصير أصغر من إصبع على الجوال
+    if (el.matches && el.matches(".setup-col, .setup-body, .setup") && innerHeight < 700) return false;
     var cs = getComputedStyle(el);
     if (cs.display === "none" || cs.visibility === "hidden") return false;
     if (!/(auto|scroll)/.test(cs.overflowY) && !el.hasAttribute("data-majlis-paged")) return false;
