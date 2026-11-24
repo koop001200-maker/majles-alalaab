@@ -114,6 +114,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .devbox .dv-lock { font: 800 16px/1 var(--body); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .5em 1.1em; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; }
 .devbox .dv-lock[hidden] { display: none; }
 .devbox .dv-reset { background: #fee2e2; }
+.art .dev-tag { position: absolute; bottom: 6px; left: 6px; z-index: 2; font: 800 clamp(11px, min(.9vw, 1.7vh), 17px)/1.3 var(--body); background: #eef2ff; border: 2px solid var(--ink); border-radius: 999px; padding: .1em .7em; white-space: nowrap; }
 .devbox .dv-notes { text-align: start; border: 3px solid var(--ink); border-radius: 14px; padding: .4em .8em; background: #f8fafc; }
 .devbox .dv-notes summary { font-weight: 800; cursor: pointer; }
 .devbox .dv-notes ul { margin: .4em 0 0; padding-inline-start: 1.2em; display: grid; gap: 4px; font-size: 14px; font-weight: 600; max-height: 38vh; overflow-y: auto; }
@@ -228,6 +229,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.11:</b> كل لعبة عليها وش تحتاج (📺 شاشة · 📱 جوال · كلها) · الإعدادات تبقى مفتوحة بعد إدخال الرمز · حذف نص الملاحظة تحت «كيف تلعبون؟».</li>
     <li><b>نسخة 0.10:</b> برا السالفة: اللي برا السالفة يخمّن الموضوع دايماً، حتى لو ما انكشف (صح ٣ نقاط، غلط نقطة).</li>
     <li><b>نسخة 0.9:</b> جولة العائلة: لما تخلص اللعبة وتظهر النتيجة، يرجع تلقائياً لجدول النقاط بعد 6 ثوانٍ (مع زر «خلّونا هنا»).</li>
     <li><b>نسخة 0.8:</b> زر «تصفير الجلسة» للمطورين · فرق جولة العائلة تنتقل تلقائياً لكل لعبة.</li>
@@ -250,56 +252,56 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
     <div class="sp-mode" role="group" aria-label="طريقة اللعب"><span class="sp-q">كيف تلعبون؟</span>
       <div class="opts"><button type="button" data-mode="tv" aria-pressed="true">📺 شاشة واحدة للجميع</button><button type="button" data-mode="phones" aria-pressed="false">📱 كل واحد بجواله</button><button type="button" id="namesbtn">👥 الأسماء <span id="namescount"></span></button></div>
-      <p class="sp-note">«كل واحد بجواله» يشغّل الجرس من الجوال في حروف وألوف، ويفتح رمز التحكم بالجوال في سين جيم · «وش الصح؟» دايم بالجوالات</p></div>
+      </div>
   </div>
 </div>
 <main>
   <h1>مجلس<span>الألعاب!</span></h1>
   <nav class="games" aria-label="الألعاب">
     <a class="game g1" href="min-akoon.html" data-g="mak">
-      <div class="art"><span class="qmark" aria-hidden="true">؟</span></div>
+      <div class="art"><span class="qmark" aria-hidden="true">؟</span><span class="dev-tag">📺 شاشة</span></div>
       <span class="chip sets"></span><span class="live" id="resume-a" hidden>محفوظة</span>
       <h2>من أنا؟</h2>
       <p>أربع معلومات وتعرف الشخصية</p>
     </a>
     <a class="game g2" href="khammen.html" data-g="kh">
-      <div class="art"><span class="emo" aria-hidden="true">🐪☕🎲</span></div>
+      <div class="art"><span class="emo" aria-hidden="true">🐪☕🎲</span><span class="dev-tag">📺📱 أي جهاز</span></div>
       <span class="chip sets"></span><span class="live" id="resume-b" hidden>محفوظة</span>
       <h2>خمّن وش هو؟</h2>
       <p>اسأل «إيه أو لا» وخمّن الشيء</p>
     </a>
     <a class="game g3" href="huruf.html" data-g="hf">
-      <div class="art"><div class="tiles letters" aria-hidden="true"><i>ل</i><i>خ</i><i>ب</i></div></div>
+      <div class="art"><div class="tiles letters" aria-hidden="true"><i>ل</i><i>خ</i><i>ب</i></div><span class="dev-tag">📺 شاشة</span></div>
       <span class="chip sets"></span><span class="live" id="resume-d" hidden>جارية</span>
       <h2>لخبطة حروف</h2>
       <p>رتّب الحروف وقل الكلمة أول</p>
     </a>
     <a class="game g4" href="rattebha.html" data-g="rt">
-      <div class="art"><div class="tiles numbers" aria-hidden="true"><i>1</i><i>2</i><i>3</i></div></div>
+      <div class="art"><div class="tiles numbers" aria-hidden="true"><i>1</i><i>2</i><i>3</i></div><span class="dev-tag">📺 شاشة</span></div>
       <span class="chip sets"></span><span class="live" id="resume-c" hidden>محفوظة</span>
       <h2>رتّب وفوز</h2>
       <p>رتّب البطاقات قبل الفرق الثانية</p>
     </a>
     <a class="game g5" href="wsh.html" data-g="wsh">
-      <div class="art"><span class="emo" aria-hidden="true">📱🤥📺</span></div>
+      <div class="art"><span class="emo" aria-hidden="true">📱🤥📺</span><span class="dev-tag">📺+📱 شاشة وجوالات</span></div>
       <span class="chip sets"></span><span class="new" id="new-e">جديدة</span><span class="live" id="resume-e" hidden>جارية</span>
       <h2>وش الصح؟</h2>
       <p>اكتب كذبة مقنعة واكشف الحقيقة</p>
     </a>
     <a class="game g6 locked" href="bara.html" data-g="br" data-dev="1" aria-disabled="true">
-      <div class="art"><span class="emo" aria-hidden="true">🤫🕵️🎭</span><span class="soonbadge">🔜 قريباً</span></div>
+      <div class="art"><span class="emo" aria-hidden="true">🤫🕵️🎭</span><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📱 جوال واحد</span></div>
       <span class="chip sets"></span>
       <h2>برا السالفة</h2>
       <p>واحد منكم ما يعرف الموضوع… اكشفوه!</p>
     </a>
     <a class="game g7 locked" href="hurouf.html" data-g="hu" data-dev="1" aria-disabled="true">
-      <div class="art"><div class="tiles letters" aria-hidden="true"><i>ح</i><i>ر</i><i>و</i></div><span class="soonbadge">🔜 قريباً</span></div>
+      <div class="art"><div class="tiles letters" aria-hidden="true"><i>ح</i><i>ر</i><i>و</i></div><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📺 شاشة + جوال اختياري</span></div>
       
       <h2>حروف وألوف</h2>
       <p>فريقان وأجراس ولوحة حروف سداسية</p>
     </a>
     <a class="game g8 locked" href="seenjeem.html" data-g="sj" data-dev="1" aria-disabled="true">
-      <div class="art"><span class="emo" aria-hidden="true">❓🏆⏱️</span><span class="soonbadge">🔜 قريباً</span></div>
+      <div class="art"><span class="emo" aria-hidden="true">❓🏆⏱️</span><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📺 شاشة + جوال اختياري</span></div>
       
       <h2>سين جيم</h2>
       <p>مسابقة عائلية بفئات وأسئلة وأجراس</p>
@@ -419,7 +421,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   document.getElementById("dvclose").addEventListener("click", closeDev);
   document.getElementById("dvform").addEventListener("submit", function (e) {
     e.preventDefault(); var v = document.getElementById("dvcode").value.trim();
-    if (v === DEV_CODE) { try { localStorage.setItem("majlis_dev", "1"); } catch (er) {} paintDev(); refreshPass(); closeDev(); }
+    if (v === DEV_CODE) { try { localStorage.setItem("majlis_dev", "1"); } catch (er) {} paintDev(); refreshPass(); document.getElementById("dverr").hidden = true; var dc = document.getElementById("dvclose"); if (dc) dc.focus(); }
     else { var er2 = document.getElementById("dverr"); er2.hidden = false; document.getElementById("dvcode").value = ""; document.getElementById("dvcode").focus(); }
   });
   /* للمطورين: يمسح كل بيانات المجلس والألعاب (كأنه أول دخول) مع إبقاء الألعاب الجديدة مفتوحة؛ ضغطتين للتأكيد */
