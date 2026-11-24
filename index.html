@@ -229,6 +229,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.12:</b> شاشة البداية: زر «🏆 جولة العائلة» بدل «الأسماء».</li>
     <li><b>نسخة 0.11:</b> كل لعبة عليها وش تحتاج (📺 شاشة · 📱 جوال · كلها) · الإعدادات تبقى مفتوحة بعد إدخال الرمز · حذف نص الملاحظة تحت «كيف تلعبون؟».</li>
     <li><b>نسخة 0.10:</b> برا السالفة: اللي برا السالفة يخمّن الموضوع دايماً، حتى لو ما انكشف (صح ٣ نقاط، غلط نقطة).</li>
     <li><b>نسخة 0.9:</b> جولة العائلة: لما تخلص اللعبة وتظهر النتيجة، يرجع تلقائياً لجدول النقاط بعد 6 ثوانٍ (مع زر «خلّونا هنا»).</li>
@@ -251,7 +252,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     <p>ألعاب جماعية للعائلة… جاهزين؟</p>
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
     <div class="sp-mode" role="group" aria-label="طريقة اللعب"><span class="sp-q">كيف تلعبون؟</span>
-      <div class="opts"><button type="button" data-mode="tv" aria-pressed="true">📺 شاشة واحدة للجميع</button><button type="button" data-mode="phones" aria-pressed="false">📱 كل واحد بجواله</button><button type="button" id="namesbtn">👥 الأسماء <span id="namescount"></span></button></div>
+      <div class="opts"><button type="button" data-mode="tv" aria-pressed="true">📺 شاشة واحدة للجميع</button><button type="button" data-mode="phones" aria-pressed="false">📱 كل واحد بجواله</button><button type="button" id="spfam">🏆 جولة العائلة</button><span id="namesbtn" hidden></span><span id="namescount" hidden></span></div>
       </div>
   </div>
 </div>
@@ -524,6 +525,10 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
     }
   });
   famBox.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.matches("[data-ft]")) { e.preventDefault(); var g = famBox.querySelector("[data-f=start]"); if (g) g.click(); } });
+  document.getElementById("spfam").addEventListener("click", function () {
+    try { sessionStorage.setItem("majlis_started", "1"); } catch (e) {}
+    splash.hidden = true; syncInert(); document.getElementById("fambtn").click();
+  });
   document.getElementById("fambtn").addEventListener("click", function () { var f = famGet(); if (f && f.waiting) famResult(); else if (f) famStage(); else { famDraft = null; famSetup(); } openDlg(famDlg); });
   function famAfterGame() { var f = famGet(); if (f && f.waiting && f.idx < f.games.length) { famResult(); openDlg(famDlg); } }
 
