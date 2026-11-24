@@ -226,6 +226,22 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   .sp-note { font-size: clamp(13px, 1.8vw, 18px) !important; }
   .subbtn { font-size: clamp(18px, 2.4vw, 26px); }
 }
+
+/* ===== إعدادات البداية: صفوف مرتبة (العنوان يمين، الخيارات مقاطع متساوية) + خط موحّد ===== */
+button, input, select, textarea, summary { font-family: var(--body); }
+.sp-set { grid-template-columns: 1fr !important; width: min(640px, 92vw); background: #fff !important; border: var(--line) !important; border-radius: 22px !important; box-shadow: 5px 5px 0 var(--ink); padding: clamp(10px, 1.6vh, 18px) clamp(12px, 1.8vw, 24px) !important; gap: clamp(8px, 1.2vh, 14px) !important; }
+.sp-set .sp-r { display: grid !important; grid-template-columns: 7.5em 1fr; align-items: center; gap: 10px; justify-content: stretch !important; }
+.sp-set .sp-r:first-child { grid-template-columns: 7.5em 1fr; }
+.sp-set .sp-r b { min-width: 0 !important; font: 900 clamp(15px, min(1.3vw, 2.4vh), 22px)/1.2 var(--body) !important; color: var(--ink); text-align: start; }
+.sp-set .opts { display: grid !important; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0 !important; border: 3px solid var(--ink); border-radius: 999px; overflow: hidden; background: #fff; }
+.sp-set .opts button { border: 0 !important; border-inline-start: 2px solid var(--ink) !important; border-radius: 0 !important; box-shadow: none !important; background: #fff; padding: .35em .5em !important; font: 800 clamp(14px, min(1.15vw, 2.2vh), 21px)/1.2 var(--body) !important; color: var(--ink); cursor: pointer; }
+.sp-set .opts button:first-child { border-inline-start: 0 !important; }
+.sp-set .opts button[aria-pressed="true"] { background: var(--yellow) !important; }
+.sp-set .sp-names-in { grid-column: 1 / -1; display: grid !important; grid-template-columns: repeat(auto-fit, minmax(8em, 1fr)); gap: 8px; }
+.sp-set .sp-names-in input { width: 100% !important; text-align: center; }
+@media (max-width: 520px) { .sp-set .sp-r, .sp-set .sp-r:first-child { grid-template-columns: 1fr; } .sp-set .sp-r b { text-align: center; } }
+@media (max-height: 520px) { .sp-set { width: min(760px, 96vw); grid-template-columns: 1fr 1fr !important; } .sp-set .sp-r:first-child { grid-column: 1 / -1; } .sp-set .sp-r { grid-template-columns: 5.5em 1fr; } }
+.devbox .box, .fam .box { font-family: var(--body); }
 </style>
 </head>
 <body data-hub>
@@ -242,6 +258,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.14:</b> ترتيب إعدادات البداية في بطاقة واحدة بمقاطع متساوية، وتوحيد الخط في الإعدادات والنوافذ.</li>
     <li><b>نسخة 0.13:</b> إعدادات اللعب الموحّدة في شاشة البداية (الفرق، الصعوبة، طول اللعبة، وقت الجواب) وتنطبق على كل الألعاب · شلنا «شاشة واحدة / كل واحد بجواله».</li>
     <li><b>نسخة 0.12:</b> شاشة البداية: زر «🏆 جولة العائلة» بدل «الأسماء».</li>
     <li><b>نسخة 0.11:</b> كل لعبة عليها وش تحتاج (📺 شاشة · 📱 جوال · كلها) · الإعدادات تبقى مفتوحة بعد إدخال الرمز · حذف نص الملاحظة تحت «كيف تلعبون؟».</li>
