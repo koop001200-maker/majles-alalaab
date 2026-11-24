@@ -243,3 +243,10 @@ body.phone #app { width: 100%; }
 /* جوال أفقي: بطاقة الفريق سطر واحد (الاسم والنتيجة) — وسائل المساعدة تظهر في أزرار السؤال نفسه */
 @media (max-height: 520px) { .tc .lf { display: none; } .tc { padding-block: calc(9px + .1em) .1em; } .tc .sc { grid-row: auto; } }
 kbd, .kbd { letter-spacing: 0; word-spacing: 0; }
+
+/* آيباد/تابلت بالطول: الخط يكبر شوي لأن المقاس هنا يعتمد على العرض الضيّق */
+@media (orientation: portrait) and (min-width: 700px) and (min-height: 900px) { body { font-size: clamp(18px, 2.3vw, 26px) !important; } }
+/* شاشة ضيقة (جوال/آيباد بالطول): زر بدء المباراة ثابت أسفل الشاشة والإعداد يتمرّر فوقه */
+@media (max-width: 900px) {
+  .setup-foot { position: sticky; bottom: 0; z-index: 5; padding: 12px 0 6px; background: linear-gradient(180deg, rgba(99,102,241,0), rgba(99,102,241,.96) 30%); }
+}

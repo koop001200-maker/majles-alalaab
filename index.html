@@ -168,6 +168,22 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
 .sp-names .done { background: var(--green); color: #fff; align-self: center; font-size: 18px; padding: .35em 1.6em; }
 .sp-names .hint { margin: 0; font-size: 13px; opacity: .75; }
 .sp-mode button[aria-pressed="true"] { background: var(--yellow); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+
+/* آيباد/تابلت بالطول: بطاقتين في الصف بدل أربع نحيفة وطويلة، وخطوط أكبر شوي */
+@media (orientation: portrait) and (min-width: 641px) and (min-height: 900px) {
+  .games { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: repeat(4, minmax(0, 1fr)) !important; height: auto !important; flex: 1 1 auto !important; }
+  main { justify-content: flex-start; padding-top: clamp(60px, 7vh, 90px); }
+  .game { flex-direction: row; align-items: center; }
+  .game .art { flex: 0 0 46%; height: 100%; }
+  .game h2 { flex: 1; font-size: clamp(26px, 4vw, 44px); }
+  .game p { display: none; }
+  .soonbadge { font-size: clamp(18px, 2.6vw, 28px); }
+  .sp-box p { font-size: clamp(18px, 2.6vw, 30px); }
+  .sp-mode .sp-q { font-size: clamp(18px, 2.6vw, 28px); }
+  .sp-mode button { font-size: clamp(16px, 2.3vw, 24px); }
+  .sp-note { font-size: clamp(13px, 1.8vw, 18px) !important; }
+  .subbtn { font-size: clamp(18px, 2.4vw, 26px); }
+}
 </style>
 </head>
 <body data-hub>
@@ -190,7 +206,7 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
   <span class="sp-float" style="bottom:12%;right:12%;animation-delay:-2s" aria-hidden="true">☕</span><span class="sp-float" style="bottom:16%;left:8%;animation-delay:-3s" aria-hidden="true">🧩</span>
   <div class="sp-box">
     <h1>مجلس<span>الألعاب!</span></h1>
-    <p>ست ألعاب للعائلة… جاهزين؟</p>
+    <p>ألعاب جماعية للعائلة… جاهزين؟</p>
     <button class="sp-go" id="go" type="button">يلا نلعب! 🎉</button>
     <div class="sp-mode" role="group" aria-label="طريقة اللعب"><span class="sp-q">كيف تلعبون؟</span>
       <div class="opts"><button type="button" data-mode="tv" aria-pressed="true">📺 شاشة واحدة للجميع</button><button type="button" data-mode="phones" aria-pressed="false">📱 كل واحد بجواله</button><button type="button" id="namesbtn">👥 الأسماء <span id="namescount"></span></button></div>

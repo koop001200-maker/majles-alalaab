@@ -364,3 +364,6 @@ kbd, .kbd { letter-spacing: 0 !important; word-spacing: 0; }
 
 /* ملخص الإعدادات بجانب زر البدء: خلفية بيضاء عشان يُقرأ على التدرّج البنفسجي */
 body .setup-foot .summary { background: rgba(255, 255, 255, .92); color: #1f2937 !important; border-radius: 999px; padding: .1em .9em; font-weight: 700; }
+
+/* آيباد/تابلت بالطول: الخط يكبر شوي لأن المقاس هنا يعتمد على العرض الضيّق */
+@media (orientation: portrait) and (min-width: 700px) and (min-height: 900px) { body { font-size: clamp(18px, 2.3vw, 26px) !important; } }
