@@ -3,7 +3,7 @@
 (function (root) {
   "use strict";
   var ROWS = [200, 200, 400, 400, 600, 600];
-  var LIFE = ["two", "call", "dbl"];
+  var LIFE = ["two", "dbl"];
   var LIFE_NAME = { two: "جاوب جوابين", call: "اتصال بصديق", dbl: "دبل النقاط" };
 
   function shuffle(a, rnd) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }

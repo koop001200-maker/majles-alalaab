@@ -40,7 +40,7 @@
       } else if (V.cur) {
         var cu = V.cur, ctl;
         if (!cu.revealed) {
-          ctl = '<div class="btns three">' + ["two", "call", "dbl"].map(function (k) { return '<button class="btn sm' + (k === "dbl" ? " gold" : "") + '" data-life="' + k + '"' + (cu.can[k] ? "" : " disabled") + ">" + LB[k] + "</button>"; }).join("") + "</div>" +
+          ctl = '<div class="btns two">' + ["two", "dbl"].map(function (k) { return '<button class="btn sm' + (k === "dbl" ? " gold" : "") + '" data-life="' + k + '"' + (cu.can[k] ? "" : " disabled") + ">" + LB[k] + "</button>"; }).join("") + "</div>" +
             '<div class="btns">' + (cu.two && cu.attempt === 1 ? '<button class="btn bad" data-c="wrong">✘ المحاولة الأولى خاطئة</button>' : "") +
             '<button class="btn gold" data-c="reveal">👁 كشف الإجابة على التلفزيون</button><div class="btns two"><button class="btn" data-c="pause">' + (cu.running ? "⏸ إيقاف" : "▶ استئناف") + '</button>' + (cu.call ? '<button class="btn" data-c="callend">إنهاء الاتصال</button>' : '<button class="btn" data-c="cancel">↩ رجوع</button>') + "</div></div>";
         } else ctl = '<p style="font-weight:800">من فاز بالسؤال؟</p><div class="btns"><button class="btn" style="background:' + TCOL[0] + ';color:#fff" data-award="0">' + esc(N[0]) + '</button><button class="btn" style="background:' + TCOL[1] + ';color:#fff" data-award="1">' + esc(N[1]) + '</button><button class="btn" data-award="-1">لا أحد</button></div>';

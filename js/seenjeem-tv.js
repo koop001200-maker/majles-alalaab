@@ -160,8 +160,8 @@
   function vHowto() {
     return '<section class="screen"><div class="head"><h2>تعليمات اللعبة</h2><button class="btn ghost" data-a="home">الصفحة الأولى</button></div><div class="scroll"><div class="panel howto">' +
       '<div><h3>الفكرة</h3><ol><li>فريقان يتنافسان على لوحة فيها 6 فئات، وكل فئة 6 أسئلة (36 سؤالاً).</li><li>الفريقان يتناوبان على اختيار السؤال (الفئة + قيمته).</li><li>في كل فئة سؤالان بقيمة 200، وسؤالان 400، وسؤالان 600، وكلما زادت القيمة زاد التحدي.</li><li>اضغط «كشف الإجابة» ثم حدّد من فاز بالسؤال: الفريق الأول أو الثاني أو لا أحد.</li><li>تُضاف النقاط تلقائياً، ويُغلق السؤال ولا يُحتسب مرتين. الأعلى نقاطاً في النهاية يفوز.</li></ol></div>' +
-      '<div><h3>وسائل المساعدة (لكل فريق ثلاث، مرة واحدة)</h3><ul><li><b>جاوب جوابين:</b> محاولتان للإجابة بدل واحدة. إذا أخطأتم الأولى اضغطوا «المحاولة الخاطئة» ويبدأ الوقت من جديد.</li><li><b>اتصال بصديق:</b> يتوقف وقت السؤال ويبدأ عدّاد 30 ثانية لاستشارة شخص خارج الفريق.</li><li><b>دبل النقاط:</b> تتضاعف نقاط السؤال إذا فاز به الفريق الذي فعّلها. يُفعَّل قبل كشف الإجابة.</li><li>الوسائل تخص الفريق صاحب الدور في السؤال الحالي.</li></ul></div>' +
-      '<div><h3>التحكم</h3><ul><li>بالماوس أو اللمس: اضغط على الخانة.</li><li>بلوحة المفاتيح أو الريموت: الأسهم للتنقل، Enter لاختيار السؤال.</li><li>داخل السؤال: <kbd>مسافة</kbd> كشف الإجابة · <kbd>1</kbd> <kbd>2</kbd> الفريق الأول/الثاني · <kbd>0</kbd> لا أحد · <kbd>D</kbd> دبل · <kbd>T</kbd> جوابين · <kbd>C</kbd> اتصال · <kbd>P</kbd> إيقاف · <kbd>W</kbd> المحاولة الخاطئة.</li><li>زر «📱 تحكم بالجوال» يعرض رمز QR ليتحكم أحد اللاعبين من هاتفه (اختياري).</li></ul></div>' +
+      '<div><h3>وسائل المساعدة (لكل فريق اثنتان، مرة واحدة)</h3><ul><li><b>جاوب جوابين:</b> محاولتان للإجابة بدل واحدة. إذا أخطأتم الأولى اضغطوا «المحاولة الخاطئة» ويبدأ الوقت من جديد.</li><li><b>دبل النقاط:</b> تتضاعف نقاط السؤال إذا فاز به الفريق الذي فعّلها. يُفعَّل قبل كشف الإجابة.</li><li>الوسائل تخص الفريق صاحب الدور في السؤال الحالي.</li></ul></div>' +
+      '<div><h3>التحكم</h3><ul><li>بالماوس أو اللمس: اضغط على الخانة.</li><li>بلوحة المفاتيح أو الريموت: الأسهم للتنقل، Enter لاختيار السؤال.</li><li>داخل السؤال: <kbd>مسافة</kbd> كشف الإجابة · <kbd>1</kbd> <kbd>2</kbd> الفريق الأول/الثاني · <kbd>0</kbd> لا أحد · <kbd>D</kbd> دبل · <kbd>T</kbd> جوابين · <kbd>P</kbd> إيقاف · <kbd>W</kbd> المحاولة الخاطئة.</li><li>زر «📱 تحكم بالجوال» يعرض رمز QR ليتحكم أحد اللاعبين من هاتفه (اختياري).</li></ul></div>' +
       '<div><h3>مهم</h3><ul><li>المباراة تُحفظ تلقائياً؛ إذا حدّثت الصفحة تقدر تتابع من الرئيسية.</li><li>كل مباراة تُختار فيها أسئلة مختلفة قدر الإمكان عن المباريات السابقة.</li><li>من «إعدادات» تقدرون تضيفون أسئلة وفئات جديدة وتعدّلونها.</li></ul></div></div></div></section>';
   }
   function vSettings() {
@@ -232,7 +232,7 @@
     var best = [0, 1].map(function (t) { var b = st.best[t]; return b ? tn(t) + ": أعلى سؤال فاز به «" + esc(catOf(b.c).name) + "» بـ " + b.pts + " نقطة" + (b.dblWon ? " (دبل)" : "") : null; }).filter(Boolean);
     var hl = best.concat([0, 1].map(function (t) { return st.streak[t] > 1 ? tn(t) + ": أطول سلسلة إجابات صحيحة متتالية " + st.streak[t] : null; }).filter(Boolean),
       [0, 1].map(function (t) { return st.dblWins[t] ? tn(t) + ": كسب الدبل " + st.dblWins[t] + " مرة" : null; }).filter(Boolean),
-      [tn(0) + " استخدم " + st.lifeUsed[0] + " من 3 وسائل، و" + tn(1) + " استخدم " + st.lifeUsed[1]]);
+      [tn(0) + " استخدم " + st.lifeUsed[0] + " من 2 وسيلتين، و" + tn(1) + " استخدم " + st.lifeUsed[1]]);
     var title = w < 0 ? "تعادل! 🤝" : "الفائز: " + tn(w) + " 🏆";
     return '<div class="win"><div class="trophy" aria-hidden="true">' + (w < 0 ? "🤝" : "🏆") + '</div><div class="txt"><h2 style="' + (w >= 0 ? "color:" + TCOL[w] + ";text-shadow:2px 2px 0 var(--ink)" : "") + '">' + title + "</h2>" +
       '<div class="stat"><span class="h">الفريق</span><span class="h">النقاط</span><span class="h">إجابات صحيحة</span><span>' + tn(0) + "</span><b>" + st.scores[0] + "</b><b>" + st.correct[0] + "</b><span>" + tn(1) + "</span><b>" + st.scores[1] + "</b><b>" + st.correct[1] + "</b></div>" +
@@ -434,7 +434,7 @@
     if (k === " " || k === "Enter") { if (!rv) { e.preventDefault(); doReveal(); } }
     else if (!rv) {
       var l = k.toLowerCase();
-      if (l === "d") doLife("dbl"); else if (l === "t") doLife("two"); else if (l === "c") doLife("call"); else if (l === "p") doPause(); else if (l === "w") doWrong(); else if (l === "escape") doCancel();
+      if (l === "d") doLife("dbl"); else if (l === "t") doLife("two"); else if (l === "p") doPause(); else if (l === "w") doWrong(); else if (l === "escape") doCancel();
     } else {
       if (k === "1") doAward(0); else if (k === "2") doAward(1); else if (k === "0") doAward(-1);
     }
