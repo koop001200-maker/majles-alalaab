@@ -51,12 +51,17 @@
   }
   function saveBank() { Store.set(K.bank, bank); }
   // hint = the first letter of the answer and how many words it has (after «ال» the next letter is the useful one)
-  function hintHTML(it) {
+  /* تلميح تدريجي: كل ضغطة تكشف أكثر وتاكل ربع الوقت المتبقي — ١) الفئة ٢) عدد الكلمات والحروف ٣) أول حرف */
+  var HINT_MAX = 3;
+  function hintHTML(it, lv) {
     var words = String(it.name).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim().split(" ");
     var L = Array.from(words[0]), al = L.length > 3 && L[0] === "ا" && L[1] === "ل";
     var n = words.length, cnt = n === 1 ? "كلمة واحدة" : n === 2 ? "كلمتين" : n + " كلمات";
-    return '<span class="hint-letter">' + esc(al ? L[2] : L[0]) + "</span>" +
-      '<span class="hint-text">' + (al ? "يبدأ بـ «ال» وبعدها حرف " : "أول حرف ") + "<b>" + esc(al ? L[2] : L[0]) + "</b> · " + cnt + "</span>";
+    var letters = Array.from(words.join("")).length, c = cat(it.cat), out = [];
+    out.push('<span class="hint-text">الفئة: <b>' + esc(c.icon + " " + c.name) + "</b></span>");
+    if (lv >= 2) out.push('<span class="hint-text">' + cnt + " · <b>" + letters + "</b> حرف</span>");
+    if (lv >= 3) out.push('<span class="hint-letter">' + esc(al ? L[2] : L[0]) + '</span><span class="hint-text">' + (al ? "يبدأ بـ «ال» وبعدها حرف " : "أول حرف ") + "<b>" + esc(al ? L[2] : L[0]) + "</b></span>");
+    return out.join(" ");
   }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
   function photo(id) { return Store.raw(K.img + id); }
@@ -330,8 +335,8 @@
       case "start": game.phase = "guess"; c.paused = false; SFX.go(); ensureTimer(); commit(); break;
       case "pause": c.paused = !c.paused; commit(); break;
       case "hint":
-        if (game.phase === "guess" && !c.paused && !c.pendingEnd && c.hintFor !== c.itemId) {
-          c.hintFor = c.itemId; c.timeLeft = Math.max(1, Math.ceil(c.timeLeft / 2)); SFX.pop(); commit();
+        if (game.phase === "guess" && !c.paused && !c.pendingEnd && (c.hintFor !== c.itemId || (c.hintN || 1) < HINT_MAX)) {
+          c.hintN = c.hintFor === c.itemId ? (c.hintN || 1) + 1 : 1; c.hintFor = c.itemId; c.timeLeft = Math.max(1, Math.ceil(c.timeLeft * 0.75)); SFX.pop(); commit();
         }
         break;
       case "guess": modal = { type: "guess" }; render(); var gi = document.getElementById("guess-input"); if (gi) gi.focus(); break;
@@ -532,12 +537,12 @@
         '<div class="ring' + (c.timeLeft <= 10 ? " warn" : "") + (c.paused ? " paused" : "") + '" id="ring" style="--p:' + (c.timeLeft / s.turnTime) + '"><span id="time-left">' + (c.paused && !c.pendingEnd ? "⏸ متوقف" : c.timeLeft) + "</span></div>" +
         '<div class="hearts' + (shakeNext ? " shake" : "") + '" aria-label="المحاولات الباقية ' + c.attempts + '">' + hearts + "</div>" +
         '<div class="feedback ' + (c.feedback ? c.feedback.cls : "") + '">' + (c.feedback ? esc(c.feedback.text) : "اسأل… والباقين يجاوبون «إيه» أو «لا» بس") + "</div>" +
-        (c.hintFor === c.itemId ? '<div class="hint-box"><b>💡 تلميح:</b>' + hintHTML(it) + "</div>" : "") +
+        (c.hintFor === c.itemId ? '<div class="hint-box"><b>💡 تلميح ' + (c.hintN || 1) + "/" + HINT_MAX + ":</b>" + hintHTML(it, c.hintN || 1) + "</div>" : "") +
         (c.guesses.length ? '<div class="guess-list">' + c.guesses.map(function (g) { return "<span>" + esc(g) + "</span>"; }).join("") + "</div>" : "") +
         (c.lastTyped && !c.pendingEnd ? '<button class="btn small ghost" data-act="object">🙋 اعتراض! كانت صح</button>' : "");
       if (c.pendingEnd) actions = '<button class="btn huge" data-act="object">🙋 اعتراض</button><button class="btn go huge" data-act="accept-end">تمام ▶</button>';
       else actions = '<button class="btn go huge" data-act="guess"' + (c.paused ? " disabled" : "") + ">خمّن 💡</button>" +
-        '<button class="btn big hint-btn" data-act="hint"' + (c.paused || c.hintFor === c.itemId ? " disabled" : "") + ">💡 تلميح (يروح نص الوقت)</button>" +
+        '<button class="btn big hint-btn" data-act="hint"' + (c.paused || (c.hintFor === c.itemId && (c.hintN || 1) >= HINT_MAX) ? " disabled" : "") + ">" + (c.hintFor === c.itemId ? "💡 تلميح أكثر" : "💡 تلميح") + " (يروح ربع الوقت)</button>" +
         '<button class="btn big" data-act="pause">' + (c.paused ? "▶ كمّل" : "⏸ وقف") + "</button>" +
         '<button class="btn big" data-act="skip">' + (s.mode === "duel" ? "باص ⏭" : "تخطي ⏭") + "</button>" +
         (s.mode === "duel" ? "" : '<button class="btn big" data-act="redo">إعادة 🔄</button>');
