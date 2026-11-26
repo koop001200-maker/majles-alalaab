@@ -489,7 +489,7 @@
   function vHowto() {
     return '<section class="screen"><div class="page-head"><h2>طريقة اللعب</h2><button class="btn ghost" data-act="home">الصفحة الأولى</button></div>' +
       '<div class="scroll"><div class="howto panel">' +
-      "<p>في كل جولة تظهر بطاقة عن شخصية أو حدث أو مكان أو مفهوم إسلامي. يكشف مقدم اللعبة المعلومات واحدة تلو الأخرى من الأصعب إلى الأسهل، والهدف أن تعرف الإجابة بأقل عدد من المعلومات.</p>" +
+      "<p>في كل جولة تظهر بطاقة عن شخصية أو حدث أو مكان أو مفهوم إسلامي. يكشف مقدم اللعبة المعلومات واحدة تلو الأخرى من الأسهل إلى الأصعب، والهدف أن تعرف الإجابة بأقل عدد من المعلومات.</p>" +
       "<h3>النقاط</h3>" +
       '<div class="points-table"><div><b>4</b>بعد المعلومة الأولى</div><div><b>3</b>بعد الثانية</div><div><b>2</b>بعد الثالثة</div><div><b>1</b>بعد الرابعة</div></div>' +
       "<ul><li>الإجابة الخاطئة لا تحصل على نقاط، ويستمر كشف المعلومات حتى تنتهي المحاولات أو يُكشف الحل.</li>" +
@@ -544,7 +544,7 @@
         var shown = i < r.revealed, pts = pointsAt(i + 1);
         clues += '<li class="clue ' + (shown ? "revealed" : "hidden") + (shown && i === r.revealed - 1 ? " current" : "") + (i === freshClue ? " fresh" : "") + '">' +
           '<span class="num"><b>' + (i + 1) + "</b><small>" + pts + " " + pointsWord(pts) + "</small></span>" +
-          '<span class="text">' + (shown ? esc(q.clues[i]) : "• • •") + "</span></li>";
+          '<span class="text">' + (shown ? esc(q.clues[3 - i]) : "• • •") + "</span></li>";
       }
       inner = '<ol class="clues">' + clues + "</ol>";
       bar = '<button class="btn primary big" data-act="reveal"' + (r.revealed >= 4 ? " disabled" : "") + ">" + (r.revealed === 0 ? "اكشف المعلومة الأولى" : "اكشف المعلومة التالية") + "</button>" +
@@ -584,7 +584,7 @@
       var clues = "";
       for (var i = 0; i < 4; i++) {
         var shown = i < f.revealed;
-        clues += '<li class="clue ' + (shown ? "revealed" : "hidden") + (shown && i === f.revealed - 1 ? " current" : "") + (i === freshClue ? " fresh" : "") + '"><span class="num"><b>' + (i + 1) + '</b></span><span class="text">' + (shown ? esc(q.clues[i]) : "• • •") + "</span></li>";
+        clues += '<li class="clue ' + (shown ? "revealed" : "hidden") + (shown && i === f.revealed - 1 ? " current" : "") + (i === freshClue ? " fresh" : "") + '"><span class="num"><b>' + (i + 1) + '</b></span><span class="text">' + (shown ? esc(q.clues[3 - i]) : "• • •") + "</span></li>";
       }
       return '<section class="screen">' + head + '<article class="qcard golden"><div class="qcard-head"><h3>السؤال النهائي</h3></div><ol class="clues">' + clues + '</ol><div class="status muted">تكتب كل الفرق إجاباتها على ورقة سراً، ثم يكشف المقدم الحل.</div></article>' +
         '<div class="hostbar"><button class="btn primary big" data-act="final-reveal"' + (f.revealed >= 4 ? " disabled" : "") + ">اكشف المعلومة " + (f.revealed === 0 ? "الأولى" : "التالية") + "</button>" +
@@ -660,7 +660,7 @@
       inner = '<h2 class="gold">' + (modal.isNew ? "إضافة سؤال" : "تعديل سؤال") + '</h2><form class="form-grid" id="q-form">' +
         '<div class="two-col"><label>القسم<select id="qf-cat" name="cat">' + CATS.map(function (c) { return '<option value="' + c.id + '"' + (q.cat === c.id ? " selected" : "") + ">" + c.name + "</option>"; }).join("") + "</select></label>" +
         '<label>المستوى<select id="qf-lvl" name="lvl">' + LEVELS.map(function (l) { return '<option value="' + l.id + '"' + (+q.lvl === l.id ? " selected" : "") + ">" + l.name + "</option>"; }).join("") + "</select></label></div>" +
-        [0, 1, 2, 3].map(function (i) { return "<label>المعلومة " + (i + 1) + " (" + BASE_POINTS[i] + " " + pointsWord(BASE_POINTS[i]) + ")" + (i === 0 ? " — الأصعب" : i === 3 ? " — الأسهل" : "") + '<textarea id="qf-c' + i + '" name="c' + i + '" required>' + esc(q.clues[i] || "") + "</textarea></label>"; }).join("") +
+        [0, 1, 2, 3].map(function (i) { return "<label>المعلومة " + (i + 1) + " (" + BASE_POINTS[i] + " " + pointsWord(BASE_POINTS[i]) + ")" + (i === 0 ? " — الأسهل (تظهر أولاً)" : i === 3 ? " — الأصعب (تظهر أخيراً)" : "") + '<textarea id="qf-c' + i + '" name="c' + i + '" required>' + esc(q.clues[3 - i] || "") + "</textarea></label>"; }).join("") +
         '<label>الإجابة<input id="qf-answer" name="answer" required value="' + esc(q.answer) + '"></label>' +
         '<label>الشرح المختصر<textarea id="qf-explain" name="explain" required>' + esc(q.explain) + "</textarea></label>" +
         '<label>معلومة إضافية<textarea id="qf-extra" name="extra">' + esc(q.extra) + "</textarea></label>" +
@@ -1001,7 +1001,7 @@
     var q = {
       id: modal.q.id || ("u" + Date.now()),
       cat: get("cat"), lvl: +get("lvl"),
-      clues: [get("c0"), get("c1"), get("c2"), get("c3")],
+      clues: [get("c3"), get("c2"), get("c1"), get("c0")], // التخزين: من الأصعب للأسهل، والمحرر يعرضها من الأسهل للأصعب
       answer: get("answer"), explain: get("explain"), extra: get("extra"), source: get("source")
     };
     if (q.clues.some(function (c) { return !c; }) || !q.answer || !q.explain || !q.source) {
