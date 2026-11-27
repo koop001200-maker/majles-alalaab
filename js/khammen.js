@@ -51,16 +51,17 @@
   }
   function saveBank() { Store.set(K.bank, bank); }
   // hint = the first letter of the answer and how many words it has (after «ال» the next letter is the useful one)
-  /* تلميح تدريجي: كل ضغطة تكشف أكثر وتاكل ربع الوقت المتبقي — ١) الفئة ٢) عدد الكلمات والحروف ٣) أول حرف */
+  /* تلميح تدريجي: كل ضغطة تكشف أكثر وتاكل ربع الوقت المتبقي — ١) عدد الكلمات والحروف ٢) أول حرف ٣) آخر حرف (الفئة ظاهرة أصلاً فوق) */
   var HINT_MAX = 3;
   function hintHTML(it, lv) {
     var words = String(it.name).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim().split(" ");
     var L = Array.from(words[0]), al = L.length > 3 && L[0] === "ا" && L[1] === "ل";
     var n = words.length, cnt = n === 1 ? "كلمة واحدة" : n === 2 ? "كلمتين" : n + " كلمات";
-    var letters = Array.from(words.join("")).length, c = cat(it.cat), out = [];
-    out.push('<span class="hint-text">الفئة: <b>' + esc(c.icon + " " + c.name) + "</b></span>");
-    if (lv >= 2) out.push('<span class="hint-text">' + cnt + " · <b>" + letters + "</b> حرف</span>");
-    if (lv >= 3) out.push('<span class="hint-letter">' + esc(al ? L[2] : L[0]) + '</span><span class="hint-text">' + (al ? "يبدأ بـ «ال» وبعدها حرف " : "أول حرف ") + "<b>" + esc(al ? L[2] : L[0]) + "</b></span>");
+    var letters = Array.from(words.join("")).length, out = [];
+    var lw = Array.from(words[words.length - 1]), last = lw[lw.length - 1];
+    out.push('<span class="hint-text">' + cnt + " · <b>" + letters + "</b> " + (letters >= 3 && letters <= 10 ? "أحرف" : "حرف") + "</span>");
+    if (lv >= 2) out.push('<span class="hint-letter">' + esc(al ? L[2] : L[0]) + '</span><span class="hint-text">' + (al ? "يبدأ بـ «ال» وبعدها حرف " : "أول حرف ") + "<b>" + esc(al ? L[2] : L[0]) + "</b></span>");
+    if (lv >= 3) out.push('<span class="hint-text">آخر حرف <b>' + esc(last) + "</b></span>");
     return out.join(" ");
   }
   function item(id) { for (var i = 0; i < bank.length; i++) if (bank[i].id === id) return bank[i]; return null; }
@@ -92,16 +93,21 @@
       var n = norm(c); if (!n) return false;
       var ns = n.replace(/ /g, "");
       if (g === n || gs === ns) return true;
+      // لهجتنا: برقر = برجر، تلاجة = ثلاجة… (ما لم تكن الكلمة لشيء ثاني في البنك)
+      if (fold(gs) === fold(ns) && !ownedByOther(gs, it, true)) return true;
+      if (ns.charAt(ns.length - 1) === "ه" && gs === ns.slice(0, -1)) return false; // طيار ≠ طيارة
       var tol = ns.length >= 9 ? 2 : ns.length >= 5 ? 1 : 0;
       // التسامح الإملائي فقط لأخطاء الكتابة: أول حرف ثابت، والتخمين ما يكون اسماً أو مرادفاً لشيء ثاني في البنك (سيارة ≠ طيارة)
       return tol > 0 && gs.charAt(0) === ns.charAt(0) && lev(gs, ns) <= tol && !ownedByOther(gs, it);
     });
   }
-  function ownedByOther(gs, it) {
+  function fold(s) { return s.replace(/[قغ]/g, "ج").replace(/ث/g, "ت").replace(/ذ/g, "د").replace(/ظ/g, "ض"); }
+  function ownedByOther(gs, it, folded) {
+    var key = folded ? fold(gs) : gs;
     for (var i = 0; i < bank.length; i++) {
       var b = bank[i]; if (b.id === it.id || b.name === it.name) continue;
       var cs = [b.name].concat(b.syn || []);
-      for (var k = 0; k < cs.length; k++) if (norm(cs[k]).replace(/ /g, "") === gs) return true;
+      for (var k = 0; k < cs.length; k++) { var x = norm(cs[k]).replace(/ /g, ""); if ((folded ? fold(x) : x) === key) return true; }
     }
     return false;
   }
@@ -177,7 +183,7 @@
   var LINES = {
     correct: ["كفووو! 🔥", "يا سلام عليك! 👏", "ذيب! 🐺", "ما شاء الله عليك 🌟", "أسطورة! 😎", "صح لسانك!", "والله إنك فنان 🎨", "يا حلوك يا ذكي"],
     fail: ["راحت عليك 😅", "هاردلك 🤏", "قريبة… بس لا!", "المرة الجاية إن شاء الله", "والله صعبة ذي 😬"],
-    wrong: ["لا مو هي ❌", "بعيييد 😂", "حاول مرة ثانية", "لا لا لا!", "مو هذي 🙈", "قربت… يمكن 🤔"],
+    wrong: ["لا مو هي ❌", "حاول مرة ثانية", "لا لا لا!", "مو هذي 🙈", "جرّب كلمة ثانية 🤔"],
     time: ["خلص الوقت! ⏰", "الوقت ما ينتظر أحد 😅"]
   };
 
