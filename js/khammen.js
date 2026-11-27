@@ -576,15 +576,20 @@
   function vOver() {
     var rp = withRanks(rankedPlayers(), function (x) { return x.p.score; });
     var top = rp[0].p.score, champs = rp.filter(function (x) { return x.p.score === top; });
-    var teamLine = "";
+    var head, star = "";
     if (game.settings.mode === "teams") {
+      // في الفرق: الفريق هو البطل، واللاعب الأعلى «نجم اللعبة»
       var rt = rankedTeams(), tt = rt[0].score, wins = rt.filter(function (x) { return x.score === tt; });
-      teamLine = '<div class="banner ' + (wins.length > 1 ? "surprise" : "hot") + '">' + (wins.length > 1 ? "تعادل بين " : "الفريق الفايز: ") + wins.map(function (x) { return esc(x.t.name); }).join(" و ") + " (" + tt + ")</div>";
+      head = '<div class="muted" style="font-size:1.2em">' + (wins.length > 1 ? "تعادل!" : "الفريق الفايز") + '</div><div class="champ">' + wins.map(function (x) { return esc(x.t.name); }).join(" و ") + "</div>" +
+        '<div class="pts"><span class="total">' + tt + " " + ptsWord(tt) + "</span></div>";
+      star = '<div class="banner surprise">⭐ نجم اللعبة: ' + champs.map(function (x) { return esc(x.p.name); }).join(" و ") + " (" + top + ")</div>";
+    } else {
+      head = '<div class="muted" style="font-size:1.2em">' + (champs.length > 1 ? "الأبطال" : "البطل") + "</div>" +
+        '<div class="champ">' + champs.map(function (x) { return esc(x.p.name); }).join(" و ") + "</div>" +
+        '<div class="pts"><span class="total">' + top + " " + ptsWord(top) + "</span><span>✓ " + champs[0].p.wins + " " + (champs[0].p.wins >= 3 && champs[0].p.wins <= 10 ? "تخمينات" : "تخمين") + " صح</span></div>";
     }
     return '<canvas id="confetti" aria-hidden="true"></canvas><section class="final">' +
-      '<div class="trophy" aria-hidden="true">🏆</div><div class="muted" style="font-size:1.2em">' + (champs.length > 1 ? "الأبطال" : "البطل") + "</div>" +
-      '<div class="champ">' + champs.map(function (x) { return esc(x.p.name); }).join(" و ") + "</div>" +
-      '<div class="pts"><span class="total">' + top + " " + ptsWord(top) + "</span><span>✓ " + champs[0].p.wins + " تخمينات صح</span></div>" + teamLine +
+      '<div class="trophy" aria-hidden="true">🏆</div>' + head + star +
       '<div class="board panel">' + boardHTML(false) + "</div>" +
       (game.trial ? '<p class="banner surprise">خلصت التجربة 👌 جاهزين للعب الجد؟</p>' : "") +
       '<div class="row"><button class="btn go big" data-ui="replay">' + (game.trial ? "نلعب جد! 🎮" : "نلعب مرة ثانية 🔁") + "</button>" + '<button class="btn big" data-ui="setup">تعديل الإعدادات</button><button class="btn big ghost" data-ui="home-clear">الصفحة الأولى</button></div></section>';

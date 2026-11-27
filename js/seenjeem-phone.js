@@ -37,7 +37,7 @@
       var N = V.names, teams = '<div class="pteams">' + [0, 1].map(function (t) { return '<div class="pt' + (V.turn === t && V.phase !== "end" ? " on" : "") + '" style="border-color:' + TCOL[t] + '">' + esc(N[t]) + "<b>" + (V.scores ? V.scores[t] : 0) + "</b></div>"; }).join("") + "</div>";
       if (V.phase === "end") h = '<div class="pc">' + teams + '<div class="panel"><h2 class="sj-logo" style="font-size:2.4em">' + (V.win < 0 ? "تعادل 🤝" : "فاز " + esc(N[V.win]) + " 🏆") + "</h2></div></div>";
       else if (V.phase === "board") {
-        var hd = V.cats.map(function (c) { return '<div class="ch" title="' + esc(c.n) + '">' + c.i + "</div>"; }).join(""), cells = "";
+        var hd = V.cats.map(function (c) { return '<div class="ch" title="' + esc(c.n) + '">' + c.i + "<small>" + esc(c.n) + "</small></div>"; }).join(""), cells = "";
         for (var r = 0; r < 6; r++) for (var ci = 0; ci < 6; ci++) { var i = ci * 6 + r, c = V.cells[i]; cells += '<button class="cell p' + c.p + (c.st ? " t" + (c.by < 0 ? "x" : c.by) : "") + '" data-i="' + i + '"' + (c.st ? " disabled" : "") + ">" + (c.st ? "·" : c.p) + "</button>"; }
         h = '<div class="pc">' + teams + '<p style="font-weight:800">اختر سؤالاً لفريق ' + esc(N[V.turn]) + '</p><div class="pboard">' + hd + cells + "</div></div>";
       } else if (V.cur) {

@@ -623,7 +623,7 @@
     if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
     if (e.key === "Escape" && modal) { modal = null; render(); }
     else if (e.key === " " && S.phase !== "lobby" && S.phase !== "final") { e.preventDefault(); togglePause(); }
-    else if ((e.key === "n" || e.key === "N" || e.key === "ArrowLeft") && S.phase !== "lobby" && S.phase !== "final") advance();
+    else if ((e.key === "n" || e.key === "N" || e.key === "ArrowLeft") && S.phase !== "lobby" && S.phase !== "final") { e.preventDefault(); advance(); }
   });
   function togglePause() {
     if (!S.timer) return;
