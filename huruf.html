@@ -974,7 +974,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
   const showGame = () => { location.hash = 'display'; };
   // «ابدأ»: يبدأ مسابقة جديدة إذا ما فيه جولة جارية، وإلا يفتح شاشة اللعب على الجولة الحالية
   $('#c-here').onclick = () => (inRound(G().status) ? showGame() : A.start(showGame));
-  $('#h-start').onclick = () => { location.hash = 'control'; selectTab('people'); };
+  // فيه أسماء (من المجلس أو محفوظة) → على طول للجولة الأولى؛ ما فيه أحد → صفحة الأسماء
+  $('#h-start').onclick = () => { if (S.players.length) A.start(showGame); else { location.hash = 'control'; selectTab('people'); } };
   $('#h-resume').onclick = showGame;
   $('#h-setup').onclick = () => { location.hash = 'control'; selectTab(S.players.length ? 'round' : 'people'); };
   $('#h-howto').onclick = () => { location.hash = 'howto'; };
