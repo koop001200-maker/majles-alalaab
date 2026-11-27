@@ -16,11 +16,13 @@
   var V = null, net = null, tstat = "connecting", app = $("#app"), at = 0;
   var TCOL = ["#3B82F6", "#F97316"], LB = { two: "② جاوب جوابين", call: "📞 اتصال بصديق", dbl: "×2 دبل النقاط" };
 
+  var taken = "";
   function hello() { if (net) net.send({ t: "hello" }); }
   function onMsg(m) {
     if (m.t === "who") { hello(); return; }
+    if (m.t === "taken") { V = null; taken = m.kicked ? "التلفزيون فصل هذا الجوال" : "فيه جوال ثاني يتحكم بالمباراة — جوال واحد فقط للمقدم"; render(); return; }
     if (m.t !== "state") return;
-    V = m; at = Date.now(); render();
+    taken = ""; V = m; at = Date.now(); render();
   }
   net = Net.join(code, pid, { onMsg: onMsg, onOpen: hello, onStatus: function (s) { tstat = s; var el = $(".pnet"); if (el) el.textContent = tstat === "online" ? "🟢" : "🟡 جاري الاتصال…"; } });
   hello(); setInterval(function () { net.send({ t: V ? "ping" : "hello" }); }, 3000);
@@ -29,7 +31,8 @@
   function secs() { if (!V || !V.cur) return 0; var l = V.cur.left; if (V.cur.running || V.cur.call) l -= Date.now() - at; return Math.max(0, Math.ceil(l / 1000)); }
   function render() {
     var h;
-    if (!V || V.phase === "idle") h = '<div class="panel pc"><h2 class="sj-logo" style="font-size:3em">سين جيم</h2><p>غرفة <b dir="ltr">' + esc(code) + "</b></p><p>بانتظار بدء المباراة على التلفزيون…</p></div>";
+    if (taken && !V) h = '<div class="panel pc"><h2 class="sj-logo" style="font-size:3em">سين جيم</h2><p>🔒 ' + esc(taken) + "</p></div>";
+    else if (!V || V.phase === "idle") h = '<div class="panel pc"><h2 class="sj-logo" style="font-size:3em">سين جيم</h2><p>غرفة <b dir="ltr">' + esc(code) + "</b></p><p>بانتظار بدء المباراة على التلفزيون…</p></div>";
     else {
       var N = V.names, teams = '<div class="pteams">' + [0, 1].map(function (t) { return '<div class="pt' + (V.turn === t && V.phase !== "end" ? " on" : "") + '" style="border-color:' + TCOL[t] + '">' + esc(N[t]) + "<b>" + (V.scores ? V.scores[t] : 0) + "</b></div>"; }).join("") + "</div>";
       if (V.phase === "end") h = '<div class="pc">' + teams + '<div class="panel"><h2 class="sj-logo" style="font-size:2.4em">' + (V.win < 0 ? "تعادل 🤝" : "فاز " + esc(N[V.win]) + " 🏆") + "</h2></div></div>";

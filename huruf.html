@@ -144,6 +144,9 @@ button{cursor:pointer}
 .champ .pts{color:var(--muted);font-size:clamp(1rem,2.6vmin,1.8rem)}
 .rank{list-style:none;margin:0;padding:0;width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px}
 .rank li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.7em;align-items:center;background:var(--ink-3);border-radius:14px;padding:.5em .9em;font-size:clamp(1rem,2.6vmin,1.7rem)}
+.rank li.tie-sep{grid-column:1/-1}
+.peek-btn{position:absolute;inset-inline-start:10px;bottom:10px;font:800 clamp(.8rem,1.6vmin,1rem)/1.2 inherit;background:rgba(255,255,255,.12);color:inherit;border:2px dashed rgba(255,255,255,.4);border-radius:12px;padding:.35em .8em;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:none}
+.peek-btn b{font-size:1.1em;letter-spacing:.05em}
 .rank li.first{background:color-mix(in srgb,var(--saffron) 26%,var(--ink-3));outline:2px solid var(--saffron)}
 .rank .rk{font-family:var(--display);color:var(--muted);padding-top:.1em}
 .rank .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -337,7 +340,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
       <ol>
         <li>اكتبوا أسماء المتسابقين من «المتسابقون والإعدادات»، واختاروا المستوى والمؤقت وعدد الجولات.</li>
         <li>تظهر على الشاشة حروف كلمة مبعثرة. أول واحد يعرف الكلمة يقولها بصوت عالي.</li>
-        <li>اضغطوا اسمه في لوحة الترتيب (أو رقمه من الكيبورد) وتنضاف له نقطة واحدة.</li>
+        <li>اضغطوا اسمه في لوحة الترتيب (أو رقمه من الكيبورد) وتنضاف له النقاط (السهل والمتوسط نقطة، والصعب نقطتين). إذا قال كلمة ثانية صحيحة من نفس الحروف تنحسب له.</li>
         <li>إذا خلص الوقت وما أحد عرفها تنكشف الكلمة بلا نقاط، وبعدها «الجولة التالية».</li>
         <li>بعد آخر جولة يطلع البطل ولوحة النتائج النهائية.</li>
       </ol>
@@ -521,12 +524,13 @@ textarea{width:100%;min-height:90px;resize:vertical}
     medium: 'نجمة كتاب وردة تفاح حليب شجرة حصان دجاج نحلة نملة أرنب ثعلب غزال بقرة خروف زهرة قهوة رمان كرسي سرير مكتب شمعة ساعة هاتف سماء غيمة صخرة نخلة ورقة قارب قطار دمية لعبة هدية مسجد خيمة حمام طريق شارع كوكب مشمش حذاء خاتم سوار نهار شتاء ربيع خريف واحة شاطئ مطار طيار بحار صياد نجار حداد خياط معلم طبيب ممرض شرطي رسام كاتب شاعر فلاح جندي موقد مرآة شماغ عقال كبسة مندي جريش هريس تميس غراب هدهد بلبل ضفدع قنفذ كنغر شلال ملعب مسبح متحف ركبة إصبع لسان جبين رقبة ذراع حاجب غرفة مطبخ صالة جدار كنبة سكين شوكة فوطة مخدة لحاف بساط علبة سحاب ضباب تراب غابة قطرة شروق غروب ماعز نعجة حمار فقمة نورس بجعة دودة عقرب خفاش بندق فستق زبدة قشطة لبنة شعير فلفل كمون قرفة عصير كرنب قميص معطف حزام جورب نعال قبعة وشاح شنطة قرية مخبز مصنع فندق دكان مركب عربة دفتر إبرة صباح مساء أحمر أزرق أخضر أصفر أسود أبيض وردي خالة حفيد عروس خباز طباخ راعي سائق حارس بائع شباك موزة عنبة حديد نحاس لؤلؤ صورة فيلم سدرة بذرة ثمرة بومة',
     hard: 'مدرسة سيارة حديقة طائرة مكتبة فراشة برتقال صندوق زرافة مفتاح دراجة بطاطس سلحفاة عنكبوت مثلجات ملعقة نافذة سفينة مصباح ليمون حمامة مدينة بطيخة ثلاجة غسالة كاميرا فراولة أناناس بروكلي حاسوب تلسكوب أخطبوط مكرونة بسكويت كهرباء جوائز بطولات ملاعب لاعبون طباشير مسطرة ممحاة مبراة دفاتر حقائب مقلمة بوصلة منظار خريطة كيمياء فيزياء قراصنة جزيرة محيطات شلالات براكين أعاصير عواصف قفازات معاطف فساتين نظارات مراوح مصابيح ستائر سجادات وسادات مزرعة فلاحون جرارات محاصيل فواكه بقدونس قرنبيط ملفوف سبانخ زنجبيل زعفران بهارات بيتزا فطائر بقلاوة كنافة قطايف معمول حلويات عصائر بسبوسة مهلبية لقيمات مكسرات طابعات هواتف نجارون خبازون طباخون ممرضات مهندس معلمون رسامون صحراء ميناء منارة صيدلي بستان حظيرة إسطبل مدفأة مروحة مكنسة ستارة وسادة بطانية سجادة فانوس قنديل فنجان مبخرة مسبحة عباءة طاقية مرقوق سمبوسة كليجا عصفور طاووس نعامة حرباء سحلية جرادة يمامة سنجاب دلفين بطريق بركان زلزال إعصار مغارة نافورة جامعة خزانة طاولة إبريق صابون منشفة ببغاء ذبابة سروال نظارة حقيبة حافلة شاحنة صاروخ مجداف فرشاة مطرقة منشار مسمار مجرفة ظهيرة أسبوع دقيقة ثانية رمادي مزارع بحيرة تفاحة رمانة ألماس'
 ,
-    short: 'باب خشب|كوب شاي|قلب كبير|جمل كبير|قط ابيض|ورد احمر|سيف حاد|خيل عربي|تمر رطب|لبن بارد|خبز حار|شاي اخضر|بحر ازرق|جبل عالي|نهر طويل|ليل بارد|يوم حار|شتاء بارد|ريح قوية|مطر خفيف|ثلج ابيض|ظل شجر|ورق شجر|رز ابيض|لحم غنم|حليب بقر|دلو ماء|كوب ماء|درع حديد|سور عالي|برج عالي|عيد سعيد|يوم جديد|عام جديد|وقت قصير|فجر جديد|حظ سعيد|قلب طيب|وجه جميل|بنت ذكية|اب حنون|جد كريم|خال كريم|سمك طازج|تفاح احمر|موز اصفر|عنب اخضر|ثوب ابيض|حذاء جديد|قلم حبر|ورق ابيض|شمس حارة|قمر منير|نجم لامع|برد شديد|جو لطيف|ماء عذب|بحر عميق|رمل ناعم|وادي عميق|سيف خشب|كرة قدم|كرة سلة|عين ماء|ورد جميل|ليل طويل|صبح جميل',
+    short: 'باب خشب|كوب شاي|قلب كبير|جمل كبير|قط أبيض|ورد أحمر|سيف حاد|خيل عربي|تمر رطب|لبن بارد|خبز حار|شاي أخضر|بحر أزرق|جبل شاهق|نهر طويل|ليل بارد|يوم حار|شتاء بارد|ريح قوية|مطر خفيف|ثلج أبيض|ظل شجر|ورق شجر|رز أبيض|لحم غنم|حليب بقر|دلو ماء|كوب ماء|درع حديد|سور قديم|برج طويل|عيد سعيد|يوم جديد|عام جديد|وقت قصير|فجر جديد|حظ سعيد|قلب طيب|وجه جميل|بنت ذكية|أب حنون|جد كريم|خال كريم|سمك طازج|تفاح أحمر|موز أصفر|عنب أخضر|ثوب أبيض|حذاء جديد|قلم حبر|ورق أبيض|شمس حارة|قمر منير|نجم لامع|برد شديد|جو لطيف|ماء عذب|بحر عميق|رمل ناعم|وادي عميق|سيف خشب|كرة قدم|كرة سلة|عين ماء|ورد جميل|ليل طويل|صبح جميل',
     phrases: 'كأس العالم|كرة القدم|كرة السلة|كرة اليد|شهر رمضان|عيد الفطر|عيد الأضحى|يوم الجمعة|صلاة الفجر|قهوة عربية|دلة قهوة|فنجان قهوة|شاي حليب|ماء بارد|عصير برتقال|آيس كريم|خبز تميس|طبق كبسة|سيارة أجرة|سيارة إسعاف|دراجة نارية|طائرة ورقية|ساعة يد|ساعة رملية|نظارة شمسية|فرشاة أسنان|معجون أسنان|قلم رصاص|حقيبة مدرسية|جرس الباب|سلة مهملات|مكيف هواء|البحر الأحمر|الخليج العربي|جزيرة العرب|جبل طويق|وادي حنيفة|ضوء القمر|شروق الشمس|غروب الشمس|قوس قزح|غيمة بيضاء|مطر غزير|ألعاب نارية|حديقة عامة|مدينة ملاهي|حمام سباحة|هدية العيد|ثوب العيد|شماغ أحمر|بشت أسود|قطة صغيرة|نحلة عسل|نجم ساطع|فلم كرتون'
   };
   // single words are separated by spaces; two-word entries (like «كأس العالم») by |
   const DEFAULT_WORDS = [WORD_BANK.easy, WORD_BANK.medium, WORD_BANK.hard].join(' ').split(' ').concat(WORD_BANK.phrases.split('|'), WORD_BANK.short.split('|'));
-  const BANK_VERSION = 6;
+  const BANK_VERSION = 7;
+  const RENAMED = {"قط ابيض": "قط أبيض", "ورد احمر": "ورد أحمر", "شاي اخضر": "شاي أخضر", "بحر ازرق": "بحر أزرق", "ثلج ابيض": "ثلج أبيض", "رز ابيض": "رز أبيض", "اب حنون": "أب حنون", "تفاح احمر": "تفاح أحمر", "موز اصفر": "موز أصفر", "عنب اخضر": "عنب أخضر", "ثوب ابيض": "ثوب أبيض", "ورق ابيض": "ورق أبيض", "جبل عالي": "جبل شاهق", "سور عالي": "سور قديم", "برج عالي": "برج طويل"}; // v7: همزات القطع، و«عالي» صارت كلمات صحيحة
   const MAX_LETTERS = 6; // no long words: the longest word has 6 letters
 
   /* ---------- الحروف والخلط ---------- */
@@ -576,6 +580,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
     }
     if ((s.bank || 1) < 5 && m.settings.rounds === 10) m.settings.rounds = 15; // new default
     if (!Array.isArray(m.seen)) m.seen = [];
+    if ((s.bank || 1) < 7) m.words.forEach((w) => { if (RENAMED[w.text]) w.text = RENAMED[w.text]; });
     if ((s.bank || 1) < BANK_VERSION) {
       const have = new Set(m.words.map((w) => w.text));
       DEFAULT_WORDS.forEach((w) => { if (!have.has(w)) m.words.push({ id: uid(), text: w, level: autoLevel(w) }); });
@@ -616,7 +621,18 @@ textarea{width:100%;min-height:90px;resize:vertical}
     return inLevel;
   }
   const pointsFor = (w) => ((w && w.level) || autoLevel(w ? w.text : '')) === 'hard' ? 2 : 1;
-  const ptsWord = (n) => n === 2 ? 'نقطتان' : 'نقطة';
+  /* زر المقدّم: الكلمة تظهر صغيرة داخل الزر طول ما هو مضغوط، وما تبان من الكنبة */
+  const anaKey = (w) => letters(w).sort().join('');
+  const peekOn = (b) => {
+    if (!b || !S.game.word) return;
+    const k = anaKey(S.game.word), alt = [...new Set(S.words.map((w) => w.text).filter((t) => t !== S.game.word && anaKey(t) === k))];
+    b.innerHTML = '👁 <b>' + esc(S.game.word) + '</b>' + (alt.length ? ' · وتنقبل: ' + alt.map(esc).join('، ') : '');
+  };
+  const peekOff = () => document.querySelectorAll('[data-peek]').forEach((b) => { b.textContent = '👁 للمقدّم: اضغط مطوّلاً'; });
+  document.addEventListener('pointerdown', (e) => { const b = e.target.closest && e.target.closest('[data-peek]'); if (b) { e.preventDefault(); peekOn(b); } });
+  ['pointerup', 'pointercancel', 'contextmenu'].forEach((ev) => document.addEventListener(ev, peekOff, true));
+  window.addEventListener('blur', peekOff);
+  const ptsWord = (n) => n === 2 ? 'نقطتان' : n >= 3 && n <= 10 ? 'نقاط' : 'نقطة';
   function remainingNow(g) { if (!g.timed) return 0; if (g.status === 'playing') return Math.max(0, g.endsAt - Date.now()); return g.remaining; }
   function beginRound(g, text) {
     g.word = text; g.tiles = scramble(text); g.winnerId = null; g.seq++; g.status = 'playing';
@@ -810,7 +826,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
           <p class="kicker rise">${S.players.length ? `${S.players.length} متسابقين بانتظار الجولة الأولى` : 'أضيفوا أسماءكم في لوحة الترتيب ✍️'}</p>`;
       } else if (g.status === 'playing' || g.status === 'paused') {
         st.innerHTML = `<p class="kicker">رتّبوا الحروف… من يعرفها يقولها بصوت عالٍ!</p>
-          <div style="position:relative;width:100%">${tilesHTML(g.tiles, '', true)}${g.status === 'paused' ? '<div class="paused-veil"><p class="big-msg">متوقف مؤقتًا</p></div>' : ''}</div>${meta}`;
+          <div style="position:relative;width:100%">${tilesHTML(g.tiles, '', true)}${g.status === 'paused' ? '<div class="paused-veil"><p class="big-msg">متوقف مؤقتًا</p></div>' : ''}</div>${meta}<button type="button" class="peek-btn" data-peek aria-label="للمقدّم: اضغط مطوّلاً لرؤية الكلمة">👁 للمقدّم: اضغط مطوّلاً</button>`;
       } else if (g.status === 'won') {
         st.innerHTML = `<p class="big-msg ok pop">إجابة صحيحة!</p>
           <p class="winner-name pop" style="animation-delay:.12s">${esc(win ? win.name : '')}</p>
@@ -826,7 +842,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
           ${champs.length ? `<div class="champ pop">${ICON.crown.replace('<svg', '<svg class="crown"')}
             <p class="title">${champs.length > 1 ? 'أبطال لخبطة حروف' : 'بطل لخبطة حروف'}</p>
             <p class="names">${champs.map((c) => esc(c.name)).join(' و')}</p>
-            <span class="pts">${champs[0].score} نقطة</span></div>` : '<p class="big-msg">لم يسجّل أحد نقاطًا</p>'}
+            <span class="pts">${champs[0].score} ${ptsWord(champs[0].score)}</span></div>` : '<p class="big-msg">لم يسجّل أحد نقاطًا</p>'}
           <ol class="rank">${board.map((p, k) => (k && p.score !== board[k - 1].score ? '<li class="tie-sep" aria-hidden="true"></li>' : '') + `<li class="${p.rank === 1 && p.score > 0 ? 'first' : ''} rise"><span class="rk">${p.rank}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></li>`).join('')}</ol>
           <button class="btn primary" type="button" data-act="start" style="font-size:clamp(1rem,2.4vmin,1.5rem)">إعادة المسابقة من البداية</button>
         </div>`;
@@ -869,7 +885,7 @@ textarea{width:100%;min-height:90px;resize:vertical}
       : st === 'timeout' ? '<div class="banner warn"><span>انتهى الوقت. إن سبق أحدهم قبل انتهائه سجّله، وإلا انتقل للجولة التالية بلا نقاط.</span></div>'
       : !inRound(st) ? '<p class="note">تظهر الأزرار مفعّلة عند بدء جولة.</p>' : '';
     $('#c-who').innerHTML = S.players.length
-      ? S.players.map((p, i) => `<button type="button" data-award="${p.id}" class="${p.id === g.winnerId ? 'win' : ''}" ${canAward && !g.winnerId ? '' : 'disabled'}>${i < 9 ? `<span class="k">${i + 1}</span>` : ''}${esc(p.name)}<span class="s">${p.score || 0} نقطة</span></button>`).join('')
+      ? S.players.map((p, i) => `<button type="button" data-award="${p.id}" class="${p.id === g.winnerId ? 'win' : ''}" ${canAward && !g.winnerId ? '' : 'disabled'}>${i < 9 ? `<span class="k">${i + 1}</span>` : ''}${esc(p.name)}<span class="s">${p.score || 0} ${ptsWord(p.score || 0)}</span></button>`).join('')
       : '<p class="note">أضف المتسابقين أولًا من قسم «المتسابقون».</p>';
 
     $('#c-pcount').textContent = S.players.length ? `(${S.players.length})` : '';

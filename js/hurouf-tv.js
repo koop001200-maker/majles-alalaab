@@ -98,6 +98,8 @@
     if (m.t === "hello") {
       var name = String(m.name || "").trim().slice(0, 14) || "لاعب", role = m.role === "host" ? "host" : "player", team = m.team === 1 ? 1 : 0;
       if (role === "player" && rosterList(team).length >= 8 && !p) { net.send(pid, { t: "full" }); return; }
+      // المقدم يشوف الأجوبة: مقدم واحد فقط، وبس لو التحكيم «المقدم» — غيره يُرفض (يقدر التلفزيون يغيّره من شاشة الربط)
+      if (role === "host") { var cur = presenter(); if (settings.judge !== "host" || (cur && cur.pid !== pid && cur.online)) { net.send(pid, { t: "nohost", why: settings.judge !== "host" ? "off" : "taken" }); return; } }
       roster[pid] = { pid: pid, name: name, team: team, role: role, seen: Date.now(), online: true };
       if (view === "lobby" || view === "play") render();
       sendTo(pid); return;
@@ -212,7 +214,7 @@
     }).join("");
     return '<section class="screen"><div class="head"><h2>ربط الجوالات</h2><button class="btn" data-a="setup">→ رجوع</button></div>' +
       '<div class="lobby"><div class="panel join"><div class="qr">' + qrSvg(url) + '</div><p class="lbl">امسحوا الرمز بالجوال واختاروا فريقكم</p><div class="code" aria-label="رمز الغرفة">' + room.split("").map(function (c) { return "<i>" + c + "</i>"; }).join("") + '</div><p class="url">' + esc(url) + '</p><p id="net" class="lbl">' + netText() + "</p>" +
-      (settings.judge === "host" ? '<p class="lbl">🎤 المقدم: ' + (pr ? esc(pr.name) + " ✓" : "يدخل من نفس الرابط ويختار «أنا المقدم»") + "</p>" : "") + "</div>" +
+      (settings.judge === "host" ? '<p class="lbl">🎤 المقدم: ' + (pr ? esc(pr.name) + ' ✓ <button class="btn sm" data-a="kickhost">تغيير</button>' : "يدخل من نفس الرابط ويختار «أنا المقدم» (مقدم واحد فقط)") + "</p>" : "") + "</div>" +
       '<div class="roster">' + cols + "</div></div>" +
       '<div class="setup-foot"><button class="btn go huge" data-a="start-phones"' + (ok ? "" : " disabled") + '>ابدأ المباراة ▶</button><button class="btn big" data-a="start-nophones">بدون جوالات (أزرار الشاشة)</button></div></section>';
   }
@@ -392,6 +394,7 @@
       case "next": if (M) { if (M.state.phase === "matchwin") return; M.next(); } break;
       case "rematch": if (M) { finishStats(); M.rematch(); } break;
       case "qr": modal = "qr"; render(); break;
+      case "kickhost": (function () { var h = presenter(); if (h) { try { net.send(h.pid, { t: "nohost", why: "kicked" }); } catch (e) {} delete roster[h.pid]; } render(); })(); break;
       case "close": modal = null; render(); break;
       case "end": modal = "end"; render(); break;
       case "end-yes": if (M && M.state.phase === "matchwin") finishStats(); Store.set(K.match, null); M = null; modal = null; view = "home"; render(); if (net) broadcastEnd(); break;

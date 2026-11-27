@@ -157,6 +157,7 @@ h1, h2, h3, p { margin: 0; }
 .q .ans { font-family: var(--display); font-size: clamp(32px, min(4.6vw, 8.2vh), 126px); background: var(--mint); border: var(--line); border-radius: 22px; padding: .05em .6em; box-shadow: var(--shadow-sm); animation: pop .3s ease; }
 .q .ans small { display: block; font-family: var(--font); font-size: .36em; font-weight: 800; }
 .q .ans.peek[hidden] { display: block; visibility: hidden; }
+.q .ans.peek { font-family: var(--font); font-size: clamp(16px, min(1.5vw, 2.6vh), 26px); background: #fff; opacity: .9; animation: none; } /* للحكم القريب من الشاشة فقط، ما يُقرأ من الكنبة */
 .q .side { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .timer { width: clamp(100px, 12vw, 320px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: var(--line); background: conic-gradient(var(--c, var(--green)) calc(var(--p) * 360deg), #e5e7eb 0); box-shadow: var(--shadow-sm); }
 .timer.warn { background: conic-gradient(var(--red) calc(var(--p) * 360deg), #e5e7eb 0); animation: pulse .6s ease-in-out infinite; }

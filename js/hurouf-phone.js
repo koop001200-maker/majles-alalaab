@@ -23,6 +23,7 @@
   function hello() { if (me.name && joined) net.send({ t: "hello", name: me.name, team: me.team || 0, role: me.role || "player" }); }
   function onMsg(m) {
     if (m.t === "who") { hello(); return; }
+    if (m.t === "nohost") { joined = false; me.role = "player"; me.joinedCode = ""; saveMe(); ack = { off: "المباراة بدون مقدم — انضم لفريق", taken: "فيه مقدم ثاني — انضم لفريق", kicked: "التلفزيون غيّر المقدم" }[m.why] || "ما تقدر تكون مقدم"; render(); return; }
     if (m.t === "full") { joined = false; me.joinedCode = ""; saveMe(); ack = "الفريق ممتلئ"; render(); return; }
     if (m.t === "ack") { ack = m.res === "ok" ? "🔔 أنت الأول!" : m.res === "early" ? "🚫 مبكّر! انتظر" : m.res === "spam" ? "" : "⏱ متأخر"; if (m.res === "ok" && navigator.vibrate) navigator.vibrate(120); render(); setTimeout(function () { ack = ""; render(); }, 1600); return; }
     if (m.t !== "state") return;

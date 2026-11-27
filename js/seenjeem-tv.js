@@ -251,7 +251,7 @@
     if (modal === "quit") return '<div class="modal"><div class="box" role="dialog"><h2>إنهاء المباراة؟</h2><p>ستظهر النتيجة الحالية ويُعلن الفائز.</p><div class="row"><button class="btn bad big" data-a="quityes">نعم، أنهِ المباراة</button><button class="btn big" data-a="close">لا، تابع اللعب</button></div></div></div>';
     if (modal === "qr") {
       var url = joinUrl(), n = Object.keys(roster).length;
-      return '<div class="modal"><div class="box" role="dialog"><h2>📱 تحكم من الجوال</h2><div class="qr">' + qrSvg(url) + '</div><div class="url">' + esc(url) + '</div><p id="net">' + netText() + " · الجوالات المتصلة: " + n + '</p><p class="hint">اختياري: من الجوال تقدر تختار الأسئلة وتكشف الإجابة وتحتسب النقاط، والتلفزيون يبقى للعرض.</p><button class="btn big" data-a="close">تم</button></div></div>';
+      return '<div class="modal"><div class="box" role="dialog"><h2>📱 تحكم من الجوال</h2><div class="qr">' + qrSvg(url) + '</div><div class="url">' + esc(url) + '</div><p id="net">' + netText() + " · الجوالات المتصلة: " + n + '</p><p class="hint">اختياري: جوال واحد للمقدم — يختار الأسئلة ويشوف الإجابة ويحتسب النقاط، والتلفزيون يبقى للعرض. أي جوال ثاني يمسح الرمز يُرفض.</p><div class="row">' + (n ? '<button class="btn big" data-a="kickphone">🔌 فصل الجوال المتصل</button>' : "") + '<button class="btn big" data-a="close">تم</button></div></div></div>';
     }
     if (modal === "share") {
       var link = packLink();
@@ -328,8 +328,12 @@
     return v;
   }
   function broadcast() { if (!net) return; var v = viewFor(); Object.keys(roster).forEach(function (pid) { try { net.send(pid, v); } catch (e) {} }); }
+  var blocked = {};
   function onPhone(pid, m) {
     if (!m || !m.t) return;
+    // جوال تحكم واحد فقط (يشوف الأجوبة): أول جوال يمسك، والباقي يُرفض حتى يفصله التلفزيون
+    var now = Date.now(); Object.keys(roster).forEach(function (k) { if (now - roster[k].seen > 15000) delete roster[k]; });
+    if ((m.t === "hello" || m.t === "ping") && (blocked[pid] || Object.keys(roster).some(function (k) { return k !== pid; }))) { try { net.send(pid, { t: "taken", kicked: !!blocked[pid] }); } catch (e) {} return; }
     if (m.t === "hello" || m.t === "ping") { roster[pid] = { seen: Date.now() }; try { net.send(pid, viewFor()); } catch (e) {} var el = $("#net"); if (el) el.textContent = netText() + " · الجوالات المتصلة: " + Object.keys(roster).length; return; }
     if (!roster[pid]) { try { net.send(pid, { t: "who" }); } catch (e) {} return; }
     if (m.t !== "cmd" || view !== "play" || !G) return;
@@ -343,6 +347,7 @@
     var v = el && el.getAttribute("data-v");
     switch (a) {
       case "home": view = "home"; armed = ""; render(); break;
+      case "kickphone": Object.keys(roster).forEach(function (k) { blocked[k] = 1; try { net.send(k, { t: "taken", kicked: true }); } catch (e) {} delete roster[k]; }); render(); break;
       case "setup": view = "setup"; setupErr = ""; render(); break;
       case "howto": view = "howto"; render(); break;
       case "settings": view = "settings"; armed = ""; render(); break;
