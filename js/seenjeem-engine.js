@@ -37,8 +37,11 @@
   function newState(opts, data, used, extra, rnd) {
     var o = opts || {};
     function team(n, d) { return { name: String(n || d).slice(0, 18), score: 0, correct: 0, life: { two: 0, call: 0, dbl: 0 } }; }
+    // من 2 إلى 4 فرق (names)، أو n0/n1 للتوافق مع القديم. 36 سؤالاً تنقسم بالتساوي على 2 و3 و4
+    var DN = ["الفريق الأول", "الفريق الثاني", "الفريق الثالث", "الفريق الرابع"];
+    var names = Array.isArray(o.names) && o.names.length >= 2 ? o.names.slice(0, 4) : [o.n0, o.n1];
     return {
-      v: 1, teams: [team(o.n0, "الفريق الأول"), team(o.n1, "الفريق الثاني")], turn: 0, cats: o.cats.slice(),
+      v: 1, teams: names.map(function (n, i) { return team(n, DN[i]); }), turn: 0, cats: o.cats.slice(),
       time: o.time || 30, diff: o.diff || "mix", phase: "board", cur: null, log: [],
       cells: buildBoard(data, o.cats, o.diff || "mix", used, extra, rnd), startedAt: Date.now()
     };
@@ -81,13 +84,13 @@
       // team: 0 | 1 | -1 (لا أحد). لا تُحتسب النقاط إلا مرة واحدة للسؤال.
       award: function (team) {
         var cur = S.cur; if (S.phase !== "q" || !cur || !cur.revealed) return { ok: false };
-        if (team !== 0 && team !== 1 && team !== -1) return { ok: false };
+        if (team !== -1 && !(team >= 0 && team < S.teams.length && team === Math.floor(team))) return { ok: false };
         var c = S.cells[cur.i]; if (c.st) return { ok: false };
         c.st = 1; c.by = team;
         var pts = 0, dbl = false;
         if (team >= 0) { dbl = cur.dblBy === team; pts = c.p * (dbl ? 2 : 1); S.teams[team].score += pts; S.teams[team].correct++; }
         S.log.push({ i: cur.i, c: c.c, p: c.p, team: team, pts: pts, dbl: cur.dblBy >= 0, dblWon: dbl, asked: S.turn, two: cur.twoBy >= 0, call: cur.callUsed });
-        S.turn = 1 - S.turn; S.cur = null; S.phase = "board";
+        S.turn = (S.turn + 1) % S.teams.length; S.cur = null; S.phase = "board";
         if (!remaining()) finish();
         return { ok: true, pts: pts, dbl: dbl, team: team };
       },
@@ -97,24 +100,27 @@
         S.cur = null; S.phase = "board"; return { ok: true };
       },
       end: function () { finish(); },
-      winner: function () { var a = S.teams[0].score, b = S.teams[1].score; return a === b ? -1 : a > b ? 0 : 1; },
+      // -1 = تعادل على المركز الأول
+      winner: function () { var sc = S.teams.map(function (t) { return t.score; }), top = Math.max.apply(null, sc); return sc.filter(function (x) { return x === top; }).length > 1 ? -1 : sc.indexOf(top); },
+      leaders: function () { var sc = S.teams.map(function (t) { return t.score; }), top = Math.max.apply(null, sc); return sc.map(function (x, i) { return x === top ? i : -1; }).filter(function (i) { return i >= 0; }); },
       stats: function () {
-        var T = S.teams, unanswered = S.cells.filter(function (c) { return !c.st || c.by < 0; }).length;
-        var best = [null, null], streak = [0, 0], run = [0, 0], dblWins = [0, 0], lifeUsed = [0, 0];
+        var T = S.teams, unanswered = S.cells.filter(function (c) { return !c.st || c.by < 0; }).length, idx = T.map(function (x, i) { return i; });
+        var z = function (v) { return T.map(function () { return v; }); };
+        var best = z(null), streak = z(0), run = z(0), dblWins = z(0), lifeUsed = z(0);
         S.log.forEach(function (e) {
-          [0, 1].forEach(function (t) {
+          idx.forEach(function (t) {
             if (e.team === t) { run[t]++; streak[t] = Math.max(streak[t], run[t]); if (!best[t] || e.pts > best[t].pts) best[t] = e; if (e.dblWon) dblWins[t]++; } else run[t] = 0;
           });
         });
-        [0, 1].forEach(function (t) { lifeUsed[t] = LIFE.filter(function (k) { return T[t].life[k]; }).length; });
-        return { scores: [T[0].score, T[1].score], correct: [T[0].correct, T[1].correct], unanswered: unanswered, best: best, streak: streak, dblWins: dblWins, lifeUsed: lifeUsed, winner: api.winner() };
+        idx.forEach(function (t) { lifeUsed[t] = LIFE.filter(function (k) { return T[t].life[k]; }).length; });
+        return { scores: T.map(function (t) { return t.score; }), correct: T.map(function (t) { return t.correct; }), unanswered: unanswered, best: best, streak: streak, dblWins: dblWins, lifeUsed: lifeUsed, winner: api.winner() };
       }
     };
     return api;
   }
 
   function validState(s) {
-    return !!s && s.v === 1 && Array.isArray(s.teams) && s.teams.length === 2 && Array.isArray(s.cells) && s.cells.length === 36 && ["board", "q", "end"].indexOf(s.phase) >= 0 && (s.turn === 0 || s.turn === 1);
+    return !!s && s.v === 1 && Array.isArray(s.teams) && s.teams.length >= 2 && s.teams.length <= 4 && Array.isArray(s.cells) && s.cells.length === 36 && ["board", "q", "end"].indexOf(s.phase) >= 0 && s.turn >= 0 && s.turn < s.teams.length;
   }
 
   var api = { ROWS: ROWS, LIFE: LIFE, LIFE_NAME: LIFE_NAME, buildBoard: buildBoard, newState: newState, Game: Game, validState: validState, shuffle: shuffle };

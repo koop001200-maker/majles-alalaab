@@ -110,6 +110,8 @@ input[type=text], textarea, select { background: var(--paper); color: var(--ink)
 .cell:disabled { cursor: default; box-shadow: none; background: #e5e7eb; color: #9ca3af; }
 .cell:disabled.t0 { background: #bfdbfe; color: transparent; }
 .cell:disabled.t1 { background: #fed7aa; color: transparent; }
+.cell:disabled.t2 { background: #bbf7d0; color: transparent; }
+.cell:disabled.t3 { background: #e9d5ff; color: transparent; }
 .cell:disabled::after { content: attr(data-mark); position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink); font-size: .6em; }
 .hintline { text-align: center; font-weight: 800; font-size: .8em; opacity: .75; }
 

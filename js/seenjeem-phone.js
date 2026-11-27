@@ -14,7 +14,7 @@
   var pid = me.pid || (me.pid = "s" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4));
   Store.set("sj_me_v1" + tab, me);
   var V = null, net = null, tstat = "connecting", app = $("#app"), at = 0;
-  var TCOL = ["#3B82F6", "#F97316"], LB = { two: "② جاوب جوابين", call: "📞 اتصال بصديق", dbl: "×2 دبل النقاط" };
+  var TCOL = ["#3B82F6", "#F97316", "#16A34A", "#A855F7"], LB = { two: "② جاوب جوابين", call: "📞 اتصال بصديق", dbl: "×2 دبل النقاط" };
 
   var taken = "";
   function hello() { if (net) net.send({ t: "hello" }); }
@@ -34,7 +34,7 @@
     if (taken && !V) h = '<div class="panel pc"><h2 class="sj-logo" style="font-size:3em">سين جيم</h2><p>🔒 ' + esc(taken) + "</p></div>";
     else if (!V || V.phase === "idle") h = '<div class="panel pc"><h2 class="sj-logo" style="font-size:3em">سين جيم</h2><p>غرفة <b dir="ltr">' + esc(code) + "</b></p><p>بانتظار بدء المباراة على التلفزيون…</p></div>";
     else {
-      var N = V.names, teams = '<div class="pteams">' + [0, 1].map(function (t) { return '<div class="pt' + (V.turn === t && V.phase !== "end" ? " on" : "") + '" style="border-color:' + TCOL[t] + '">' + esc(N[t]) + "<b>" + (V.scores ? V.scores[t] : 0) + "</b></div>"; }).join("") + "</div>";
+      var N = V.names, teams = '<div class="pteams" style="grid-template-columns:repeat(' + N.length + ',1fr)">' + N.map(function (x, t) { return '<div class="pt' + (V.turn === t && V.phase !== "end" ? " on" : "") + '" style="border-color:' + TCOL[t] + '">' + esc(N[t]) + "<b>" + (V.scores ? V.scores[t] : 0) + "</b></div>"; }).join("") + "</div>";
       if (V.phase === "end") h = '<div class="pc">' + teams + '<div class="panel"><h2 class="sj-logo" style="font-size:2.4em">' + (V.win < 0 ? "تعادل 🤝" : "فاز " + esc(N[V.win]) + " 🏆") + "</h2></div></div>";
       else if (V.phase === "board") {
         var hd = V.cats.map(function (c) { return '<div class="ch" title="' + esc(c.n) + '">' + c.i + "<small>" + esc(c.n) + "</small></div>"; }).join(""), cells = "";
@@ -46,7 +46,7 @@
           ctl = '<div class="btns two">' + ["two", "dbl"].map(function (k) { return '<button class="btn sm' + (k === "dbl" ? " gold" : "") + '" data-life="' + k + '"' + (cu.can[k] ? "" : " disabled") + ">" + LB[k] + "</button>"; }).join("") + "</div>" +
             '<div class="btns">' + (cu.two && cu.attempt === 1 ? '<button class="btn bad" data-c="wrong">✘ المحاولة الأولى خاطئة</button>' : "") +
             '<button class="btn gold" data-c="reveal">👁 كشف الإجابة على التلفزيون</button><div class="btns two"><button class="btn" data-c="pause">' + (cu.running ? "⏸ إيقاف" : "▶ استئناف") + '</button>' + (cu.call ? '<button class="btn" data-c="callend">إنهاء الاتصال</button>' : '<button class="btn" data-c="cancel">↩ رجوع</button>') + "</div></div>";
-        } else ctl = '<p style="font-weight:800">من فاز بالسؤال؟</p><div class="btns"><button class="btn" style="background:' + TCOL[0] + ';color:#fff" data-award="0">' + esc(N[0]) + '</button><button class="btn" style="background:' + TCOL[1] + ';color:#fff" data-award="1">' + esc(N[1]) + '</button><button class="btn" data-award="-1">لا أحد</button></div>';
+        } else ctl = '<p style="font-weight:800">من فاز بالسؤال؟</p><div class="btns">' + N.map(function (n, t) { return '<button class="btn" style="background:' + TCOL[t] + ';color:#fff" data-award="' + t + '">' + esc(n) + "</button>"; }).join("") + '<button class="btn" data-award="-1">لا أحد</button></div>';
         h = '<div class="pc">' + teams + '<div class="pq"><div style="font-weight:800">' + cu.p + " نقطة" + (cu.dbl ? " · ×2" : "") + (cu.two ? " · المحاولة " + cu.attempt + "/2" : "") + (!cu.revealed ? " · ⏱ " + secs() + (cu.call ? " (اتصال)" : "") : "") + '</div><div class="qt">' + esc(cu.q) + '</div><div class="ans">✔ ' + esc(cu.a) + '</div><small>الإجابة تظهر لك فقط حتى تكشفها على التلفزيون</small></div>' + ctl + "</div>";
       } else h = '<div class="pc">' + teams + "</div>";
     }

@@ -12,7 +12,8 @@
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
   var K = { settings: "sj_settings_v1", match: "sj_match_v1", used: "sj_used_v1", custom: "sj_custom_v1", room: "sj_room_v1" };
-  var TCOL = ["#3B82F6", "#F97316"];
+  var TCOL = ["#3B82F6", "#F97316", "#16A34A", "#A855F7"];
+  var TNAMES = ["فريق إبراهيم", "الفريق الثاني", "الفريق الثالث", "الفريق الرابع"]; // الأسماء الافتراضية (من 2 إلى 4 فرق)
   var TIMES = [20, 30, 45, 60], DIFFS = [["mix", "منوّع"], ["easy", "أسهل"], ["hard", "أصعب"]];
 
   /* ---------- البيانات: الأساسية + المضافة ---------- */
@@ -24,12 +25,15 @@
   function missing(cid) { var out = []; [200, 400, 600].forEach(function (p) { var n = allQ().filter(function (q) { return q.c === cid && q.p === p; }).length; if (n < 2) out.push(p + " (ينقص " + (2 - n) + ")"); }); return out; }
 
   /* ---------- الإعدادات ---------- */
-  var DEF = { n0: "الفريق الأول", n1: "الفريق الثاني", cats: ["ksa", "gen", "sport", "film", "geo", "islam"], time: 30, diff: "mix", sound: true, music: false };
+  var DEF = { names: TNAMES.slice(0, 2), cats: ["ksa", "gen", "sport", "film", "geo", "islam"], time: 30, diff: "mix", sound: true, music: false };
   var settings = Object.assign({}, DEF, Store.get(K.settings, {}) || {});
-  (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) { settings.n0 = P.teams[0]; settings.n1 = P.teams[1]; } settings.diff = pick("level", { easy: "easy", mix: "mix", hard: "hard" }); settings.time = pick("time", { fast: 20, normal: 30, slow: 45 }); })(); // إعدادات المجلس
-  (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { settings.n0 = FT[0]; settings.n1 = FT[1]; } })(); // فرق جولة العائلة (أول فريقين)
+  (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) settings.names = P.teams.slice(0, 4); settings.diff = pick("level", { easy: "easy", mix: "mix", hard: "hard" }); settings.time = pick("time", { fast: 20, normal: 30, slow: 45 }); })(); // إعدادات المجلس
+  (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) settings.names = FT.slice(0, 4); })(); // فرق جولة العائلة (حتى 4)
   (function sanitize() {
-    settings.n0 = String(settings.n0 || DEF.n0).slice(0, 18); settings.n1 = String(settings.n1 || DEF.n1).slice(0, 18);
+    // من n0/n1 القديمة إلى قائمة names (2–4)، و«الفريق الأول» القديم صار «فريق إبراهيم»
+    if (!Array.isArray(settings.names) || settings.names.length < 2 || (settings.n0 != null && settings.names === DEF.names)) settings.names = [settings.n0 === "الفريق الأول" ? TNAMES[0] : settings.n0, settings.n1];
+    settings.names = settings.names.slice(0, 4).map(function (n, i) { return String(n || TNAMES[i]).trim().slice(0, 18) || TNAMES[i]; });
+    delete settings.n0; delete settings.n1;
     var ids = allCats().map(function (c) { return c.id; });
     settings.cats = (Array.isArray(settings.cats) ? settings.cats : []).filter(function (c, i, a) { return ids.indexOf(c) >= 0 && a.indexOf(c) === i; }).slice(0, 6);
     if (TIMES.indexOf(+settings.time) < 0) settings.time = 30; settings.time = +settings.time;
@@ -66,7 +70,7 @@
     if (bad.length) { setupErr = "الفئة «" + catOf(bad[0]).name + "» ينقصها أسئلة: " + missing(bad[0]).join("، "); render(); return; }
     setupErr = "";
     var used = Store.get(K.used, {}) || {};
-    var st = E.newState({ n0: settings.n0, n1: settings.n1, cats: settings.cats, time: settings.time, diff: settings.diff }, D, used, custom.q);
+    var st = E.newState({ names: settings.names, cats: settings.cats, time: settings.time, diff: settings.diff }, D, used, custom.q);
     G = E.Game(st); T = { left: 0, running: false, call: false, callLeft: 0 }; fi = firstOpen(); view = "play"; modal = null; gain = null;
     A.play("intro"); persist();
     // لو اختاروا في المجلس «كل واحد بجواله»: نفتح رمز الـQR مباشرة عشان يربطون جوال التحكم
@@ -142,24 +146,25 @@
   function chipsOf(list, cur, act) { return '<div class="chips">' + list.map(function (x) { var v = Array.isArray(x) ? x[0] : x, l = Array.isArray(x) ? x[1] : x + " ثانية"; return '<button class="chip" data-a="' + act + '" data-v="' + esc(v) + '" aria-pressed="' + (String(cur) === String(v)) + '">' + esc(l) + "</button>"; }).join("") + "</div>"; }
   function vSetup() {
     var s = settings, sel = s.cats;
-    var teams = [0, 1].map(function (t) { return '<label class="tname" style="--c:' + TCOL[t] + '"><span class="dot"></span><input type="text" id="tn' + t + '" maxlength="18" value="' + esc(s["n" + t]) + '" aria-label="اسم الفريق ' + (t + 1) + '"></label>'; }).join("");
+    var teams = s.names.map(function (n, t) { return '<label class="tname" style="--c:' + TCOL[t] + '"><span class="dot"></span><input type="text" id="tn' + t + '" maxlength="18" value="' + esc(n) + '" aria-label="اسم الفريق ' + (t + 1) + '"></label>'; }).join("") +
+      '<div class="row"><button class="btn sm" data-a="tadd"' + (s.names.length >= 4 ? " disabled" : "") + '>＋ فريق</button><button class="btn sm" data-a="tdel"' + (s.names.length <= 2 ? " disabled" : "") + ">− فريق</button><span class=\"hint\">" + s.names.length + " فرق</span></div>";
     var grid = allCats().map(function (c) {
       var i = sel.indexOf(c.id), miss = missing(c.id), dis = miss.length && i < 0;
       return '<button class="chip" data-a="cat" data-v="' + esc(c.id) + '" aria-pressed="' + (i >= 0) + '"' + (dis ? " disabled" : "") + (miss.length ? ' title="ينقص: ' + esc(miss.join("، ")) + '"' : "") + ">" + (i >= 0 ? '<span class="no">' + (i + 1) + "</span>" : "") + c.icon + " " + esc(c.name) + "</button>";
     }).join("");
     var ord = sel.map(function (id, i) { var c = catOf(id); return '<div class="it"><b>' + (i + 1) + "</b><span>" + c.icon + " " + esc(c.name) + '</span><button class="btn sm" data-a="up" data-v="' + i + '"' + (i === 0 ? " disabled" : "") + ' aria-label="للأعلى">▲</button><button class="btn sm" data-a="down" data-v="' + i + '"' + (i === sel.length - 1 ? " disabled" : "") + ' aria-label="للأسفل">▼</button></div>'; }).join("") || '<p class="hint">لم تُختر فئات بعد.</p>';
     return '<section class="screen"><div class="head"><h2>جهّزوا المباراة</h2><button class="btn ghost" data-a="home">الصفحة الأولى</button></div>' +
-      '<div class="setup"><div class="col panel"><span class="sec-t">الفريقان والإعدادات</span><div class="field"><span class="lbl">اسم الفريقين</span>' + teams + '</div>' +
+      '<div class="setup"><div class="col panel"><span class="sec-t">الفرق والإعدادات</span><div class="field"><span class="lbl">أسماء الفرق (من 2 إلى 4)</span>' + teams + '</div>' +
       '<div class="field"><span class="lbl">مدة الإجابة</span>' + chipsOf(TIMES, s.time, "time") + '</div>' +
       '<div class="field"><span class="lbl">مستوى صعوبة الأسئلة</span>' + chipsOf(DIFFS, s.diff, "diff") + '<span class="hint">يؤثر على اختيار الأسئلة داخل كل مستوى (200 / 400 / 600).</span></div></div>' +
       '<div class="col panel"><span class="sec-t">اختر 6 فئات (' + sel.length + "/6)</span><div class=\"row\"><button class=\"btn sm\" data-a=\"rand\">🎲 اختيار عشوائي</button><button class=\"btn sm\" data-a=\"clear\">مسح</button></div><div class=\"catgrid\">" + grid + '</div></div>' +
       '<div class="col panel"><span class="sec-t">ترتيب الفئات على اللوحة</span><div class="ord">' + ord + "</div></div></div>" +
       (setupErr ? '<p class="err" role="alert">' + esc(setupErr) + "</p>" : "") +
-      '<div class="setup-foot"><button class="btn go huge" data-a="start"' + (sel.length === 6 ? "" : " disabled") + '>ابدأ المباراة ▶</button><span class="summary">' + esc(s.n0) + " ضد " + esc(s.n1) + " · " + s.time + " ث · " + ({ mix: "منوّع", easy: "أسهل", hard: "أصعب" }[s.diff]) + "</span></div></section>";
+      '<div class="setup-foot"><button class="btn go huge" data-a="start"' + (sel.length === 6 ? "" : " disabled") + '>ابدأ المباراة ▶</button><span class="summary">' + s.names.map(esc).join(" ضد ") + " · " + s.time + " ث · " + ({ mix: "منوّع", easy: "أسهل", hard: "أصعب" }[s.diff]) + "</span></div></section>";
   }
   function vHowto() {
     return '<section class="screen"><div class="head"><h2>تعليمات اللعبة</h2><button class="btn ghost" data-a="home">الصفحة الأولى</button></div><div class="scroll"><div class="panel howto">' +
-      '<div><h3>الفكرة</h3><ol><li>فريقان يتنافسان على لوحة فيها 6 فئات، وكل فئة 6 أسئلة (36 سؤالاً).</li><li>الفريقان يتناوبان على اختيار السؤال (الفئة + قيمته).</li><li>في كل فئة سؤالان بقيمة 200، وسؤالان 400، وسؤالان 600، وكلما زادت القيمة زاد التحدي.</li><li>اضغط «كشف الإجابة» ثم حدّد من فاز بالسؤال: الفريق الأول أو الثاني أو لا أحد.</li><li><b>السرقة:</b> صاحب الدور يجاوب أول. إذا أخطأ أو خلص وقته، الفريق الثاني يقدر يجاوب ويسرق النقاط.</li><li>تُضاف النقاط تلقائياً، ويُغلق السؤال ولا يُحتسب مرتين. الأعلى نقاطاً في النهاية يفوز.</li></ol></div>' +
+      '<div><h3>الفكرة</h3><ol><li>من 2 إلى 4 فرق يتنافسون على لوحة فيها 6 فئات، وكل فئة 6 أسئلة (36 سؤالاً تنقسم بالتساوي على الفرق).</li><li>الفرق تتناوب على اختيار السؤال (الفئة + قيمته).</li><li>في كل فئة سؤالان بقيمة 200، وسؤالان 400، وسؤالان 600، وكلما زادت القيمة زاد التحدي.</li><li>اضغط «كشف الإجابة» ثم حدّد من فاز بالسؤال: الفريق الأول أو الثاني أو لا أحد.</li><li><b>السرقة:</b> صاحب الدور يجاوب أول. إذا أخطأ أو خلص وقته، الفريق الثاني يقدر يجاوب ويسرق النقاط.</li><li>تُضاف النقاط تلقائياً، ويُغلق السؤال ولا يُحتسب مرتين. الأعلى نقاطاً في النهاية يفوز.</li></ol></div>' +
       '<div><h3>وسائل المساعدة (لكل فريق اثنتان، مرة واحدة)</h3><ul><li><b>جاوب جوابين:</b> محاولتان للإجابة بدل واحدة. إذا أخطأتم الأولى اضغطوا «المحاولة الخاطئة» ويبدأ الوقت من جديد.</li><li><b>دبل النقاط:</b> تتضاعف نقاط السؤال إذا فاز به الفريق الذي فعّلها. يُفعَّل قبل كشف الإجابة.</li><li>الوسائل تخص الفريق صاحب الدور في السؤال الحالي.</li></ul></div>' +
       '<div><h3>التحكم</h3><ul><li>بالماوس أو اللمس: اضغط على الخانة.</li><li>بلوحة المفاتيح أو الريموت: الأسهم للتنقل، Enter لاختيار السؤال.</li><li>داخل السؤال: <kbd>مسافة</kbd> كشف الإجابة · <kbd>1</kbd> <kbd>2</kbd> الفريق الأول/الثاني · <kbd>0</kbd> لا أحد · <kbd>D</kbd> دبل · <kbd>T</kbd> جوابين · <kbd>P</kbd> إيقاف · <kbd>W</kbd> المحاولة الخاطئة.</li><li>زر «📱 تحكم بالجوال» يعرض رمز QR ليتحكم أحد اللاعبين من هاتفه (اختياري).</li></ul></div>' +
       '<div><h3>مهم</h3><ul><li>المباراة تُحفظ تلقائياً؛ إذا حدّثت الصفحة تقدر تتابع من الرئيسية.</li><li>كل مباراة تُختار فيها أسئلة مختلفة قدر الإمكان عن المباريات السابقة.</li><li>من «إعدادات» تقدرون تضيفون أسئلة وفئات جديدة وتعدّلونها.</li></ul></div></div></div></section>';
@@ -218,7 +223,7 @@
         '<button class="btn" data-a="pause"' + (T.call || T.left <= 0 ? " disabled" : "") + ">" + (T.running ? "⏸ إيقاف الوقت" : "▶ استئناف") + "</button>" +
         (cur.twoBy < 0 && cur.dblBy < 0 && !cur.callUsed ? '<button class="btn" data-a="cancel">↩ رجوع للّوحة</button>' : "") + "</div>";
     } else {
-      foot = '<div class="qf"><span class="lbl">من فاز بالسؤال؟</span><button class="btn huge tb0" data-a="award" data-v="0">' + esc(S.teams[0].name) + '</button><button class="btn huge tb1" data-a="award" data-v="1">' + esc(S.teams[1].name) + '</button><button class="btn huge" data-a="award" data-v="-1">لا أحد</button></div>';
+      foot = '<div class="qf"><span class="lbl">من فاز بالسؤال؟</span>' + S.teams.map(function (tm, t) { return '<button class="btn huge" style="background:' + TCOL[t] + ';color:#fff" data-a="award" data-v="' + t + '">' + esc(tm.name) + "</button>"; }).join("") + '<button class="btn huge" data-a="award" data-v="-1">لا أحد</button></div>';
     }
     var tstate = T.left <= 0 && !rv && !T.call ? '<b style="color:#b91c1c">⏰ انتهى الوقت</b>' : "";
     return '<div class="q' + (cur.dblBy >= 0 ? " dbl" : "") + (rv ? " rv" : "") + '" role="dialog" aria-label="السؤال"><div class="qh"><span class="cat">' + catOf(c.c).icon + " " + esc(catOf(c.c).name) + " — دور " + esc(tm.name) + "</span>" +
@@ -229,13 +234,14 @@
   }
   function vEnd() {
     var S = G.state, st = G.stats(), w = st.winner, tn = function (t) { return esc(S.teams[t].name); };
-    var best = [0, 1].map(function (t) { var b = st.best[t]; return b ? tn(t) + ": أعلى سؤال فاز به «" + esc(catOf(b.c).name) + "» بـ " + b.pts + " نقطة" + (b.dblWon ? " (دبل)" : "") : null; }).filter(Boolean);
-    var hl = best.concat([0, 1].map(function (t) { return st.streak[t] > 1 ? tn(t) + ": أطول سلسلة إجابات صحيحة متتالية " + st.streak[t] : null; }).filter(Boolean),
-      [0, 1].map(function (t) { return st.dblWins[t] ? tn(t) + ": كسب الدبل " + st.dblWins[t] + " مرة" : null; }).filter(Boolean),
-      [tn(0) + " استخدم " + st.lifeUsed[0] + " من وسيلتين، و" + tn(1) + " استخدم " + st.lifeUsed[1]]);
-    var title = w < 0 ? "تعادل! 🤝" : "الفائز: " + tn(w) + " 🏆";
+    var ids = S.teams.map(function (x, i) { return i; });
+    var best = ids.map(function (t) { var b = st.best[t]; return b ? tn(t) + ": أعلى سؤال فاز به «" + esc(catOf(b.c).name) + "» بـ " + b.pts + " نقطة" + (b.dblWon ? " (دبل)" : "") : null; }).filter(Boolean);
+    var hl = best.concat(ids.map(function (t) { return st.streak[t] > 1 ? tn(t) + ": أطول سلسلة إجابات صحيحة متتالية " + st.streak[t] : null; }).filter(Boolean),
+      ids.map(function (t) { return st.dblWins[t] ? tn(t) + ": كسب الدبل " + st.dblWins[t] + " مرة" : null; }).filter(Boolean),
+      [ids.map(function (t) { return tn(t) + " استخدم " + st.lifeUsed[t] + " من وسيلتين"; }).join("، ")]);
+    var title = w < 0 ? "تعادل! 🤝 " + G.leaders().map(tn).join(" و ") : "الفائز: " + tn(w) + " 🏆";
     return '<div class="win"><div class="trophy" aria-hidden="true">' + (w < 0 ? "🤝" : "🏆") + '</div><div class="txt"><h2 style="' + (w >= 0 ? "color:" + TCOL[w] + ";text-shadow:2px 2px 0 var(--ink)" : "") + '">' + title + "</h2>" +
-      '<div class="stat"><span class="h">الفريق</span><span class="h">النقاط</span><span class="h">إجابات صحيحة</span><span>' + tn(0) + "</span><b>" + st.scores[0] + "</b><b>" + st.correct[0] + "</b><span>" + tn(1) + "</span><b>" + st.scores[1] + "</b><b>" + st.correct[1] + "</b></div>" +
+      '<div class="stat"><span class="h">الفريق</span><span class="h">النقاط</span><span class="h">إجابات صحيحة</span>' + ids.map(function (t) { return "<span>" + tn(t) + "</span><b>" + st.scores[t] + "</b><b>" + st.correct[t] + "</b>"; }).join("") + "</div>" +
       '<p style="font-weight:800">أسئلة لم يُجب عنها أحد: ' + st.unanswered + ' من 36</p><div class="hl"><b>أبرز لحظات المباراة</b>' + hl.map(function (x) { return "<span>" + x + "</span>"; }).join("") + "</div>" +
       '<div class="btns"><button class="btn huge go" data-a="rematch">إعادة المباراة بأسئلة جديدة</button><button class="btn big" data-a="home">القائمة الرئيسية</button></div></div></div>';
   }
@@ -244,7 +250,7 @@
     var top = '<div class="topbar"><div class="grp"><button class="btn sm" data-a="home">→ رجوع</button></div><div class="grp">' +
       '<button class="btn sm" data-a="sfx2" aria-pressed="' + settings.sound + '">' + (settings.sound ? "🔊" : "🔇") + '</button><button class="btn sm" data-a="mus2" aria-pressed="' + settings.music + '">' + (settings.music ? "🎵" : "🎶") + '</button>' +
       '<button class="btn sm" data-a="fs">⛶</button>' + (Net ? '<button class="btn sm" data-a="qr">📱 تحكم بالجوال</button>' : "") + (end ? "" : '<button class="btn sm bad" data-a="quit">✕ إنهاء</button>') + "</div></div>";
-    return '<section class="screen play">' + top + '<div class="teams">' + teamCard(0) + teamCard(1) + '</div><div class="stage">' + (end ? vEnd() : vBoard() + (S.phase === "q" ? vQuestion() : "")) + "</div></section>";
+    return '<section class="screen play">' + top + '<div class="teams" style="grid-template-columns:repeat(' + S.teams.length + ',1fr)">' + S.teams.map(function (x, t) { return teamCard(t); }).join("") + '</div><div class="stage">' + (end ? vEnd() : vBoard() + (S.phase === "q" ? vQuestion() : "")) + "</div></section>";
   }
   function vModal() {
     if (!modal) return "";
@@ -294,7 +300,7 @@
 
   var KEEP = "";
   function render() {
-    var app = $("#app"), a = document.activeElement, keep = a && (a.id === "ed-q" || a.id === "ed-a" || a.id === "nc-n" || a.id === "nc-i" || a.id === "tn0" || a.id === "tn1") ? { id: a.id, v: a.value } : null;
+    var app = $("#app"), a = document.activeElement, keep = a && (a.id === "ed-q" || a.id === "ed-a" || a.id === "nc-n" || a.id === "nc-i" || /^tn\d$/.test(a.id)) ? { id: a.id, v: a.value } : null;
     var body = view === "home" ? vHome() : view === "setup" ? vSetup() : view === "howto" ? vHowto() : view === "settings" ? vSettings() : view === "editor" ? vEditor() : vPlay();
     app.innerHTML = body + vModal(); gain = null;
     if (keep) { var el = $("#" + keep.id); if (el) { el.value = keep.v; el.focus(); } }
@@ -317,12 +323,12 @@
     net = Net.host(room, { onMsg: onPhone, onStatus: function (st) { netStatus = st; var el = $("#net"); if (el) el.textContent = netText() + " · الجوالات المتصلة: " + Object.keys(roster).length; }, onConflict: function () { room = newCode(); Store.set(K.room, room); roster = {}; try { net.close(); } catch (e) {} net = null; startNet(); render(); } });
   }
   function viewFor() {
-    var S = G ? G.state : null, v = { t: "state", names: settings.n0 ? [settings.n0, settings.n1] : [] };
+    var S = G ? G.state : null, v = { t: "state", names: settings.names.slice() };
     if (!G || !S) { v.phase = "idle"; return v; }
-    v.names = [S.teams[0].name, S.teams[1].name]; v.phase = S.phase; v.turn = S.turn; v.scores = [S.teams[0].score, S.teams[1].score];
+    v.names = S.teams.map(function (t) { return t.name; }); v.phase = S.phase; v.turn = S.turn; v.scores = S.teams.map(function (t) { return t.score; });
     v.cats = S.cats.map(function (id) { var c = catOf(id); return { n: c.name, i: c.icon }; });
     v.cells = S.cells.map(function (c) { return { p: c.p, st: c.st, by: c.by }; });
-    v.life = [0, 1].map(function (t) { return E.LIFE.map(function (k) { return S.teams[t].life[k] ? 1 : 0; }); });
+    v.life = S.teams.map(function (x, t) { return E.LIFE.map(function (k) { return S.teams[t].life[k] ? 1 : 0; }); });
     if (S.cur) { var c = S.cells[S.cur.i]; v.cur = { i: S.cur.i, q: c.q, a: c.a, p: c.p, revealed: S.cur.revealed, attempt: S.cur.attempt, two: S.cur.twoBy >= 0, dbl: S.cur.dblBy >= 0, call: T.call, can: { two: G.canUse("two"), call: G.canUse("call"), dbl: G.canUse("dbl") }, left: T.call ? T.callLeft : T.left, running: T.running }; }
     if (S.phase === "end") v.win = G.winner();
     return v;
@@ -347,6 +353,8 @@
     var v = el && el.getAttribute("data-v");
     switch (a) {
       case "home": view = "home"; armed = ""; render(); break;
+      case "tadd": collectTeams(); if (settings.names.length < 4) settings.names.push(TNAMES[settings.names.length]); saveSettings(); render(); break;
+      case "tdel": collectTeams(); if (settings.names.length > 2) settings.names.pop(); saveSettings(); render(); break;
       case "kickphone": Object.keys(roster).forEach(function (k) { blocked[k] = 1; try { net.send(k, { t: "taken", kicked: true }); } catch (e) {} delete roster[k]; }); render(); break;
       case "setup": view = "setup"; setupErr = ""; render(); break;
       case "howto": view = "howto"; render(); break;
@@ -393,7 +401,7 @@
       case "dopack": var tin = $("#pk-in"); if (importPack(tin ? tin.value : "")) { modal = null; view = "editor"; } else pendingPack = tin ? tin.value : ""; render(); break;
     }
   }
-  function collectTeams() { var a = $("#tn0"), b = $("#tn1"); if (a) settings.n0 = a.value.trim().slice(0, 18) || DEF.n0; if (b) settings.n1 = b.value.trim().slice(0, 18) || DEF.n1; }
+  function collectTeams() { settings.names = settings.names.map(function (n, i) { var el = $("#tn" + i); return el ? el.value.trim().slice(0, 18) || TNAMES[i] : n; }); }
   function saveQuestion() {
     var c = $("#ed-c").value, p = +$("#ed-p").value, q = $("#ed-q").value.trim(), a = $("#ed-a").value.trim();
     if (!q || !a) { edMsg = "اكتب السؤال والجواب."; render(); return; }
@@ -419,7 +427,7 @@
     if (el.id === "ed-f") { edCat = el.value; render(); }
     else if (el.getAttribute && el.getAttribute("data-a") === "sfx") { settings.sound = el.checked; A.enable(settings.sound); saveSettings(); }
     else if (el.getAttribute && el.getAttribute("data-a") === "mus") { settings.music = el.checked; A.unlock(); A.music(settings.music); saveSettings(); }
-    else if (el.id === "tn0" || el.id === "tn1") { collectTeams(); saveSettings(); }
+    else if (/^tn\d$/.test(el.id)) { collectTeams(); saveSettings(); }
   });
   document.addEventListener("keydown", function (e) {
     var tag = (e.target.tagName || "").toLowerCase();
