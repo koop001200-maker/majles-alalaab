@@ -176,8 +176,7 @@
   function finishRound(caught, guessed) {
     var gain = game.players.map(function () { return 0; });
     if (!caught) { gain[game.out] = guessed ? 3 : 1; SFX.wah(); }
-    else if (guessed) { gain[game.out] = 2; SFX.wah(); }
-    else { game.players.forEach(function (p, i) { if (i !== game.out) gain[i] = 1; }); SFX.win(); }
+    else { game.players.forEach(function (p, i) { if (i !== game.out) gain[i] = 1; }); if (guessed) { gain[game.out] = 2; SFX.wah(); } else SFX.win(); } // كشفوه = نقطة لكل واحد دايماً، ولو عرف الموضوع ياخذ نقطتين
     game.gain = gain; game.guess = caught ? (guessed ? "ok" : "no") : (guessed ? "free" : "free-miss");
     game.players.forEach(function (p, i) { p.score += gain[i]; });
     game.history.push({ round: game.round, word: game.word, out: game.out, accused: game.accused, guess: game.guess });
@@ -218,7 +217,7 @@
       "<li>كل لاعب يشوف الشاشة لحاله ويعرف «الموضوع» (مثل: كبسة)… إلا واحد! هذا اللي <b>برا السالفة</b> ما يعرف شي إلا الفئة.</li>" +
       "<li>بعدها كل واحد يعطي <b>تلميحة وحدة</b> عن الموضوع بدون ما يقوله صريح. اللي برا السالفة يمثّل إنه عارف!</li>" +
       "<li>لما يخلص الوقت اختاروا مين تشكّون فيه.</li>" +
-      "<li>بعد التصويت اللي برا السالفة دايم يخمّن الموضوع من ٨ خيارات. إذا ما انكشف: يصيب ← <b>٣ نقاط</b>، يغلط ← <b>نقطة</b>. وإذا انكشف: يصيب ← <b>نقطتين</b> له، يغلط ← <b>نقطة</b> لكل الباقين.</li>" +
+      "<li>بعد التصويت اللي برا السالفة دايم يخمّن الموضوع من ٨ خيارات. إذا ما انكشف: يصيب ← <b>٣ نقاط</b>، يغلط ← <b>نقطة</b>. وإذا انكشف: <b>نقطة</b> لكل الباقين دايماً، ولو أصاب ياخذ هو <b>نقطتين</b>. ومن يطلع برا السالفة يتوزع على الكل بالتساوي.</li>" +
       "</ol></div></section>";
   }
 
@@ -228,13 +227,13 @@
     }).join("");
     function chips(list, cur, a, fmtf) { return '<div class="chips">' + list.map(function (v) { return '<button class="chip" data-a="' + a + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + fmtf(v) + "</button>"; }).join("") + "</div>"; }
     return '<section class="screen"><div class="head"><h2>إعداد اللعبة</h2><button class="btn" data-a="home">→ رجوع</button></div>' +
-      '<div class="panel"><div class="field"><span class="label">اللاعبون (' + s.players.length + ' من ١٠)</span><div class="names">' + names + "</div>" +
+      '<div class="panel"><div class="field"><span class="label">اللاعبون (' + s.players.length + ' من 10)</span><div class="names">' + names + "</div>" +
       (s.players.length < 10 ? '<button class="btn small" data-a="add">+ لاعب</button> ' : "") + '</div>' +
       '<datalist id="names-dl">' + COMMON.map(function (c) { return '<option value="' + esc(c) + '">'; }).join("") + "</datalist>" +
       '<div class="field"><span class="label">اضغط الاسم يدخل، واضغطه مرة ثانية يُزال</span><div class="chips namepick">' +
       COMMON.map(function (c, ci) { var used = s.players.some(function (n) { return n.trim() === c; }); return (!REG.length && ci === BOYS.length ? '<i class="brk" aria-hidden="true"></i>' : "") + '<button class="chip" data-a="pickname" data-v="' + esc(c) + '" aria-pressed="' + used + '"' + (used ? ' title="اضغط مرة ثانية لإزالته"' : "") + ">" + (used ? "✓ " : "") + esc(c) + "</button>"; }).join("") + "</div></div></div>" +
       '<div class="row"><div class="field"><span class="label">عدد الجولات</span>' + chips([3, 5, 8], s.rounds, "rounds", function (v) { return v + " جولات"; }) + "</div>" +
-      '<div class="field"><span class="label">وقت النقاش</span>' + chips([60, 120, 180], s.talk, "talk", function (v) { return v / 60 + (v === 60 ? " دقيقة" : " دقائق"); }) + "</div></div>" +
+      '<div class="field"><span class="label">وقت النقاش</span>' + chips([60, 120, 180], s.talk, "talk", function (v) { return { 60: "دقيقة", 120: "دقيقتين", 180: "3 دقائق" }[v] || v / 60 + " دقائق"; }) + "</div></div>" +
       (setupErr ? '<p class="error" style="color:#b91c1c;font-weight:800">' + esc(setupErr) + "</p>" : "") +
       '<button class="btn go huge" data-a="play">ابدأ ▶</button></section>';
   }
@@ -290,7 +289,7 @@
 
   function vScores() {
     var out = game.players[game.out], w = wordOf(game.word) || { w: "؟" };
-    var msg = game.guess === "free" ? "ما انكشف وعرف الموضوع! 😎 " + esc(out.name) + " أخذ ٣ نقاط" : game.guess === "free-miss" ? "ما انكشف بس ما عرف الموضوع! " + esc(out.name) + " أخذ نقطة" : game.guess === "ok" ? "انكشف وخمّن الموضوع! 🧠 " + esc(out.name) + " أخذ نقطتين" : "انكشف وما عرف! 🎉 نقطة لكل الباقين";
+    var msg = game.guess === "free" ? "ما انكشف وعرف الموضوع! 😎 +3 نقاط لـ" + esc(out.name) : game.guess === "free-miss" ? "ما انكشف بس ما عرف الموضوع! +1 نقطة لـ" + esc(out.name) : game.guess === "ok" ? "انكشف وخمّن الموضوع! 🧠 +2 لـ" + esc(out.name) + "، ونقطة لكل الباقين" : "انكشف وما عرف! 🎉 نقطة لكل الباقين";
     return '<section class="screen">' + topbar() + '<h2 class="verdict">' + msg + '</h2><p class="sub">الموضوع: <b>' + esc(w.w) + "</b> · اللي برا السالفة: <b>" + esc(out.name) + "</b>" + (game.pick && wordOf(game.pick) ? " · اختار: <b>" + esc(wordOf(game.pick).w) + "</b>" : "") + "</p>" + board(true) +
       '<button class="btn go huge" data-a="next">' + (game.round >= game.total ? "النتيجة النهائية 🏆" : "الجولة التالية ▶") + "</button></section>";
   }

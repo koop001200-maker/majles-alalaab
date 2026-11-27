@@ -219,7 +219,10 @@
     var key = teamMode() ? "t" + p.team : p.id;
     if (teamMode() && S.lies[key] && S.lies[key].by !== p.id) { sendTo(p); return; }
     if (isTruth(text, q)) { S.lieErr[p.id] = "إجابتك صحيحة أو قريبة جداً منها! 😅 اكتب إجابة مزيّفة بدلاً منها"; sendTo(p); return; }
-    if (!window.WSH_FMT_OK(window.WSH_FMT(q.answer), window.WSH_FMT(text))) { S.lieErr[p.id] = "اكتب " + fmtText(q) + " مثل الإجابة الصحيحة، عشان ما تنكشف كذبتك 😉"; sendTo(p); return; }
+    var af = window.WSH_FMT(q.answer);
+    var why = window.WSH_FMT_WHY(af, window.WSH_FMT(text));
+    if (why) { S.lieErr[p.id] = why + "، عشان ما تنكشف كذبتك 😉"; sendTo(p); return; }
+    if (isTruth(text, q)) { S.lieErr[p.id] = "إجابتك صحيحة أو قريبة جداً منها! 😅 اكتب إجابة مزيّفة بدلاً منها"; sendTo(p); return; }
     S.lieErr[p.id] = "";
     S.lies[key] = { text: text, by: p.id };
     sfx.pop(); save(); render();

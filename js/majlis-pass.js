@@ -15,7 +15,7 @@
   var FREE_SETS = 3; // sets that open before subscribing; after subscribing every set in the bank is open
   var SIZE = { mak: 8, kh: 12, rt: 8, hf: 15, wsh: 8, br: 5 };
   var NAMES = { mak: "من أنا؟", kh: "خمّن وش هو؟", rt: "رتّب وفوز", hf: "لخبطة حروف", wsh: "وش الصح؟", br: "برا السالفة" };
-  var DEFAULT_TOTAL = { mak: 96, kh: 411, rt: 192, hf: 582, wsh: 152, br: 192 }; // shown on the hub before a game has ever been opened
+  var DEFAULT_TOTAL = { mak: 128, kh: 411, rt: 192, hf: 582, wsh: 152, br: 192 }; // shown on the hub before a game has ever been opened
   var PLANS = {
     day: { id: "day", name: "اشتراك يوم واحد", price: "9.99", unit: "لليوم", ms: 864e5 },
     month: { id: "month", name: "اشتراك شهر", price: "19.99", unit: "للشهر", ms: 30 * 864e5 }
@@ -70,15 +70,16 @@
     if (!old || old.total !== total || old.unplayed !== unplayed || JSON.stringify(old.prog || []) !== JSON.stringify(prog)) { d[game] = { total: total, unplayed: unplayed, prog: prog }; set(SETS_KEY, d); }
     placeBadge(); setTimeout(queuePlace, 0);
   }
+  function setsWord(n) { return n === 2 ? "مجموعتان متاحتان" : n >= 3 && n <= 10 ? "مجموعات متاحة" : "مجموعة متاحة"; }
   function badgeText() {
     if (!curGame) return "";
     var i = setsInfo(curGame);
     var small = window.innerWidth < 560;
-    return "🎮 " + i.left + (small ? "" : " مجموعة متاحة");
+    return "🎮 " + i.left + (small ? "" : " " + setsWord(i.left));
   }
   function badgeTitle() {
     var i = setsInfo(curGame);
-    return NAMES[curGame] + ": " + i.left + " مجموعة متاحة (كل مجموعة " + i.size + " جولات)";
+    return NAMES[curGame] + ": " + i.left + " " + setsWord(i.left) + " (كل مجموعة " + i.size + " جولات)";
   }
   var placing = false;
   function placeBadge() {
