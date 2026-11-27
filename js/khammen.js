@@ -821,7 +821,7 @@
         else { resetArm = Date.now(); setTimeout(function () { if (view === "home") render(); }, 4100); }
         render(); break;
       case "bank": go("bank"); break;
-      case "quick": view = "setup"; setupTab = "players"; setupErr = ""; render(); break;
+      case "quick": if (window.MAJLIS_WHO && MAJLIS_WHO()) { startGame(); break; } view = "setup"; setupTab = "players"; setupErr = ""; render(); break;
       case "start": case "replay": startGame(); break;
       case "trial":
         setupErr = validate();

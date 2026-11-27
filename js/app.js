@@ -823,7 +823,7 @@
       case "bank": go("bank"); break;
       case "resume": view = "game"; if (game.round && !game.round.done && game.round.revealed > 0 && game.round.timeLeft != null) startTimer(); render(); break;
       case "start": startGame(); break;
-      case "homestart": setupTab = "teams"; go("setup"); break;
+      case "homestart": if (window.MAJLIS_WHO && MAJLIS_WHO()) { startGame(); break; } setupTab = "teams"; go("setup"); break; // الأسماء من المجلس → على طول
       case "quick": startGame(); break;
       case "trial": startTrial(); break;
       case "cats-none": collectNames(); settings.cats = []; saveSettings(); render(); break;

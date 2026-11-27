@@ -131,7 +131,8 @@
   function act(a, el) {
     SFX.tap();
     switch (a) {
-      case "start": go("setup"); break;
+      case "start": if (whoP()) { act("play"); break; } go("setup"); break;
+      case "setup": go("setup"); break; // الأسماء من المجلس → على طول
       case "resume": view = "game"; if (game && game.phase === "pass") game.shown = false; render(); break;
       case "howto": go("howto"); break;
       case "home": case "back": go("home"); break;
@@ -210,7 +211,7 @@
       '<div class="home-stack">' +
       (resumable ? '<button class="btn go big" data-a="resume">كمّل اللعبة (الجولة ' + game.round + ")</button>" : "") +
       '<button class="btn ' + (resumable ? "" : "go ") + 'big start" data-a="start">ابدأ اللعب 🎮</button>' +
-      '<div class="row"><button class="btn big ghost" data-a="howto">طريقة اللعب</button></div>' +
+      '<div class="row"><button class="btn big ghost" data-a="howto">طريقة اللعب</button><button class="btn big ghost" data-a="setup">الإعدادات</button></div>' +
       "</div></section>";
   }
 

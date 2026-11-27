@@ -141,10 +141,10 @@
   function vHome() {
     var m = saved();
     return '<section class="screen home"><div class="emoji-row" aria-hidden="true"><span>❓</span><span>🏆</span><span>⏱️</span></div>' +
-      '<h1 class="sj-logo">سين جيم<small>مسابقة العائلة: فريقان · ست فئات · 36 سؤالاً</small></h1>' +
+      '<h1 class="sj-logo">سين جيم<small>مسابقة العائلة: من 2 إلى 4 فرق · ست فئات · 36 سؤالاً</small></h1>' +
       '<div class="stack">' + (m ? '<button class="btn huge go" data-a="resume">متابعة المباراة المحفوظة ▶</button>' : "") +
-      '<button class="btn ' + (m ? "big" : "huge go") + '" data-a="setup">' + (m ? "ابدأ لعبة جديدة" : "ابدأ لعبة جديدة 🎮") + '</button>' +
-      '<div class="row"><button class="btn big" data-a="howto">تعليمات اللعبة</button><button class="btn big" data-a="settings">إعدادات</button></div></div></section>';
+      '<button class="btn ' + (m ? "big" : "huge go") + '" data-a="' + (whoSJ() && settings.cats.length === 6 ? "start" : "setup") + '">' + (m ? "ابدأ لعبة جديدة" : "ابدأ لعبة جديدة 🎮") + '</button>' +
+      '<div class="row"><button class="btn big" data-a="howto">تعليمات اللعبة</button>' + (whoSJ() && settings.cats.length === 6 ? '<button class="btn big" data-a="setup">الفئات والوقت</button>' : "") + '<button class="btn big" data-a="settings">إعدادات</button></div></div></section>';
   }
   function chipsOf(list, cur, act) { return '<div class="chips">' + list.map(function (x) { var v = Array.isArray(x) ? x[0] : x, l = Array.isArray(x) ? x[1] : x + " ثانية"; return '<button class="chip" data-a="' + act + '" data-v="' + esc(v) + '" aria-pressed="' + (String(cur) === String(v)) + '">' + esc(l) + "</button>"; }).join("") + "</div>"; }
   function vSetup() {

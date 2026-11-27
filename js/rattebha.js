@@ -682,7 +682,7 @@
         if (Date.now() - resetArm < 4000) { Store.set(K.used, []); resetArm = 0; toast("تم التصفير — كل الأسئلة صارت جديدة"); }
         else { resetArm = Date.now(); setTimeout(function () { if (view === "home") render(); }, 4100); }
         render(); break;
-      case "homestart": setupTab = "teams"; go("setup"); break;
+      case "homestart": if (window.MAJLIS_WHO && MAJLIS_WHO()) { startMatch(); break; } setupTab = "teams"; go("setup"); break; // الأسماء من المجلس → على طول
       case "quick": case "start": startMatch(); break;
       case "trial": {
         keepNames(); saveSettings();

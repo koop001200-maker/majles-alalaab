@@ -138,7 +138,7 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .fam .box { text-align: center; }
 .fam p { margin: 0; font-weight: 700; }
 .fam .f-step { font-weight: 800; color: #4b5563; }
-.fam .f-teams { display: grid; gap: 8px; }
+.fam .f-teams { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .fam .f-teams input { font: 800 18px/1.2 var(--body); border: 3px solid var(--ink); border-radius: 14px; padding: .35em .8em; width: 100%; }
 .fam .f-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .fam .f-row button, .fam .f-pick button { font: 800 16px/1.2 var(--body); color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .45em 1em; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); }
@@ -151,6 +151,15 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .fam .f-win button[aria-pressed="true"]::before { content: "✔ "; }
 .fam .f-go[disabled] { opacity: .45; cursor: not-allowed; }
 .fam .f-board { display: grid; gap: 6px; }
+.fam .f-n button[aria-pressed="true"] { background: var(--yellow); }
+.fam .f-dbl { display: flex; gap: 8px; align-items: center; justify-content: center; font-weight: 800; }
+.fam .f-dbl input { width: 20px !important; height: 20px; flex: none; margin: 0; }
+.fam .f-games { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.fam .f-games li { display: flex; justify-content: space-between; gap: 8px; border: 2px dashed #9ca3af; border-radius: 12px; padding: .2em .7em; font-weight: 800; }
+.fam .f-games li.now { border: 3px solid var(--ink); background: #fef3c7; }
+.fam .f-games li.done { border-style: solid; background: #ecfdf5; }
+.fam .f-games span { color: var(--ink); }
+.fam .f-games small { color: #374151; font-weight: 800; }
 .fam .f-board div { display: flex; justify-content: space-between; gap: 10px; align-items: center; border: 3px solid var(--ink); border-radius: 14px; padding: .25em .8em; font-weight: 800; background: #fff; }
 .fam .f-board div.top { background: #fef3c7; }
 .fam .f-board b { font: 400 1.5em/1 var(--display); }
@@ -214,6 +223,10 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
 .sp-names .chips button { background: var(--yellow); }
 .sp-names .done { background: var(--green); color: #fff; align-self: center; font-size: 18px; padding: .35em 1.6em; }
 .sp-names .hint { margin: 0; font-size: 13px; opacity: .75; }
+.fit-tip { position: absolute; bottom: clamp(6px, 1vh, 12px); inset-inline: 10px; text-align: center; font: 800 clamp(10px, min(.8vw, 1.5vh), 15px)/1.2 var(--body); background: #fef3c7; border: 2px solid var(--ink); border-radius: 999px; padding: .15em .5em; }
+.fit-tip[hidden] { display: none; }
+.game:has(.fit-tip:not([hidden])) > p { visibility: hidden; } /* التلميح مكان الوصف */
+.lastbtn[hidden] { display: none; }
 .who-kind, .who-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .who-kind button, .who-row button { font: 800 16px var(--body); color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .3em 1em; cursor: pointer; }
 .who-kind button[aria-pressed="true"] { background: var(--yellow); box-shadow: 3px 3px 0 var(--ink); }
@@ -288,6 +301,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.29:</b> «ابدأ اللعب» يبدأ على طول لو الأسماء من المجلس (الإعدادات بزرها). تلميح على البطاقة لو الأسماء ما تنطبق عليها، وزر «▶ العب آخر لعبة مرة ثانية». جولة العائلة: الفرق من «مين بيلعب؟»، تختارون من 2 إلى 5 ألعاب أو «🎲 اختاروا لنا»، آخر لعبة دبل اختياري، وسجل الفايز بكل لعبة، وألعاب الفرق بس.</li>
     <li><b>نسخة 0.28:</b> بعد «يلا نلعب» تطلع «👥 مين بيلعب؟»: فرق (2–4) أو كل واحد لحاله (2–10)، وتنعكس على كل الألعاب وتنشال حقول الأسماء منها (فيها زر ✏️ تغيير). المجلس صار صفين: 📺 شاشة وحدة فوق و📱 بالجوالات تحت. شلنا «المجموعات المتاحة».</li>
     <li><b>نسخة 0.27:</b> تحت «مجلس الألعاب» جملة «مجاناً: أول 3 مجموعات أسئلة في كل لعبة» تختفي بعد الاشتراك، وشلنا عدّاد «مجموعة متاحة» من البطاقات وشاشات الألعاب.</li>
     <li><b>نسخة 0.26:</b> سين جيم: من 2 إلى 4 فرق (＋/− فريق في الإعداد)، والأدوار بالتساوي، وأول فريق اسمه الافتراضي «فريق إبراهيم».</li>
@@ -384,7 +398,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
       <p>واحد منكم ما يعرف الموضوع… اكشفوه!</p>
     </a>
   </nav>
-  <div class="subrow"><button class="subbtn" id="sub" type="button"></button></div>
+  <div class="subrow"><button class="subbtn alt lastbtn" id="lastbtn" type="button" hidden></button><button class="subbtn" id="sub" type="button"></button></div>
   <div class="subrow"><button class="subbtn alt fambtn" id="fambtn" type="button">🏆 جولة العائلة</button><button class="subbtn alt" id="whobtn" type="button">👥 مين بيلعب؟</button><button class="subbtn alt" id="honorbtn" type="button">🏅 لوحة الشرف</button></div>
 </main>
 <div class="sp-names fam" id="famdlg" hidden role="dialog" aria-label="جولة العائلة"><div class="box" id="fambox"></div></div>
@@ -487,7 +501,22 @@ button, input, select, textarea, summary { font-family: var(--body); }
     nmBox.hidden = false; syncInert(); whoPaint(); var f = whoList.querySelector("input"); if (f) f.focus();
   }
   function closeNames() { nmBox.hidden = true; syncInert(); paintWhoBtn(); var g = document.querySelector(".game"); if (g) g.focus(); }
-  function paintWhoBtn() { var w = whoGet(), b = document.getElementById("whobtn"); b.textContent = w ? "👥 " + w.names.join("، ") : "👥 مين بيلعب؟"; b.title = "غيّر الفرق أو اللاعبين"; }
+  /* تلميح على البطاقة لو أسماء «مين بيلعب؟» ما تنطبق عليها، وزر «العب آخر لعبة» */
+  function paintFit() {
+    var w = whoGet(), n = w ? w.names.length : 0;
+    var fit = { sj: n <= 4, hu: w && n === 2, br: w && w.kind === "players" && n >= 3 };
+    [].forEach.call(document.querySelectorAll("a.game[data-g]"), function (a) {
+      var g = a.getAttribute("data-g"), bad = !!w && g in fit && !fit[g], tip = a.querySelector(".fit-tip");
+      if (bad && !tip) { tip = document.createElement("span"); tip.className = "fit-tip"; a.appendChild(tip); }
+      if (tip) { tip.hidden = !bad; tip.textContent = g === "br" ? "✍️ فردية: تكتبون اللاعبين فيها" : g === "hu" ? "✍️ لفريقين: تكتبون الأسماء فيها" : "✍️ لين 4 فرق: تكتبون الأسماء فيها"; }
+    });
+    var last = null; try { last = localStorage.getItem("majlis_last"); } catch (e) {}
+    var la = last && document.querySelector('a.game[href="' + last + '"]:not(.locked)'), lb = document.getElementById("lastbtn");
+    lb.hidden = !la; if (la) { lb.textContent = "▶ العب «" + la.querySelector("h2").textContent.trim() + "» مرة ثانية"; lb.setAttribute("data-href", last); }
+  }
+  document.getElementById("lastbtn").addEventListener("click", function () { var a = document.querySelector('a.game[href="' + this.getAttribute("data-href") + '"]'); if (a) a.click(); });
+  window.__paintFit = paintFit;
+  function paintWhoBtn() { paintFit(); var w = whoGet(), b = document.getElementById("whobtn"); b.textContent = w ? "👥 " + w.names.join("، ") : "👥 مين بيلعب؟"; b.title = "غيّر الفرق أو اللاعبين"; }
   nmBox.addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return; whoRead();
     if (b.hasAttribute("data-kind")) { var k = b.getAttribute("data-kind"); if (k !== whoDraft.kind) { whoDraft.kind = k; whoDraft.names = whoDraft.names.slice(0, WHO_MAX[k]); } whoPaint(); }
@@ -560,27 +589,43 @@ button, input, select, textarea, summary { font-family: var(--body); }
   function famSet(f) { try { if (f) localStorage.setItem(FAM_KEY, JSON.stringify(f)); else localStorage.removeItem(FAM_KEY); } catch (e) {} paintFamBar(); }
   function honorGet() { try { var h = JSON.parse(localStorage.getItem(HONOR_KEY) || "[]"); return Array.isArray(h) ? h.filter(function (x) { return x && typeof x.winner === "string"; }) : []; } catch (e) { return []; } }
   function honorAdd(rec) { var h = honorGet(); h.push(rec); try { localStorage.setItem(HONOR_KEY, JSON.stringify(h.slice(-200))); } catch (e) {} }
-  function gameList() { return [].map.call(document.querySelectorAll("a.game:not(.locked)"), function (a) { return { href: a.getAttribute("href"), name: a.querySelector("h2").textContent.trim() }; }); }
+  var FAM_SKIP = ["bara.html", "wsh.html"]; // ألعاب فردية: ما تنفع لجولة فرق
+  function gameList() { return [].filter.call(document.querySelectorAll("a.game:not(.locked)"), function (a) { return FAM_SKIP.indexOf(a.getAttribute("href")) < 0; }).map(function (a) { return { href: a.getAttribute("href"), name: a.querySelector("h2").textContent.trim() }; }); }
   function gameName(href) { var a = document.querySelector('a.game[href="' + href + '"]'); return a ? a.querySelector("h2").textContent.trim() : href; }
   function openDlg(d) { d.hidden = false; syncInert(); setTimeout(function () { var b = d.querySelector("input, .f-go, button"); if (b) b.focus(); }, 30); }
   function closeDlg(d) { d.hidden = true; syncInert(); }
   var famDraft = null;
   function famSetup() {
-    if (!famDraft) { var reg = []; try { reg = JSON.parse(localStorage.getItem("majlis_names") || "[]"); } catch (e) {} famDraft = { teams: ["فريق الصقور", "فريق النخيل"], games: gameList().slice(0, 3).map(function (g) { return g.href; }), err: "" }; }
-    var d = famDraft, list = gameList();
-    famBox.innerHTML = '<h2>🏆 جولة العائلة</h2><p>فرقكم تلعب 3 ألعاب ورا بعض، والنقاط تتجمع لين يطلع بطل الجولة.</p>' +
+    if (!famDraft) {
+      // الفرق من «مين بيلعب؟» لو كانت فرق
+      var w = null; try { w = JSON.parse(localStorage.getItem("majlis_who") || "null"); } catch (e) {}
+      var t0 = w && w.kind === "teams" && Array.isArray(w.names) && w.names.length >= 2 ? w.names.slice(0, 4) : ["فريق الصقور", "فريق النخيل"];
+      famDraft = { teams: t0, n: 3, dbl: false, games: gameList().slice(0, 3).map(function (g) { return g.href; }), err: "" };
+    }
+    var d = famDraft, list = gameList(), N = Math.min(d.n, list.length);
+    famBox.innerHTML = '<h2>🏆 جولة العائلة</h2><p>فرقكم تلعب ألعاب ورا بعض، والنقاط تتجمع لين يطلع بطل الجولة. (الفايز 3 نقاط، والتعادل نقطة لكل متعادل)</p>' +
       '<p class="f-step">١) الفرق</p><div class="f-teams">' + d.teams.map(function (t, i) { return '<input data-ft="' + i + '" maxlength="20" value="' + fesc(t) + '" aria-label="اسم الفريق ' + (i + 1) + '">'; }).join("") + '</div>' +
       '<div class="f-row">' + (d.teams.length < 4 ? '<button type="button" data-f="addteam">➕ فريق</button>' : "") + (d.teams.length > 2 ? '<button type="button" data-f="delteam">➖ فريق</button>' : "") + '</div>' +
-      '<p class="f-step">٢) اختاروا 3 ألعاب (' + d.games.length + ' من 3)</p><div class="f-pick">' + list.map(function (g) { var on = d.games.indexOf(g.href) >= 0; return '<button type="button" data-fg="' + fesc(g.href) + '" aria-pressed="' + on + '"' + (!on && d.games.length >= 3 ? " disabled" : "") + ">" + fesc(g.name) + "</button>"; }).join("") + '</div>' +
+      '<p class="f-step">٢) كم لعبة؟</p><div class="f-row f-n">' + [2, 3, 4, 5].filter(function (k) { return k <= list.length; }).map(function (k) { return '<button type="button" data-fn="' + k + '" aria-pressed="' + (d.n === k) + '">' + k + "</button>"; }).join("") + "</div>" +
+      '<p class="f-step">٣) اختاروا ' + N + " ألعاب بالترتيب (" + d.games.length + " من " + N + ') <button type="button" class="f-link" data-f="randgames">🎲 اختاروا لنا</button></p><div class="f-pick">' +
+      list.map(function (g) { var k = d.games.indexOf(g.href), on = k >= 0; return '<button type="button" data-fg="' + fesc(g.href) + '" aria-pressed="' + on + '"' + (!on && d.games.length >= N ? " disabled" : "") + ">" + (on ? (k + 1) + ". " : "") + fesc(g.name) + "</button>"; }).join("") + '</div>' +
+      '<label class="f-dbl"><input type="checkbox" data-f-dbl' + (d.dbl ? " checked" : "") + '> 🔥 آخر لعبة نقاطها دبل (6 للفايز)</label>' +
       (d.err ? '<p class="f-err">' + fesc(d.err) + "</p>" : "") +
       '<div class="f-row"><button type="button" class="f-go" data-f="start">يلا نبدأ الجولة ▶</button><button type="button" data-f="close">إلغاء</button></div>';
+  }
+  function famGamesHTML(f) {
+    var res = f.results || [];
+    return '<ol class="f-games">' + f.games.map(function (g, i) {
+      var r = res[i], st = r ? (r.skipped ? "⏭ تخطيناها" : "🏆 " + r.w.join(" و ") + (r.mult > 1 ? " (دبل)" : "")) : i === f.idx ? "◀ الحين" : (f.dbl && i === f.games.length - 1 ? "🔥 دبل" : "");
+      return '<li class="' + (i === f.idx && !r ? "now" : r ? "done" : "") + '"><span>' + fesc(gameName(g)) + "</span><small>" + fesc(st) + "</small></li>";
+    }).join("") + "</ol>";
   }
   function famStage() {
     var f = famGet(); if (!f) return famSetup();
     if (f.idx >= f.games.length) return famFinal(f);
     var g = f.games[f.idx];
     famBox.innerHTML = '<h2>🏆 جولة العائلة</h2><p class="f-step">اللعبة ' + (f.idx + 1) + " من " + f.games.length + "</p>" +
-      '<p class="f-big">' + fesc(gameName(g)) + "</p>" + famBoardHTML(f) +
+      '<p class="f-big">' + fesc(gameName(g)) + (f.dbl && f.idx === f.games.length - 1 ? " 🔥 دبل" : "") + "</p>" + famGamesHTML(f) + famBoardHTML(f) +
       '<div class="f-row"><button type="button" class="f-go" data-f="play">ابدأ ' + fesc(gameName(g)) + ' ▶</button></div>' +
       '<div class="f-row"><button type="button" class="f-link" data-f="skipgame">تخطي هذي اللعبة</button><button type="button" class="f-link" data-f="quit">إنهاء الجولة</button></div>';
   }
@@ -603,7 +648,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   function famFinal(f) {
     var top = Math.max.apply(null, f.teams.map(function (t) { return t.pts; })), win = f.teams.filter(function (t) { return t.pts === top; }).map(function (t) { return t.name; });
     if (!f.saved) { honorAdd({ date: new Date().toISOString(), winner: win.join(" و "), teams: f.teams.map(function (t) { return t.name; }), games: f.games.map(gameName) }); f.saved = true; famSet(f); }
-    famBox.innerHTML = '<h2>🏆 بطل جولة العائلة</h2><p class="f-big">' + (win.length > 1 ? "تعادل: " : "") + fesc(win.join(" و ")) + " 🎉</p>" + famBoardHTML(f) +
+    famBox.innerHTML = '<h2>🏆 بطل جولة العائلة</h2><p class="f-big">' + (win.length > 1 ? "تعادل: " : "") + fesc(win.join(" و ")) + " 🎉</p>" + famBoardHTML(f) + famGamesHTML(f) +
       '<p class="f-muted">انحفظ في لوحة الشرف 🏅</p><div class="f-row"><button type="button" class="f-go" data-f="again">جولة جديدة بنفس الفرق 🔁</button><button type="button" data-f="done">تم</button></div>';
   }
   function paintFamBar() {
@@ -611,11 +656,12 @@ button, input, select, textarea, summary { font-family: var(--body); }
     if (!f || f.idx >= f.games.length || !document.getElementById("play").hidden) { famBar.hidden = true; return; }
     famBar.hidden = false; famBar.textContent = "🏆 جولة العائلة · اللعبة " + (f.idx + 1) + " من " + f.games.length + " · " + f.teams.map(function (t) { return t.name + " " + t.pts; }).join(" · ");
   }
-  function famReadTeams() { [].forEach.call(famBox.querySelectorAll("[data-ft]"), function (inp) { famDraft.teams[+inp.getAttribute("data-ft")] = inp.value; }); }
+  function famReadTeams() { [].forEach.call(famBox.querySelectorAll("[data-ft]"), function (inp) { famDraft.teams[+inp.getAttribute("data-ft")] = inp.value; }); var dc = famBox.querySelector("[data-f-dbl]"); if (dc) famDraft.dbl = dc.checked; }
   famBox.addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     var f = famGet();
-    if (b.hasAttribute("data-fg")) { famReadTeams(); var h = b.getAttribute("data-fg"), k = famDraft.games.indexOf(h); if (k >= 0) famDraft.games.splice(k, 1); else if (famDraft.games.length < 3) famDraft.games.push(h); famDraft.err = ""; famSetup(); return; }
+    if (b.hasAttribute("data-fg")) { famReadTeams(); var h = b.getAttribute("data-fg"), k = famDraft.games.indexOf(h); if (k >= 0) famDraft.games.splice(k, 1); else if (famDraft.games.length < famDraft.n) famDraft.games.push(h); famDraft.err = ""; famSetup(); return; }
+    if (b.hasAttribute("data-fn")) { famReadTeams(); famDraft.n = +b.getAttribute("data-fn"); famDraft.games = famDraft.games.slice(0, famDraft.n); famDraft.err = ""; famSetup(); return; }
     if (b.hasAttribute("data-fw")) {
       if (!f) return; var w = +b.getAttribute("data-fw"), k = famPick.indexOf(w);
       if (k >= 0) famPick.splice(k, 1); else famPick.push(w);
@@ -624,7 +670,9 @@ button, input, select, textarea, summary { font-family: var(--body); }
     switch (b.getAttribute("data-f")) {
       case "famok":
         if (!f || !famPick.length) return;
-        if (famPick.length === 1) f.teams[famPick[0]].pts += 3; else famPick.forEach(function (i) { f.teams[i].pts += 1; });
+        var mult = f.dbl && f.idx === f.games.length - 1 ? 2 : 1;
+        if (famPick.length === 1) f.teams[famPick[0]].pts += 3 * mult; else famPick.forEach(function (i) { f.teams[i].pts += 1 * mult; });
+        (f.results = f.results || [])[f.idx] = { w: famPick.map(function (i) { return f.teams[i].name; }), mult: mult };
         famPick = []; famSuggest = null; f.idx++; f.waiting = false; famSet(f); famStage(); break;
       case "addteam": famReadTeams(); famDraft.teams.push(["فريق الذيب", "فريق القمر"][famDraft.teams.length - 2] || "فريق"); famSetup(); break;
       case "delteam": famReadTeams(); famDraft.teams.pop(); famSetup(); break;
@@ -634,13 +682,15 @@ button, input, select, textarea, summary { font-family: var(--body); }
         var names = famDraft.teams.map(function (t) { return String(t).trim().slice(0, 20); });
         if (names.some(function (n) { return !n; })) { famDraft.err = "اكتبوا اسم لكل فريق"; famSetup(); break; }
         if (names.some(function (n, i) { return names.indexOf(n) !== i; })) { famDraft.err = "أسماء الفرق لازم تكون مختلفة"; famSetup(); break; }
-        if (famDraft.games.length !== 3) { famDraft.err = "اختاروا 3 ألعاب"; famSetup(); break; }
-        famSet({ teams: names.map(function (n) { return { name: n, pts: 0 }; }), games: famDraft.games.slice(), idx: 0, waiting: false, started: Date.now() }); famStage(); break;
+        var need = Math.min(famDraft.n, gameList().length);
+        if (famDraft.games.length !== need) { famDraft.err = "اختاروا " + need + " ألعاب"; famSetup(); break; }
+        famSet({ teams: names.map(function (n) { return { name: n, pts: 0 }; }), games: famDraft.games.slice(), idx: 0, waiting: false, started: Date.now(), dbl: !!famDraft.dbl, results: [] }); famStage(); break;
+      case "randgames": famReadTeams(); var pool = gameList().map(function (g) { return g.href; }); for (var q = pool.length - 1; q > 0; q--) { var z = Math.floor(Math.random() * (q + 1)), tmp = pool[q]; pool[q] = pool[z]; pool[z] = tmp; } famDraft.games = pool.slice(0, Math.min(famDraft.n, pool.length)); famDraft.err = ""; famSetup(); break;
       case "play": if (!f) break; f.waiting = true; famSet(f); closeDlg(famDlg); open(f.games[f.idx], true); break;
       case "replay": if (!f) break; famPick = []; famSuggest = null; f.waiting = true; famSet(f); closeDlg(famDlg); open(f.games[f.idx], true); break;
-      case "skipgame": if (!f) break; f.idx++; famSet(f); famStage(); break;
+      case "skipgame": if (!f) break; (f.results = f.results || [])[f.idx] = { skipped: true }; f.idx++; famSet(f); famStage(); break;
       case "quit": famSet(null); closeDlg(famDlg); break;
-      case "again": if (!f) break; famSet({ teams: f.teams.map(function (t) { return { name: t.name, pts: 0 }; }), games: f.games.slice(), idx: 0, waiting: false, started: Date.now() }); famStage(); break;
+      case "again": if (!f) break; famSet({ teams: f.teams.map(function (t) { return { name: t.name, pts: 0 }; }), games: f.games.slice(), idx: 0, waiting: false, started: Date.now(), dbl: !!f.dbl, results: [] }); famStage(); break;
       case "done": famSet(null); closeDlg(famDlg); break;
     }
   });
@@ -689,6 +739,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   fsBtn.addEventListener("click", function () { if (isFs()) exitFs(); else enterFs(); });
 
   function open(href, push) {
+    try { localStorage.setItem("majlis_last", href); } catch (e) {} // «العب آخر لعبة»
     // a new frame each time: its first load adds no browser-history entry of its own
     if (!frame || frame.getAttribute("src") !== href) {
       if (frame) frame.remove();
@@ -704,7 +755,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   function close() {
     play.hidden = true; if (frame) { frame.remove(); frame = null; } refresh();
     var first = document.querySelector(".game"); if (first) first.focus();
-    paintFamBar(); famAfterGame();
+    paintFamBar(); famAfterGame(); if (window.__paintFit) window.__paintFit();
   }
   document.querySelector(".games").addEventListener("click", function (e) {
     var a = e.target.closest("a.game"); if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
