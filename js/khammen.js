@@ -375,12 +375,9 @@
   }
 
   function voters() {
-    var c = game.cur, me = game.players[c.player];
-    var list = game.players.map(function (p, i) { return i; }).filter(function (i) {
-      return i !== c.player && !(game.settings.mode === "teams" && game.players[i].team === me.team);
-    });
-    if (!list.length) list = game.players.map(function (p, i) { return i; }).filter(function (i) { return i !== c.player; });
-    return list;
+    var c = game.cur;
+    // يصوّت الكل غير المخمّن (فريقه والخصم) — لو صوّت الخصم بروحه صار هو الحكم على نفسه
+    return game.players.map(function (p, i) { return i; }).filter(function (i) { return i !== c.player; });
   }
 
   function finishVote() {
@@ -655,7 +652,7 @@
       "<li>إذا عرفها يضغط «خمّن» ويكتب جوابه، والنظام يتحقق منه ويقبل المرادفات المشهورة. أو يقولها بصوت والعائلة تحكم.</li>" +
       "<li>عنده 5 محاولات. إذا خلصت المحاولات أو الوقت، يروح الدور للي بعده.</li></ol>" +
       '<h3>النقاط</h3><div class="pts-table"><div><b>10</b>تخمين صحيح</div><div><b>15</b>صح من أول محاولة</div><div><b>+5</b>إذا عرفها في أول ' + QUICK_BONUS_SEC + ' ثانية</div><div><b>×2</b>في الجولة الدبل</div><div><b>0</b>خلص الوقت أو المحاولات</div></div>' +
-      "<h3>إذا اختلفتوا</h3><p>إذا رفض النظام جواب ويشوف المخمّن إنه صح، يضغط «اعتراض» ويصير تصويت بين الباقين. وفي الفرق ما يصوّت أعضاء فريقه. التعادل لصالح المخمّن.</p>" +
+      "<h3>إذا اختلفتوا</h3><p>إذا رفض النظام جواب ويشوف المخمّن إنه صح، يضغط «اعتراض» ويصير تصويت بين الكل غير المخمّن (فريقه والخصم). التعادل لصالح المخمّن.</p>" +
       "<h3>الأنماط</h3><ul><li><b>فردي:</b> كل واحد لنفسه.</li><li><b>فرق:</b> الفرق تتناوب، وكل فريق يتناوب أعضاؤه.</li><li><b>مواجهة:</b> لاعبين اثنين، وكل واحد يخمّن أكثر عدد في وقته. «باص» ينقله لشيء جديد.</li><li><b>عشوائي:</b> النظام يختار التصنيف والصعوبة وترتيب اللاعبين.</li></ul>" +
       "<h3>أزرار مفيدة</h3><ul><li><b>إعادة 🔄:</b> نفس اللاعب بشيء جديد (لو أحد قالها بالغلط).</li><li><b>تخطي ⏭:</b> ينتقل الدور بدون نقاط.</li><li><b>⏸ وقف:</b> يوقف الوقت.</li><li>زر <kbd>مسافة</kbd> أو <kbd>Enter</kbd> ينفّذ الزر الرئيسي.</li></ul>" +
       "<h3>صور حقيقية</h3><p>من «بنك الأشياء» تقدرون تضيفون صورة لأي شيء من جوالكم أو جهازكم، وتظهر بدل الرمز.</p>" +
@@ -698,7 +695,7 @@
     } else if (m.type === "vote") {
       var vs = voters(), yes = 0, no = 0;
       Object.keys(m.votes).forEach(function (k) { if (m.votes[k] === true) yes++; else if (m.votes[k] === false) no++; });
-      inner = "<h2>تصويت 🗳️</h2><p>" + (m.ctx === "object" ? "«" + esc(game.cur.lastTyped) + "» — هل هي نفس الشيء؟" : "هل كان جواب " + esc(game.players[game.cur.player].name) + " صح؟") + '</p><p class="muted">كل واحد يصوّت (ما يصوّت المخمّن' + (game.settings.mode === "teams" ? " ولا فريقه" : "") + "). التعادل لصالح المخمّن.</p>" +
+      inner = "<h2>تصويت 🗳️</h2><p>" + (m.ctx === "object" ? "«" + esc(game.cur.lastTyped) + "» — هل هي نفس الشيء؟" : "هل كان جواب " + esc(game.players[game.cur.player].name) + " صح؟") + '</p><p class="muted">كل واحد يصوّت (ما يصوّت المخمّن). التعادل لصالح المخمّن.</p>' +
         '<div class="voters">' + vs.map(function (i) {
           return '<div class="voter"><span class="n">' + esc(game.players[i].name) + '</span><button class="v-yes" data-vote="' + i + ':1" aria-pressed="' + (m.votes[i] === true) + '">👍 صح</button><button class="v-no" data-vote="' + i + ':0" aria-pressed="' + (m.votes[i] === false) + '">👎 غلط</button></div>';
         }).join("") + '</div><div class="tally">👍 ' + yes + " — 👎 " + no + "</div>" +

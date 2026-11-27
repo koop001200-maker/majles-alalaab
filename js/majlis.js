@@ -63,7 +63,23 @@
         go.onclick = function () { clearInterval(iv); send("home"); };
         stay.onclick = function () { clearInterval(iv); box.remove(); };
       }
-      setInterval(function () { if (!done && window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS() && over()) back(); }, 1000);
+      /* نقترح الفايز على المجلس من نتيجة اللعبة المحفوظة: أي قائمة فيها أسماء فرق الجولة ونقاطها */
+      function winners() {
+        var ft = MAJLIS_FAM_TEAMS(), best = null;
+        function walk(o, d) {
+          if (!o || typeof o !== "object" || d > 5 || best) return;
+          if (Array.isArray(o)) {
+            var hits = o.filter(function (x) { return x && typeof x.name === "string" && typeof x.score === "number" && ft.indexOf(x.name.trim()) >= 0; });
+            if (hits.length >= 2) { best = hits; return; }
+          }
+          Object.keys(o).forEach(function (k) { walk(o[k], d + 1); });
+        }
+        for (var i = 0; i < localStorage.length && !best; i++) { var k = localStorage.key(i); if (/^majlis|_used|_bank|_settings|_custom|_img/.test(k)) continue; try { walk(JSON.parse(localStorage.getItem(k)), 0); } catch (e) {} }
+        if (!best) return null;
+        var top = Math.max.apply(null, best.map(function (x) { return x.score; }));
+        return best.filter(function (x) { return x.score === top; }).map(function (x) { return x.name.trim(); });
+      }
+      setInterval(function () { if (!done && window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS() && over()) { var w = null; try { w = winners(); } catch (e) {} if (w) send({ famwin: w }); back(); } }, 1000);
     })();
     // links to the hub close the frame instead of loading the hub inside it
     document.addEventListener("click", function (e) {

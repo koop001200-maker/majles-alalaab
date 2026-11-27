@@ -112,7 +112,12 @@
   function nextRound() {
     if (window.MAJLIS_PASS && !MAJLIS_PASS.gate("br")) { saveGame(); render(); return; }
     var n = game.players.length, out;
-    do { out = Math.floor(Math.random() * n); } while (n > 1 && out === game.lastOut);
+    // توزيع عادل: يُختار عشوائياً من اللي طلعوا «برا السالفة» أقل عدد مرات (وما يتكرر نفس الشخص ورا بعض)
+    if (!Array.isArray(game.outN) || game.outN.length !== n) game.outN = game.players.map(function () { return 0; });
+    var min = Math.min.apply(null, game.outN), pool = [];
+    for (var i = 0; i < n; i++) if (game.outN[i] === min && (n < 2 || i !== game.lastOut)) pool.push(i);
+    if (!pool.length) for (i = 0; i < n; i++) if (i !== game.lastOut) pool.push(i);
+    out = pool[Math.floor(Math.random() * pool.length)]; game.outN[out]++;
     game.lastOut = out; game.round++; game.word = pickWord().id; game.out = out; game.idx = 0; game.shown = false;
     game.timeLeft = settings.talk; game.paused = false; game.accused = -1; game.guess = null; game.gain = [];
     game.phase = "pass"; commit();
@@ -250,7 +255,7 @@
 
   function vTalk() {
     var w = wordOf(game.word) || { cat: "" }, c = catOf(w.cat), n = game.players.length, st = game.starter || 0;
-    var order = game.players.map(function (p, i) { return '<span' + (i === st ? ' class="now"' : "") + ">" + esc(game.players[(st + i) % n].name) + "</span>"; }).join("");
+    var order = game.players.map(function (p, i) { return '<span' + (i === 0 ? ' class="now"' : "") + ">" + esc(game.players[(st + i) % n].name) + "</span>"; }).join("");
     return '<section class="screen">' + topbar() + '<span class="cat">' + c.icon + " الفئة: " + esc(c.name) + "</span>" +
       '<div class="ring' + (game.timeLeft <= 15 ? " warn" : "") + '" id="ring" style="--p:' + (game.timeLeft / settings.talk) + '"><span id="t">' + (game.paused ? "⏸" : fmt(game.timeLeft)) + "</span></div>" +
       '<p class="sub">كل واحد يعطي تلميحة وحدة بالترتيب، يبدأ <b>' + esc(game.players[st].name) + '</b>. بعدها جولة ثانية إذا بقي وقت!</p>' +

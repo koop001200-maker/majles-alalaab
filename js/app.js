@@ -158,6 +158,8 @@
     });
     var teams = names.map(function (nm, i) { return { name: nm, score: 0, color: TEAM_COLORS[i] }; });
     var count = settings.rounds;
+    // بالدور: نقرّب عدد الجولات لأقرب مضاعف لعدد الفرق عشان كل فريق ياخذ نفس عدد الأدوار (3 فرق × 8 = 3/3/2 ظلم)
+    if (settings.answerMode !== "open" && n > 1 && count % n) count = Math.min(30, Math.max(n, Math.round(count / n) * n));
     var allCats = CATS.map(function (c) { return c.id; });
     var plan = [], exclude = [];
     for (var i = 0; i < count; i++) {
@@ -267,7 +269,7 @@
     var r = game.round;
     if (!r || r.done || r.revealed >= 4) return;
     r.revealed++; freshClue = r.revealed - 1;
-    r.locked = []; r.phase = "main";
+    r.locked = (r.pre || []).slice(); r.phase = "main"; // السؤال الفاصل: الفرق غير المتعادلة مقفولة
     var pts = pointsAt(r.revealed);
     setMsg(game.settings.answerMode === "open"
       ? "المعلومة " + r.revealed + " — الإجابة الآن بـ " + pts + " " + pointsWord(pts) + " لأي فريق"
@@ -453,7 +455,7 @@
       '<div class="field"><span class="label">أسماء ' + (isP ? "اللاعبين" : "الفرق") + '</span><div class="team-inputs">' + names + "</div>" + nmChips(settings.names.slice(0, n)) + "</div>" +
       '<div class="field"><span class="label">عدد الجولات</span><div class="stepper">' +
       '<button class="btn" data-act="rounds-" aria-label="إنقاص">−</button><output id="rounds-out">' + settings.rounds + "</output>" +
-      '<button class="btn" data-act="rounds+" aria-label="زيادة">+</button></div><p class="hint">مضاعفات عدد الفرق تعطي كل فريق نفس عدد الأدوار.</p></div>' +
+      '<button class="btn" data-act="rounds+" aria-label="زيادة">+</button></div><p class="hint">في «بالدور» يتعدل العدد تلقائياً لأقرب مضاعف لعدد الفرق عشان كل فريق ياخذ نفس عدد الأدوار.</p></div>' +
       '<div class="field"><span class="label">طريقة الإجابة</span><div class="chips">' +
       '<button class="chip" data-answer-mode="turn" aria-pressed="' + (settings.answerMode === "turn") + '">بالدور</button>' +
       '<button class="chip" data-answer-mode="open" aria-pressed="' + (settings.answerMode === "open") + '">الأسرع يجيب</button></div>' +
@@ -616,6 +618,7 @@
       standingsHTML(game.teams) +
       '<p class="muted">عدد الجولات: ' + game.plan.length + " — عُرفت الإجابة في " + correct + " منها. أحسنتم!</p>" +
       (game.trial ? '<p class="gold" style="font-size:1.2em">خلصت التجربة 👌 جاهزين للمباراة الحقيقية؟</p>' : "") +
+      (winners.length > 1 && !game.trial && (game.tb || 0) < 3 ? '<div class="home-actions"><button class="btn primary big" data-act="tiebreak">⚡ سؤال فاصل (الأسرع يجاوب)</button></div>' : "") +
       '<div class="home-actions"><button class="btn primary big" data-act="replay">' + (game.trial ? "ابدأ المباراة الحقيقية" : "العب مرة أخرى بأسئلة جديدة") + "</button>" +
       '<button class="btn big" data-act="setup">تعديل الإعدادات</button><button class="btn big ghost" data-act="home-clear">الصفحة الأولى</button></div>' +
       "</section>";
@@ -822,6 +825,16 @@
       case "trial": startTrial(); break;
       case "cats-none": collectNames(); settings.cats = []; saveSettings(); render(); break;
       case "replay": startGame(); break;
+      case "tiebreak": (function () {
+        // تعادل: سؤال إضافي للكل، والأسرع يجاوب — نفس الفرق والنقاط
+        var q = pickQuestion(game.settings.cats, 2, game.plan.map(function (p) { return p.qid; })) || pickQuestion(game.settings.cats, 1, game.plan.map(function (p) { return p.qid; }));
+        if (!q) return;
+        game.tb = (game.tb || 0) + 1; game.plan.push({ qid: q.id, type: "normal", random: false, tiebreak: true });
+        game.settings.answerMode = "open"; game.idx = game.plan.length - 1; game.finalQ = null; game.status = "playing"; newRound();
+        var top = Math.max.apply(null, game.teams.map(function (t) { return t.score; }));
+        game.round.pre = game.teams.map(function (t, i) { return t.score === top ? -1 : i; }).filter(function (i) { return i >= 0; }); game.round.locked = game.round.pre.slice();
+        setMsg("⚡ سؤال فاصل — المتعادلين بس، والأسرع يجاوب", ""); commit();
+      })(); break;
       case "rounds-": collectNames(); settings.rounds = Math.max(3, settings.rounds - 1); saveSettings(); render(); break;
       case "rounds+": collectNames(); settings.rounds = Math.min(30, settings.rounds + 1); saveSettings(); render(); break;
       case "cats-all": collectNames(); settings.cats = CATS.map(function (c) { return c.id; }); saveSettings(); render(); break;

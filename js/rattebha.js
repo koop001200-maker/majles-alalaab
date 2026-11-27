@@ -20,7 +20,7 @@
     unknown: { name: "جولة المجهول ❓", desc: "البطاقات تظهر… وطريقة الترتيب تنكشف بعد شوي" },
     decider: { name: "جولة الحسم 🔥", desc: "سؤال صعب والنقاط مضاعفة" }
   };
-  var SPEED_TIME = 25, UNKNOWN_DELAY = 8, PICK_TIME = 12, pickLeft = null;
+  var SPEED_TIME = 25, UNKNOWN_DELAY = 8, PICK_TIME = 25, pickLeft = null;
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -255,7 +255,9 @@
       bonus = c.elapsed <= ref / 3 ? 3 : c.elapsed <= ref * 2 / 3 ? 1 : 0;
     }
     var mult = c.special === "decider" ? 2 : 1;
-    c.results.push({ team: team, order: c.order.slice(), errors: err, base: base, bonus: bonus, mult: mult, points: (base + bonus) * mult, timedOut: !!auto });
+    // ما تحسّن عن الخلطة الأصلية (أو تركها مثل ما هي) = صفر، عشان «اعتماد» بدون ترتيب ما يجيب نقاط
+    var still = base > 0 && err > 0 && err >= inversions(c.start); if (still) base = 0;
+    c.results.push({ team: team, order: c.order.slice(), errors: err, base: base, bonus: bonus, mult: mult, points: (base + bonus) * mult, timedOut: !!auto, still: still });
     grabbed = false;
     if (c.qi + 1 < c.queue.length) { c.qi++; game.phase = "cover"; SFX.drop(); commit(); return; }
     game.phase = "reveal"; c.revealed = false;
@@ -287,7 +289,7 @@
   function nextTurn() {
     if (game.phase !== "scores") return;
     if (game.cur && game.cur.tiebreak) { afterTiebreak(); return; }
-    game.turn++;
+    if (!(game.cur && game.cur.special === "all")) game.turn++; // «الكل يشارك» جولة إضافية للجميع، ما تاكل دور الفريق اللي سحبها
     if (game.turn < game.total) {
       /* long matches: when every number has been opened, deal a fresh board */
       if (game.tiles.every(function (t) { return t.opened; })) {
@@ -454,7 +456,7 @@
     var best = single ? r0 : null, verdict = "";
     if (single) {
       verdict = r0.errors === 0 ? '<div class="big good">ترتيب كامل! 🎉</div>' : r0.errors === 1 ? '<div class="big mid">خطأ واحد بس! 👌</div>' : r0.base === 0 ? '<div class="big bad">' + pick(["ولا وحدة بمكانها تقريباً 🙈", "عكستوها؟ 😂", "الترتيب زعلان منكم 😅"]) + "</div>" : '<div class="big bad">' + pick(["قريبة… من بعيد 😅", "اللخبطة واضحة 🙃", "الترتيب له رأي ثاني 😂"]) + "</div>";
-      verdict += '<div class="pts"><span>' + (errLabel(r0.errors, n) + " " + r0.base) + "</span>" + (r0.bonus ? "<span>⚡ سرعة +" + r0.bonus + "</span>" : "") + (r0.mult > 1 ? "<span>🔥 ×2</span>" : "") + (r0.timedOut ? "<span>⏰ خلص الوقت</span>" : "") + '<span class="tot">+' + r0.points + " " + ptsWord(r0.points) + "</span></div>";
+      verdict += '<div class="pts"><span>' + ((r0.still ? "ما تحسّن عن الخلطة" : errLabel(r0.errors, n)) + " " + r0.base) + "</span>" + (r0.bonus ? "<span>⚡ سرعة +" + r0.bonus + "</span>" : "") + (r0.mult > 1 ? "<span>🔥 ×2</span>" : "") + (r0.timedOut ? "<span>⏰ خلص الوقت</span>" : "") + '<span class="tot">+' + r0.points + " " + ptsWord(r0.points) + "</span></div>";
     } else verdict = '<div class="big good">' + (c.tiebreak ? "نتيجة الجولة الفاصلة" : "النتائج 👥") + "</div>";
     var nextBtn = game.settings.host === "host" ? '<button class="btn go huge" data-ui="to-scores">لوحة النتائج 📊</button>' :
       '<button class="btn go huge" data-ui="to-scores">لوحة النتائج 📊 <span class="muted" style="font-size:.5em">(<span id="auto-left">' + c.autoLeft + "</span>)</span></button>";
