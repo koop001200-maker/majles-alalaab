@@ -29,6 +29,9 @@
   var settings = Object.assign({}, DEF, Store.get(K.settings, {}) || {});
   (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) settings.names = P.teams.slice(0, 4); settings.diff = pick("level", { easy: "easy", mix: "mix", hard: "hard" }); settings.time = pick("time", { fast: 20, normal: 30, slow: 45 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) settings.names = FT.slice(0, 4); })(); // فرق جولة العائلة (حتى 4)
+  // «مين بيلعب؟» من المجلس: لو 2–4 أسماء تصير هي الفرق
+  function whoSJ() { var W = window.MAJLIS_WHO && MAJLIS_WHO(); return W && W.names.length <= 4 ? W : null; }
+  (function () { var W = whoSJ(); if (W) settings.names = W.names.slice(); })();
   (function sanitize() {
     // من n0/n1 القديمة إلى قائمة names (2–4)، و«الفريق الأول» القديم صار «فريق إبراهيم»
     if (!Array.isArray(settings.names) || settings.names.length < 2 || (settings.n0 != null && settings.names === DEF.names)) settings.names = [settings.n0 === "الفريق الأول" ? TNAMES[0] : settings.n0, settings.n1];
@@ -146,7 +149,7 @@
   function chipsOf(list, cur, act) { return '<div class="chips">' + list.map(function (x) { var v = Array.isArray(x) ? x[0] : x, l = Array.isArray(x) ? x[1] : x + " ثانية"; return '<button class="chip" data-a="' + act + '" data-v="' + esc(v) + '" aria-pressed="' + (String(cur) === String(v)) + '">' + esc(l) + "</button>"; }).join("") + "</div>"; }
   function vSetup() {
     var s = settings, sel = s.cats;
-    var teams = s.names.map(function (n, t) { return '<label class="tname" style="--c:' + TCOL[t] + '"><span class="dot"></span><input type="text" id="tn' + t + '" maxlength="18" value="' + esc(n) + '" aria-label="اسم الفريق ' + (t + 1) + '"></label>'; }).join("") +
+    var teams = whoSJ() ? MAJLIS_WHO_NOTE(s.names) : s.names.map(function (n, t) { return '<label class="tname" style="--c:' + TCOL[t] + '"><span class="dot"></span><input type="text" id="tn' + t + '" maxlength="18" value="' + esc(n) + '" aria-label="اسم الفريق ' + (t + 1) + '"></label>'; }).join("") +
       '<div class="row"><button class="btn sm" data-a="tadd"' + (s.names.length >= 4 ? " disabled" : "") + '>＋ فريق</button><button class="btn sm" data-a="tdel"' + (s.names.length <= 2 ? " disabled" : "") + ">− فريق</button><span class=\"hint\">" + s.names.length + " فرق</span></div>";
     var grid = allCats().map(function (c) {
       var i = sel.indexOf(c.id), miss = missing(c.id), dis = miss.length && i < 0;

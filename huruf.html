@@ -609,6 +609,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
   /* ---------- منطق اللعبة ---------- */
   const G = () => S.game;
   const player = (id) => S.players.find((p) => p.id === id);
+  // «مين بيلعب؟» من المجلس: الأسماء تصير المتسابقين (لو ما فيه جولة شغالة)
+  (function () { const W = window.MAJLIS_WHO && MAJLIS_WHO(); if (!W) return; const cur = S.players.map((p) => p.name).join('|'); if (cur !== W.names.join('|') && !['playing', 'paused', 'won', 'timeout', 'revealed'].includes(S.game.status)) S.players = W.names.map((n) => ({ id: uid(), name: n, score: 0 })); })();
   const live = (st) => st === 'playing' || st === 'paused';
   const inRound = (st) => ['playing', 'paused', 'won', 'timeout', 'revealed'].includes(st);
   function pool(s) {

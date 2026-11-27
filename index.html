@@ -214,6 +214,13 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
 .sp-names .chips button { background: var(--yellow); }
 .sp-names .done { background: var(--green); color: #fff; align-self: center; font-size: 18px; padding: .35em 1.6em; }
 .sp-names .hint { margin: 0; font-size: 13px; opacity: .75; }
+.who-kind, .who-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.who-kind button, .who-row button { font: 800 16px var(--body); color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .3em 1em; cursor: pointer; }
+.who-kind button[aria-pressed="true"] { background: var(--yellow); box-shadow: 3px 3px 0 var(--ink); }
+.who-row button:disabled { opacity: .4; cursor: not-allowed; }
+.who-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(10em, 1fr)); gap: 8px; }
+.who-list input { max-width: none !important; text-align: center; font-size: 17px !important; }
+.sp-names .who-row .done { background: var(--green); color: #fff; font-size: 20px; padding: .35em 1.8em; }
 .sp-mode button[aria-pressed="true"] { background: var(--yellow); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
 
 /* آيباد/تابلت بالطول: بطاقتين في الصف بدل أربع نحيفة وطويلة، وخطوط أكبر شوي */
@@ -255,13 +262,23 @@ button, input, select, textarea, summary { font-family: var(--body); }
 .devbox .dv-reset { background: #fee2e2 !important; color: #7f1d1d !important; }
 .devbox .done { color: #fff !important; font-size: 18px !important; font-weight: 800 !important; }
 .devbox .dv-note, .devbox .dv-notes li, .devbox summary { color: var(--ink); }
+
+/* تصنيف البطاقات: صف «شاشة وحدة» فوق وصف «بالجوالات» تحت، لكل صف عنوان صغير */
+.grp-t { grid-column: 1 / -1; margin: 0; text-align: start; font: 800 clamp(13px, min(1.2vw, 2.2vh), 22px)/1.2 var(--body); color: #fff; text-shadow: 2px 2px 0 var(--ink); }
+.grp-t small { font-size: .8em; opacity: .9; font-weight: 700; }
+.games { grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) !important; row-gap: clamp(4px, 1vh, 14px) !important; }
+@media (max-width: 640px) { .games { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) !important; } .grp-t small { display: none; } }
+@media (orientation: portrait) and (min-width: 641px) and (min-height: 900px) { .games { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) !important; } }
+@media (max-height: 520px) { .grp-t small { display: none; } }
 </style>
 </head>
 <body data-hub>
-<div class="sp-names" id="spnames" hidden role="dialog" aria-label="أسماء اللاعبين"><div class="box"><h2>👥 مين اللاعبين؟</h2>
-  <form id="nameform"><input id="nameinp" maxlength="16" placeholder="اكتب اسم وأضف" autocomplete="off"><button type="submit">+ إضافة</button></form>
-  <div class="chips" id="namechips"></div><p class="hint">تنعكس هذي الأسماء على الألعاب اللي فيها أسماء لاعبين (خمّن وش هو؟، برا السالفة). اضغط الاسم لإزالته.</p>
-  <button type="button" class="done" id="namesdone">تم</button></div></div>
+<div class="sp-names" id="spnames" hidden role="dialog" aria-label="مين بيلعب؟"><div class="box"><h2>👥 مين بيلعب؟</h2>
+  <div class="who-kind" role="group" aria-label="طريقة اللعب"><button type="button" data-kind="teams">👥 فرق</button><button type="button" data-kind="players">🙋 كل واحد لحاله</button></div>
+  <div class="who-list" id="wholist"></div>
+  <div class="who-row"><button type="button" id="whoadd">＋ إضافة</button><button type="button" id="whodel">− حذف</button></div>
+  <p class="hint" id="whohint"></p>
+  <div class="who-row"><button type="button" class="done" id="namesdone">يلا ✔</button><button type="button" id="whoskip">تخطي</button></div></div></div>
 <button class="fs" id="fs" type="button">⛶ شاشة كاملة</button>
 <button class="fs hm" id="hm" type="button">🏠 الرئيسية</button>
 <button class="fs gear" id="gear" type="button" aria-label="إعدادات المطورين" title="إعدادات المطورين">⚙</button>
@@ -271,6 +288,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.28:</b> بعد «يلا نلعب» تطلع «👥 مين بيلعب؟»: فرق (2–4) أو كل واحد لحاله (2–10)، وتنعكس على كل الألعاب وتنشال حقول الأسماء منها (فيها زر ✏️ تغيير). المجلس صار صفين: 📺 شاشة وحدة فوق و📱 بالجوالات تحت. شلنا «المجموعات المتاحة».</li>
     <li><b>نسخة 0.27:</b> تحت «مجلس الألعاب» جملة «مجاناً: أول 3 مجموعات أسئلة في كل لعبة» تختفي بعد الاشتراك، وشلنا عدّاد «مجموعة متاحة» من البطاقات وشاشات الألعاب.</li>
     <li><b>نسخة 0.26:</b> سين جيم: من 2 إلى 4 فرق (＋/− فريق في الإعداد)، والأدوار بالتساوي، وأول فريق اسمه الافتراضي «فريق إبراهيم».</li>
     <li><b>نسخة 0.25:</b> أسهم الريموت تتنقل بين البطاقات والأزرار في المجلس وكل الألعاب. وش الصح؟ بالجوال بالعرض صارت الخيارات كلها تبان. سين جيم: أسماء الفئات تحت الإيموجي في الجوال. خمّن: في الفرق البطل هو الفريق و«نجم اللعبة» تحته. حروف وألوف: اسم الفريق الفايز ما يركب على النص.</li>
@@ -315,6 +333,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <h1>مجلس<span>الألعاب!</span></h1>
   <p class="free-line" id="freeline" hidden>🎁 مجاناً لكم: أول 3 مجموعات أسئلة في كل لعبة، واشتركوا وتنفتح كلها</p>
   <nav class="games" aria-label="الألعاب">
+    <h3 class="grp-t">📺 على شاشة وحدة <small>(تلفزيون أو لابتوب، بدون جوالات)</small></h3>
     <a class="game g1" href="min-akoon.html" data-g="mak">
       <div class="art"><span class="qmark" aria-hidden="true">؟</span><span class="dev-tag">📺 شاشة</span></div>
       <span class="chip sets"></span><span class="live" id="resume-a" hidden>محفوظة</span>
@@ -339,23 +358,12 @@ button, input, select, textarea, summary { font-family: var(--body); }
       <h2>رتّب وفوز</h2>
       <p>رتّب البطاقات قبل الفرق الثانية</p>
     </a>
+    <h3 class="grp-t">📱 بالجوالات <small>(أو الجوال اختياري)</small></h3>
     <a class="game g5" href="wsh.html" data-g="wsh">
       <div class="art"><span class="emo" aria-hidden="true">📱🤥📺</span><span class="dev-tag">📺+📱 شاشة وجوالات</span></div>
       <span class="chip sets"></span><span class="new" id="new-e">جديدة</span><span class="live" id="resume-e" hidden>جارية</span>
       <h2>وش الصح؟</h2>
       <p>اكتب كذبة مقنعة واكشف الحقيقة</p>
-    </a>
-    <a class="game g6 locked" href="bara.html" data-g="br" data-dev="1" aria-disabled="true">
-      <div class="art"><span class="emo" aria-hidden="true">🤫🕵️🎭</span><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📱 جوال واحد</span></div>
-      <span class="chip sets"></span>
-      <h2>برا السالفة</h2>
-      <p>واحد منكم ما يعرف الموضوع… اكشفوه!</p>
-    </a>
-    <a class="game g7 locked" href="hurouf.html" data-g="hu" data-dev="1" aria-disabled="true">
-      <div class="art"><div class="tiles letters" aria-hidden="true"><i>ح</i><i>ر</i><i>و</i></div><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📺 شاشة + جوال اختياري</span></div>
-      
-      <h2>حروف وألوف</h2>
-      <p>فريقان وأجراس ولوحة حروف سداسية</p>
     </a>
     <a class="game g8 locked" href="seenjeem.html" data-g="sj" data-dev="1" aria-disabled="true">
       <div class="art"><span class="emo" aria-hidden="true">❓🏆⏱️</span><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📺 شاشة + جوال اختياري</span></div>
@@ -363,9 +371,21 @@ button, input, select, textarea, summary { font-family: var(--body); }
       <h2>سين جيم</h2>
       <p>مسابقة عائلية بفئات وأسئلة وأجراس</p>
     </a>
+    <a class="game g7 locked" href="hurouf.html" data-g="hu" data-dev="1" aria-disabled="true">
+      <div class="art"><div class="tiles letters" aria-hidden="true"><i>ح</i><i>ر</i><i>و</i></div><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📺 شاشة + جوال اختياري</span></div>
+      
+      <h2>حروف وألوف</h2>
+      <p>فريقان وأجراس ولوحة حروف سداسية</p>
+    </a>
+    <a class="game g6 locked" href="bara.html" data-g="br" data-dev="1" aria-disabled="true">
+      <div class="art"><span class="emo" aria-hidden="true">🤫🕵️🎭</span><span class="soonbadge">🔜 قريباً</span><span class="dev-tag">📱 جوال واحد</span></div>
+      <span class="chip sets"></span>
+      <h2>برا السالفة</h2>
+      <p>واحد منكم ما يعرف الموضوع… اكشفوه!</p>
+    </a>
   </nav>
   <div class="subrow"><button class="subbtn" id="sub" type="button"></button></div>
-  <div class="subrow"><button class="subbtn alt fambtn" id="fambtn" type="button">🏆 جولة العائلة</button><button class="subbtn alt" id="setsbtn" type="button">🎮 المجموعات المتاحة</button><button class="subbtn alt" id="honorbtn" type="button">🏅 لوحة الشرف</button></div>
+  <div class="subrow"><button class="subbtn alt fambtn" id="fambtn" type="button">🏆 جولة العائلة</button><button class="subbtn alt" id="whobtn" type="button">👥 مين بيلعب؟</button><button class="subbtn alt" id="honorbtn" type="button">🏅 لوحة الشرف</button></div>
 </main>
 <div class="sp-names fam" id="famdlg" hidden role="dialog" aria-label="جولة العائلة"><div class="box" id="fambox"></div></div>
 <div class="sp-names fam" id="honordlg" hidden role="dialog" aria-label="لوحة الشرف"><div class="box" id="honorbox"></div></div>
@@ -402,7 +422,6 @@ button, input, select, textarea, summary { font-family: var(--body); }
     if (P.isSub()) { if (confirm("إلغاء الاشتراك التجريبي؟")) { P.unsubscribe(); refreshPass(); } }
     else P.openPaywall("hub", true);
   });
-  document.getElementById("setsbtn").addEventListener("click", function () { if (window.MAJLIS_PASS) MAJLIS_PASS.openSets("mak"); });
   if (window.MAJLIS_PASS) MAJLIS_PASS.onChange(refreshPass);
   window.addEventListener("resize", refreshPass);
   refresh();
@@ -421,7 +440,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   }
   document.getElementById("go").addEventListener("click", function () {
     try { sessionStorage.setItem("majlis_started", "1"); } catch (e) {}
-    splash.classList.add("out"); setTimeout(function () { splash.hidden = true; syncInert(); var g = document.querySelector(".game"); if (g) g.focus(); }, 480);
+    splash.classList.add("out"); setTimeout(function () { splash.hidden = true; syncInert(); openWho(); }, 480);
   });
   syncInert();
   setTimeout(function () { if (!splash.hidden) document.getElementById("go").focus(); }, 100);
@@ -449,23 +468,42 @@ button, input, select, textarea, summary { font-family: var(--body); }
   function paintMode() { var m = "tv"; try { m = localStorage.getItem("majlis_mode") === "phones" ? "phones" : "tv"; } catch (e) {} for (var i = 0; i < modeBtns.length; i++) modeBtns[i].setAttribute("aria-pressed", String(modeBtns[i].getAttribute("data-mode") === m)); }
   for (var mi = 0; mi < modeBtns.length; mi++) modeBtns[mi].addEventListener("click", function (e) { try { localStorage.setItem("majlis_mode", e.currentTarget.getAttribute("data-mode")); } catch (er) {} paintMode(); });
   paintMode();
-  var nmBox = document.getElementById("spnames"), nmChips = document.getElementById("namechips");
-  function getNames() { try { var r = JSON.parse(localStorage.getItem("majlis_names") || "[]"); return Array.isArray(r) ? r : []; } catch (e) { return []; } }
-  function setNames(a) { try { localStorage.setItem("majlis_names", JSON.stringify(a)); } catch (e) {} paintNames(); }
-  function paintNames() {
-    var a = getNames(); nmChips.textContent = "";
-    a.forEach(function (n, i) { var b = document.createElement("button"); b.type = "button"; b.textContent = n + " ✕"; b.addEventListener("click", function () { var x = getNames(); x.splice(i, 1); setNames(x); }); nmChips.appendChild(b); });
-    var ncEl = document.getElementById("namescount"); if (ncEl) ncEl.textContent = a.length ? "(" + a.length + ")" : "";
+  /* «مين بيلعب؟»: بعد «يلا نلعب» يكتبون الفرق أو الأسماء مرة وحدة، وتنعكس على كل الألعاب (majlis_who) */
+  var nmBox = document.getElementById("spnames"), whoList = document.getElementById("wholist");
+  var WHO_DEF = { teams: ["فريق الصقور", "فريق النخيل", "فريق الذيب", "فريق القمر"], players: ["لاعب 1", "لاعب 2", "لاعب 3", "لاعب 4", "لاعب 5", "لاعب 6", "لاعب 7", "لاعب 8", "لاعب 9", "لاعب 10"] };
+  var WHO_MAX = { teams: 4, players: 10 }, whoDraft = null;
+  function whoGet() { try { var w = JSON.parse(localStorage.getItem("majlis_who") || "null"); if (w && Array.isArray(w.names) && w.names.length >= 2) return { kind: w.kind === "players" ? "players" : "teams", names: w.names.slice(0, 10) }; } catch (e) {} return null; }
+  function whoRead() { [].forEach.call(whoList.querySelectorAll("input"), function (inp, i) { whoDraft.names[i] = inp.value; }); }
+  function whoPaint() {
+    var k = whoDraft.kind, n = whoDraft.names;
+    [].forEach.call(nmBox.querySelectorAll("[data-kind]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-kind") === k)); });
+    whoList.innerHTML = n.map(function (x, i) { return '<input data-wi="' + i + '" maxlength="18" aria-label="' + (k === "teams" ? "اسم الفريق " : "اسم اللاعب ") + (i + 1) + '" placeholder="' + WHO_DEF[k][i] + '">'; }).join("");
+    [].forEach.call(whoList.querySelectorAll("input"), function (inp, i) { inp.value = n[i] || ""; });
+    document.getElementById("whoadd").disabled = n.length >= WHO_MAX[k]; document.getElementById("whodel").disabled = n.length <= 2;
+    document.getElementById("whohint").textContent = k === "teams" ? "من 2 إلى 4 فرق — كل الألعاب الجماعية تاخذها تلقائياً." : "من 2 إلى 10 — كل لعبة تاخذ اللي يناسبها (ألعاب الفرق تاخذ لين 4–6).";
   }
-  var nbEl = document.getElementById("namesbtn"); if (nbEl) nbEl.addEventListener("click", function () { nmBox.hidden = false; syncInert(); paintNames(); document.getElementById("nameinp").focus(); });
-  function closeNames() { nmBox.hidden = true; syncInert(); var nb = document.getElementById("namesbtn"); if (nb) nb.focus(); }
-  document.getElementById("namesdone").addEventListener("click", closeNames);
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !nmBox.hidden) { e.preventDefault(); closeNames(); } });
-  document.getElementById("nameform").addEventListener("submit", function (e) {
-    e.preventDefault(); var inp = document.getElementById("nameinp"), v = inp.value.trim().slice(0, 16), a = getNames();
-    if (v && a.indexOf(v) < 0 && a.length < 16) { a.push(v); setNames(a); } inp.value = ""; inp.focus();
+  function openWho() {
+    var w = whoGet(); whoDraft = w ? { kind: w.kind, names: w.names.slice(0, WHO_MAX[w.kind]) } : { kind: "teams", names: WHO_DEF.teams.slice(0, 2) };
+    nmBox.hidden = false; syncInert(); whoPaint(); var f = whoList.querySelector("input"); if (f) f.focus();
+  }
+  function closeNames() { nmBox.hidden = true; syncInert(); paintWhoBtn(); var g = document.querySelector(".game"); if (g) g.focus(); }
+  function paintWhoBtn() { var w = whoGet(), b = document.getElementById("whobtn"); b.textContent = w ? "👥 " + w.names.join("، ") : "👥 مين بيلعب؟"; b.title = "غيّر الفرق أو اللاعبين"; }
+  nmBox.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return; whoRead();
+    if (b.hasAttribute("data-kind")) { var k = b.getAttribute("data-kind"); if (k !== whoDraft.kind) { whoDraft.kind = k; whoDraft.names = whoDraft.names.slice(0, WHO_MAX[k]); } whoPaint(); }
+    else if (b.id === "whoadd" && whoDraft.names.length < WHO_MAX[whoDraft.kind]) { whoDraft.names.push(""); whoPaint(); var l = whoList.querySelectorAll("input"); l[l.length - 1].focus(); }
+    else if (b.id === "whodel" && whoDraft.names.length > 2) { whoDraft.names.pop(); whoPaint(); }
+    else if (b.id === "namesdone") {
+      var k = whoDraft.kind, names = whoDraft.names.map(function (x, i) { return String(x || "").trim().slice(0, 18) || WHO_DEF[k][i]; });
+      try { localStorage.setItem("majlis_who", JSON.stringify({ kind: k, names: names })); localStorage.setItem("majlis_names", JSON.stringify(names)); } catch (er) {}
+      closeNames();
+    } else if (b.id === "whoskip") closeNames();
   });
-  paintNames();
+  whoList.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); document.getElementById("namesdone").click(); } });
+  document.getElementById("whobtn").addEventListener("click", openWho);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !nmBox.hidden) { e.preventDefault(); closeNames(); } });
+  paintWhoBtn();
+  if (location.hash === "#who") { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} setTimeout(openWho, 50); }
   document.getElementById("hm").addEventListener("click", function () {
     splash.hidden = false; splash.classList.remove("out"); syncInert();
     try { sessionStorage.removeItem("majlis_started"); } catch (e) {}
@@ -678,6 +716,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
     if (!frame || e.source !== frame.contentWindow || !e.data || !e.data.majlis) return;
     var m = e.data.majlis;
     if (m && typeof m === "object" && Array.isArray(m.famwin)) { famSuggest = m.famwin.map(String).slice(0, 6); return; }
+    if (m === "who") { close(); openWho(); return; }
     if (m === "home") { close(); try { history.replaceState(null, "", location.pathname + location.search); } catch (err) {} }
     else if (m === "fs-on") { enterFs(); setTimeout(tellFrame, 400); }
     else if (m === "fs-off") { exitFs(); setTimeout(tellFrame, 400); }

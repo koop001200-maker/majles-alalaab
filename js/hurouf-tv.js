@@ -24,6 +24,9 @@
   var settings = Object.assign({}, DEF, Store.get(K.settings, {}) || {});
   (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams && settings.teams) { settings.teams = settings.teams.map(function (t, i) { return i < 2 ? Object.assign({}, t, { name: P.teams[i] }) : t; }); } settings.level = pick("level", { easy: "medium", mix: "mixed", hard: "hard" }); settings.target = pick("length", { short: 1, normal: 2, long: 3 }); settings.time = pick("time", { fast: 7, normal: 10, slow: 15 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT && settings.teams && settings.teams.length >= 2) { settings.teams = settings.teams.map(function (t, i) { return i < 2 ? Object.assign({}, t, { name: FT[i] }) : t; }); } })(); // فرق جولة العائلة (أول فريقين)
+  // «مين بيلعب؟» من المجلس: لو فريقين بالضبط يصيرون فرق المباراة
+  function whoHU() { var W = window.MAJLIS_WHO && MAJLIS_WHO(); return W && W.names.length === 2 ? W : null; }
+  (function () { var W = whoHU(); if (W && settings.teams && settings.teams.length >= 2) settings.teams = settings.teams.map(function (t, i) { return i < 2 ? Object.assign({}, t, { name: W.names[i] }) : t; }); })();
   (function sanitize() {
     if (!Array.isArray(settings.teams) || settings.teams.length !== 2) settings.teams = DEF.teams.map(function (t) { return Object.assign({}, t); });
     settings.teams = settings.teams.map(function (t, i) { t = t || {}; return { name: String(t.name || DEF.teams[i].name).slice(0, 16), color: COLORS.indexOf(t.color) >= 0 ? t.color : DEF.teams[i].color, players: Math.min(6, Math.max(1, +t.players || 2)) }; });
@@ -188,12 +191,12 @@
   function vSetup() {
     var s = settings, teams = s.teams.map(function (t, i) {
       var sw = COLORS.map(function (c) { return '<button class="sw" style="--c:' + c + '" data-a="color" data-t="' + i + '" data-v="' + c + '" aria-pressed="' + (t.color === c) + '" aria-label="لون"' + (s.teams[1 - i].color === c ? " disabled" : "") + "></button>"; }).join("");
-      return '<div class="tcard" style="' + cs(t.color) + '"><div class="tbar"></div><span class="lbl">الفريق ' + (i === 0 ? "الأول — يربط اليمين باليسار ↔" : "الثاني — يربط الأعلى بالأسفل ↕") + '</span><input data-name="' + i + '" maxlength="16" value="' + esc(t.name) + '" aria-label="اسم الفريق">' +
+      return '<div class="tcard" style="' + cs(t.color) + '"><div class="tbar"></div><span class="lbl">الفريق ' + (i === 0 ? "الأول — يربط اليمين باليسار ↔" : "الثاني — يربط الأعلى بالأسفل ↕") + '</span>' + (whoHU() ? '<b style="font-size:1.3em">' + esc(t.name) + "</b>" : '<input data-name="' + i + '" maxlength="16" value="' + esc(t.name) + '" aria-label="اسم الفريق">') +
         '<div class="swatches">' + sw + '</div><div class="row" style="justify-content:flex-start"><span class="lbl">عدد اللاعبين</span><span class="stepper"><button class="btn sm" data-a="pl-" data-t="' + i + '">−</button><output>' + t.players + '</output><button class="btn sm" data-a="pl+" data-t="' + i + '">+</button></span></div></div>';
     }).join("");
     var cats = '<button class="chip" data-a="cat-all" aria-pressed="' + (s.cats.length === 0) + '">كل التصنيفات</button>' + Object.keys(CATS).map(function (c) { return '<button class="chip" data-a="cat" data-v="' + c + '" aria-pressed="' + (s.cats.indexOf(c) >= 0) + '">' + esc(CATS[c]) + "</button>"; }).join("");
     return '<section class="screen"><div class="head"><h2>إعداد المباراة</h2><button class="btn" data-a="home">→ رجوع</button></div>' +
-      '<div class="setup"><div class="col"><div class="panel field"><span class="sec-t">الفريقان</span>' + teams + "</div></div>" +
+      '<div class="setup"><div class="col"><div class="panel field"><span class="sec-t">الفريقان</span>' + (whoHU() ? MAJLIS_WHO_NOTE() : "") + teams + "</div></div>" +
       '<div class="col"><div class="panel field"><span class="sec-t">اللوحة والقواعد</span><span class="lbl">حجم اللوحة</span>' + chips([[4, "4×4"], [5, "5×5"], [6, "6×6"]], s.n, "n") +
       '<span class="lbl">الفوز بالمباراة بـ</span>' + chips([[1, "جولة واحدة"], [2, "جولتين"], [3, "3 جولات"]], s.target, "target") +
       '<span class="lbl">مستوى الأسئلة</span>' + chips([["medium", "متوسط"], ["hard", "صعب"], ["mixed", "مختلط"]], s.level, "level") +

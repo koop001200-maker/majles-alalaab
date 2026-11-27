@@ -58,6 +58,7 @@
   var settings = Object.assign(clone(defaultSettings), Store.get(K.settings, {}) || {});
   (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) { settings.format = String(Math.min(6, P.teams.length)); settings.names = P.teams.concat((settings.names || []).slice(P.teams.length)); } settings.level = pick("level", { easy: 1, mix: 2, hard: 3 }); settings.rounds = pick("length", { short: 5, normal: 8, long: 12 }); settings.timerSec = pick("time", { fast: 30, normal: 45, slow: 60 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { var t = FT.slice(0, 6); settings.format = String(t.length); settings.names = t.concat((settings.names || []).slice(t.length)); } })(); // فرق جولة العائلة
+  (function () { var W = window.MAJLIS_WHO && MAJLIS_WHO(); if (!W) return; var t = W.names.slice(0, 6); settings.format = W.kind === "players" && t.length === 2 ? "players" : String(t.length); settings.names = t.concat((settings.names || []).slice(t.length)); })(); // «مين بيلعب؟» من المجلس
   if (["players", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
   if (!Array.isArray(settings.names)) settings.names = DEFAULT_NAMES.slice();
   if (!Array.isArray(settings.cats)) settings.cats = CATS.map(function (c) { return c.id; });
@@ -449,10 +450,12 @@
       ["random", "التحدي العشوائي", "القسم والمستوى يختارهما النظام"],
       ["final", "الجولة النهائية", "مراهنة الفرق على نقاطها"]
     ];
+    var who = window.MAJLIS_WHO && MAJLIS_WHO();
     var colTeams = '<div class="setup-col panel' + (setupTab === "teams" ? " on" : "") + '">' +
+      (who ? '<div class="field">' + MAJLIS_WHO_NOTE(settings.names.slice(0, n)) + "</div>" :
       '<div class="field"><span class="label">نمط اللعب</span><div class="chips">' +
       formats.map(function (f) { return '<button class="chip" data-format="' + f[0] + '" aria-pressed="' + (settings.format === f[0]) + '">' + f[1] + "</button>"; }).join("") + "</div></div>" +
-      '<div class="field"><span class="label">أسماء ' + (isP ? "اللاعبين" : "الفرق") + '</span><div class="team-inputs">' + names + "</div>" + nmChips(settings.names.slice(0, n)) + "</div>" +
+      '<div class="field"><span class="label">أسماء ' + (isP ? "اللاعبين" : "الفرق") + '</span><div class="team-inputs">' + names + "</div>" + nmChips(settings.names.slice(0, n)) + "</div>") +
       '<div class="field"><span class="label">عدد الجولات</span><div class="stepper">' +
       '<button class="btn" data-act="rounds-" aria-label="إنقاص">−</button><output id="rounds-out">' + settings.rounds + "</output>" +
       '<button class="btn" data-act="rounds+" aria-label="زيادة">+</button></div><p class="hint">في «بالدور» يتعدل العدد تلقائياً لأقرب مضاعف لعدد الفرق عشان كل فريق ياخذ نفس عدد الأدوار.</p></div>' +

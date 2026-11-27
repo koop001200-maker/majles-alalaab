@@ -293,6 +293,23 @@
       return { teams: teams.length >= 2 ? teams : null, level: ["easy", "mix", "hard"].indexOf(p.level) >= 0 ? p.level : "mix", length: ["short", "normal", "long"].indexOf(p.length) >= 0 ? p.length : "normal", time: ["fast", "normal", "slow"].indexOf(p.time) >= 0 ? p.time : "normal" };
     } catch (e) { return null; }
   };
+  /* «مين بيلعب؟» من المجلس: {kind: "teams"|"players", names:[...]} — تنعكس على كل الألعاب. جولة العائلة تتقدّم عليها */
+  window.MAJLIS_WHO = function () {
+    var ft = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (ft) return { kind: "teams", names: ft, fam: true };
+    try {
+      var w = JSON.parse(localStorage.getItem("majlis_who") || "null"); if (!w || !Array.isArray(w.names)) return null;
+      var n = w.names.map(function (x) { return String(x || "").trim().slice(0, 18); }).filter(Boolean);
+      return n.length >= 2 ? { kind: w.kind === "players" ? "players" : "teams", names: n.slice(0, 10) } : null;
+    } catch (e) { return null; }
+  };
+  /* سطر بدل حقول الأسماء داخل اللعبة: الأسماء جاية من المجلس + زر تغيير يرجع للمجلس */
+  window.MAJLIS_WHO_NOTE = function (names) {
+    var W = MAJLIS_WHO(); if (!W) return "";
+    var e = function (x) { return String(x).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+    return '<div class="who-note" style="display:flex;flex-wrap:wrap;gap:.4em;align-items:center;font-weight:800;background:#fff;color:#111827;border:3px solid #111827;border-radius:14px;padding:.35em .7em">' +
+      "<span>" + (W.kind === "teams" ? "👥 الفرق" : "🙋 اللاعبين") + " من المجلس:</span><b>" + (names || W.names).map(e).join("، ") + "</b>" +
+      (W.fam ? "<small>(جولة العائلة)</small>" : '<a href="index.html#who" target="_top" onclick="try{if(window.parent!==window){parent.postMessage({majlis:\'who\'},\'*\');return false}}catch(x){}" style="margin-inline-start:auto;color:#1d4ed8">✏️ تغيير</a>') + "</div>";
+  };
   window.MAJLIS_FAM_TEAMS = function () {
     try {
       var f = JSON.parse(localStorage.getItem("majlis_fam") || "null");

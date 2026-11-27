@@ -44,6 +44,7 @@
   var settings = Object.assign(clone(defaults), Store.get(K.settings, {}) || {});
   (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; if (P.teams) { settings.format = String(Math.min(6, P.teams.length)); settings.names = P.teams.concat(defaults.names.slice(P.teams.length)); } settings.level = pick("level", { easy: 1, mix: 2, hard: 3 }); settings.perTeam = pick("length", { short: 2, normal: 3, long: 4 }); settings.timer = pick("time", { fast: 30, normal: 45, slow: 60 }); })(); // إعدادات المجلس
   (function () { var FT = window.MAJLIS_FAM_TEAMS && MAJLIS_FAM_TEAMS(); if (FT) { var t = FT.slice(0, 6); settings.format = String(t.length); settings.names = t.concat(defaults.names.slice(t.length)); } })(); // فرق جولة العائلة
+  (function () { var W = window.MAJLIS_WHO && MAJLIS_WHO(); if (!W) return; var t = W.names.slice(0, 6); settings.format = W.kind === "players" && t.length === 2 ? "pvp" : String(t.length); settings.names = t.concat(defaults.names.slice(t.length)); })(); // «مين بيلعب؟» من المجلس
   if (["pvp", "2", "3", "4", "5", "6"].indexOf(String(settings.format)) < 0) settings.format = "2"; settings.format = String(settings.format);
   if ([1, 2, 3].indexOf(+settings.level) < 0) settings.level = 1; settings.level = +settings.level;
   settings.perTeam = Math.min(8, Math.max(1, Math.round(+settings.perTeam) || 3));
@@ -519,9 +520,10 @@
     var s = settings, n = teamCount();
     var formats = [["pvp", "لاعب ضد لاعب"], ["2", "فريق ضد فريق"], ["3", "3 فرق"], ["4", "4 فرق"], ["5", "5 فرق"], ["6", "6 فرق"]];
     var inputs = ""; for (var i = 0; i < n; i++) inputs += '<div class="team-input"><span class="sw" style="background:' + COLORS[i] + '"></span><input id="tn-' + i + '" data-name="' + i + '" maxlength="24" value="' + esc(s.names[i]) + '" aria-label="اسم ' + (s.format === "pvp" ? "اللاعب" : "الفريق") + " " + (i + 1) + '"><button class="btn dice" data-dice="' + i + '" title="اسم عشوائي" aria-label="اسم عشوائي">🎲</button></div>';
-    var c1 = '<div class="setup-col panel' + (setupTab === "teams" ? " on" : "") + '"><div class="field"><span class="label">نظام اللعب</span><div class="chips">' +
+    var who = window.MAJLIS_WHO && MAJLIS_WHO();
+    var c1 = '<div class="setup-col panel' + (setupTab === "teams" ? " on" : "") + '">' + (who ? '<div class="field">' + MAJLIS_WHO_NOTE(s.names.slice(0, n)) + "</div>" : '<div class="field"><span class="label">نظام اللعب</span><div class="chips">' +
       formats.map(function (f) { return '<button class="chip" data-format="' + f[0] + '" aria-pressed="' + (s.format === f[0]) + '">' + f[1] + "</button>"; }).join("") + "</div></div>" +
-      '<div class="field"><span class="label">الأسماء</span><div class="team-inputs">' + inputs + '</div><button class="btn small" data-ui="all-funny">🎲 أسماء مضحكة للكل</button>' + nmChips(s.names.slice(0, n)) + "</div></div>";
+      '<div class="field"><span class="label">الأسماء</span><div class="team-inputs">' + inputs + '</div><button class="btn small" data-ui="all-funny">🎲 أسماء مضحكة للكل</button>' + nmChips(s.names.slice(0, n)) + "</div>") + "</div>";
     var c2 = '<div class="setup-col panel' + (setupTab === "level" ? " on" : "") + '"><div class="field"><span class="label">مستوى الصعوبة</span><div class="chips">' +
       LEVELS.map(function (l) { return '<button class="chip" data-level="' + l.id + '" aria-pressed="' + (s.level === l.id) + '">' + l.name + "</button>"; }).join("") +
       '</div><p class="hint">' + ["", "معلومات معروفة تحتاج تفكير", "تحتاج تركيز ومعرفة جيدة", "معلومات أقل شيوعاً حتى بين المثقفين"][s.level] + "</p></div>" +

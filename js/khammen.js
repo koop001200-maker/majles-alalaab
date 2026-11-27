@@ -139,6 +139,10 @@
   function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var COMMON = shuf(BOYS).concat(shuf(GIRLS));
   function regNames() { try { var r = JSON.parse(localStorage.getItem("majlis_names") || "[]"); return Array.isArray(r) ? r.map(function (x) { return String(x).trim().slice(0, 16); }).filter(Boolean).slice(0, 16) : []; } catch (e) { return []; } }
+  // «مين بيلعب؟» من المجلس: الفرق تلعب كأنها لاعبين (كل فريق دور)، والأفراد قائمة اللاعبين
+  (function () { var W = window.MAJLIS_WHO && MAJLIS_WHO(); if (!W) return; var n = W.names.slice(0, 16);
+    if (settings.players.join("|") !== n.join("|")) { settings.players = n; settings.teamOf = n.map(function (x, i) { return i % (settings.teamCount || 2); }); }
+    if (W.kind === "teams") settings.mode = "solo"; else if (settings.mode === "duel" && n.length !== 2) settings.mode = "solo"; })();
   (function seed() { var r = regNames(), def = defaults.players.join("|"); if (r.length >= 2 && settings.players.join("|") === def) { settings.players = r.slice(); settings.teamOf = r.map(function (x, i) { return i % settings.teamCount; }); } })();
 
   var view = location.hash === "#bank" ? "bank" : "home", setupTab = "players", setupErr = "", modal = null, bankF = { cat: "", lvl: "", q: "" }, pendingDel = null;
@@ -621,14 +625,20 @@
       return '<span class="pchip">' + (isTeams ? '<button class="team-dot" data-team-cycle="' + i + '" style="background:' + TEAM_COLORS[t] + '" title="' + TEAM_NAMES[t] + ' — اضغط للتغيير" aria-label="فريق ' + esc(n) + ": " + TEAM_NAMES[t] + '"></button>' : "") + esc(n) +
         '<button class="x" data-del-player="' + i + '" aria-label="حذف ' + esc(n) + '">✕</button></span>';
     }).join("");
+    var who = window.MAJLIS_WHO && MAJLIS_WHO();
+    if (who && who.kind === "teams") return vSetupWith('<div class="setup-col panel' + (setupTab === "players" ? " on" : "") + '"><div class="field">' + MAJLIS_WHO_NOTE() + '<p class="hint">كل فريق ياخذ دوره ويخمّن كأنه لاعب واحد.</p></div></div>');
     var col1 = '<div class="setup-col panel' + (setupTab === "players" ? " on" : "") + '">' +
       '<div class="field"><span class="label">نمط اللعب</span><div class="chips">' +
       [["solo", "فردي 🙋"], ["teams", "فرق 👥"], ["duel", "مواجهة ⚔️"]].map(function (m) { return '<button class="chip" data-mode="' + m[0] + '" aria-pressed="' + (s.mode === m[0]) + '">' + m[1] + "</button>"; }).join("") + "</div>" +
       '<p class="hint">' + { solo: "كل لاعب يلعب لنفسه ويجمع نقاطه.", teams: "الفرق تتناوب، وأعضاء كل فريق يتناوبون على التخمين.", duel: "لاعبين اثنين، وكل واحد يخمّن أكبر عدد من الأشياء في وقته." }[s.mode] + "</p></div>" +
       (isTeams ? '<div class="field"><span class="label">عدد الفرق</span><div class="chips">' + [2, 3, 4].map(function (n) { return '<button class="chip" data-teams="' + n + '" aria-pressed="' + (s.teamCount === n) + '">' + n + "</button>"; }).join("") + '</div><p class="hint">اضغط الدائرة الملونة جنب الاسم لتغيير فريقه.</p></div>' : "") +
-      '<div class="field"><span class="label">اللاعبين (' + s.players.length + ')</span><form class="add-row" id="add-player"><input id="new-player" maxlength="16" placeholder="اكتب الاسم واضغط إضافة"><button class="btn go" type="submit">إضافة</button></form>' +
+      (who ? '<div class="field">' + MAJLIS_WHO_NOTE() + '<div class="player-list">' + pl + "</div></div></div>" : '<div class="field"><span class="label">اللاعبين (' + s.players.length + ')</span><form class="add-row" id="add-player"><input id="new-player" maxlength="16" placeholder="اكتب الاسم واضغط إضافة"><button class="btn go" type="submit">إضافة</button></form>' +
       '<div class="chips namepick">' + (regNames().length ? regNames() : COMMON).map(function (c) { var used = s.players.some(function (n) { return n.trim() === c; }); return '<button class="chip" data-pickname="' + esc(c) + '" aria-pressed="' + used + '">' + (used ? "✓ " : "") + esc(c) + "</button>"; }).join("") + "</div>" +
-      '<div class="player-list">' + pl + "</div></div></div>";
+      '<div class="player-list">' + pl + "</div></div></div>");
+    return vSetupWith(col1);
+  }
+  function vSetupWith(col1) {
+    var s = settings, isTeams = s.mode === "teams";
     var col2 = '<div class="setup-col panel' + (setupTab === "items" ? " on" : "") + '">' +
       '<div class="field"><span class="label">التصنيفات</span><div class="chips"><button class="chip" data-cat="all" aria-pressed="' + (!s.cats.length) + '">🎲 الكل</button>' +
       CATS.map(function (c) { return '<button class="chip" data-cat="' + c.id + '" aria-pressed="' + (s.cats.indexOf(c.id) >= 0) + '">' + c.icon + " " + c.name + "</button>"; }).join("") + "</div></div>" +

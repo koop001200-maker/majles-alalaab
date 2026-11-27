@@ -79,6 +79,9 @@
   while (settings.players.length < 3) settings.players.push("لاعب " + (settings.players.length + 1));
   if (REG.length >= 3 && settings.players.every(function (n) { return isDefaultName(n); })) settings.players = REG.slice(0, 10);
   (function () { var P = window.MAJLIS_PREFS && MAJLIS_PREFS(); if (!P) return; var pick = function (k, m) { return m[P[k]]; }; settings.rounds = pick("length", { short: 3, normal: 5, long: 8 }); settings.talk = pick("time", { fast: 60, normal: 120, slow: 180 }); })(); // إعدادات المجلس
+  // «مين بيلعب؟» من المجلس: اللعبة فردية، فتاخذ الأسماء لو «كل واحد لحاله» و3 أو أكثر
+  function whoP() { var W = window.MAJLIS_WHO && MAJLIS_WHO(); return W && W.kind === "players" && W.names.length >= 3 ? W : null; }
+  (function () { var W = whoP(); if (W) settings.players = W.names.slice(0, 10); })();
   if ([3, 5, 8].indexOf(+settings.rounds) < 0) settings.rounds = 5; settings.rounds = +settings.rounds;
   if ([60, 120, 180].indexOf(+settings.talk) < 0) settings.talk = 120; settings.talk = +settings.talk;
   settings.sound = settings.sound !== false;
@@ -227,11 +230,12 @@
     }).join("");
     function chips(list, cur, a, fmtf) { return '<div class="chips">' + list.map(function (v) { return '<button class="chip" data-a="' + a + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + fmtf(v) + "</button>"; }).join("") + "</div>"; }
     return '<section class="screen"><div class="head"><h2>إعداد اللعبة</h2><button class="btn" data-a="home">→ رجوع</button></div>' +
+      (whoP() ? '<div class="panel"><div class="field">' + MAJLIS_WHO_NOTE(s.players) + "</div></div>" :
       '<div class="panel"><div class="field"><span class="label">اللاعبون (' + s.players.length + ' من 10)</span><div class="names">' + names + "</div>" +
       (s.players.length < 10 ? '<button class="btn small" data-a="add">+ لاعب</button> ' : "") + '</div>' +
       '<datalist id="names-dl">' + COMMON.map(function (c) { return '<option value="' + esc(c) + '">'; }).join("") + "</datalist>" +
       '<div class="field"><span class="label">اضغط الاسم يدخل، واضغطه مرة ثانية يُزال</span><div class="chips namepick">' +
-      COMMON.map(function (c, ci) { var used = s.players.some(function (n) { return n.trim() === c; }); return (!REG.length && ci === BOYS.length ? '<i class="brk" aria-hidden="true"></i>' : "") + '<button class="chip" data-a="pickname" data-v="' + esc(c) + '" aria-pressed="' + used + '"' + (used ? ' title="اضغط مرة ثانية لإزالته"' : "") + ">" + (used ? "✓ " : "") + esc(c) + "</button>"; }).join("") + "</div></div></div>" +
+      COMMON.map(function (c, ci) { var used = s.players.some(function (n) { return n.trim() === c; }); return (!REG.length && ci === BOYS.length ? '<i class="brk" aria-hidden="true"></i>' : "") + '<button class="chip" data-a="pickname" data-v="' + esc(c) + '" aria-pressed="' + used + '"' + (used ? ' title="اضغط مرة ثانية لإزالته"' : "") + ">" + (used ? "✓ " : "") + esc(c) + "</button>"; }).join("") + "</div></div></div>") +
       '<div class="row"><div class="field"><span class="label">عدد الجولات</span>' + chips([3, 5, 8], s.rounds, "rounds", function (v) { return v + " جولات"; }) + "</div>" +
       '<div class="field"><span class="label">وقت النقاش</span>' + chips([60, 120, 180], s.talk, "talk", function (v) { return { 60: "دقيقة", 120: "دقيقتين", 180: "3 دقائق" }[v] || v / 60 + " دقائق"; }) + "</div></div>" +
       (setupErr ? '<p class="error" style="color:#b91c1c;font-weight:800">' + esc(setupErr) + "</p>" : "") +
