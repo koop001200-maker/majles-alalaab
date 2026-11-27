@@ -87,6 +87,8 @@
     placing = true;
     try {
       // the sets counter lives only on the game's first screen, next to the «المجموعات» button
+      // عدّاد «مجموعة متاحة» انشال من شاشات الألعاب (طلب المستخدم)، فنشيله لو موجود ونطلع
+      var old = document.querySelector(".sets-pill"); if (old) old.remove(); placing = false; return;
       var host = null, hs = document.querySelectorAll(".home-stack .row.small, .reset-line");
       for (var k = 0; k < hs.length && !host; k++) if (hs[k].getClientRects().length > 0) host = hs[k];
       var pill = document.querySelector(".sets-pill");

@@ -96,6 +96,8 @@ h1 span { display: inline-block; color: #fff; background: var(--green); border: 
 .game.locked .art .soonbadge { filter: saturate(2); }
 .game.locked:hover, .game.locked:focus-visible { transform: none; box-shadow: clamp(5px, .5vw, 10px) clamp(5px, .5vw, 10px) 0 var(--ink); }
 .game.locked .chip { display: none; }
+.game .chip.sets { display: none; } /* عدّاد المجموعات انشال من البطاقات */
+.free-line { margin: calc(-1 * clamp(2px, .6vh, 8px)) auto 0; text-align: center; font-weight: 800; font-size: clamp(13px, min(1.4vw, 2.3vh), 24px); background: rgba(255,255,255,.85); border: 3px solid var(--ink); border-radius: 999px; padding: .15em 1em; width: max-content; max-width: 94vw; }
 .art { position: relative; }
 .soonbadge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-6deg); background: var(--yellow); color: var(--ink); border: var(--line); border-radius: 999px; padding: .1em .9em; font: 400 clamp(18px, min(2vw, 4vh), 44px)/1.3 var(--display); box-shadow: 3px 3px 0 var(--ink); z-index: 2; white-space: nowrap; }
 .game:not(.locked) .soonbadge { top: clamp(16px, 1.8vw, 30px); left: clamp(16px, 1.8vw, 30px); transform: rotate(-4deg); font: 800 clamp(12px, min(.9vw, 1.8vh), 20px)/1.4 var(--body); background: #c4b5fd; padding: 0 .8em; }
@@ -269,6 +271,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.27:</b> تحت «مجلس الألعاب» جملة «مجاناً: أول 3 مجموعات أسئلة في كل لعبة» تختفي بعد الاشتراك، وشلنا عدّاد «مجموعة متاحة» من البطاقات وشاشات الألعاب.</li>
     <li><b>نسخة 0.26:</b> سين جيم: من 2 إلى 4 فرق (＋/− فريق في الإعداد)، والأدوار بالتساوي، وأول فريق اسمه الافتراضي «فريق إبراهيم».</li>
     <li><b>نسخة 0.25:</b> أسهم الريموت تتنقل بين البطاقات والأزرار في المجلس وكل الألعاب. وش الصح؟ بالجوال بالعرض صارت الخيارات كلها تبان. سين جيم: أسماء الفئات تحت الإيموجي في الجوال. خمّن: في الفرق البطل هو الفريق و«نجم اللعبة» تحته. حروف وألوف: اسم الفريق الفايز ما يركب على النص.</li>
     <li><b>نسخة 0.24:</b> وش الصح؟: «ال» ما تنحسب، تقبل كلمة زيادة أو نقص، ورسالة الرفض تقول السبب، وشلنا أسئلة أبواب الجنة. برا السالفة: لو انكشف ياخذ الباقين نقطة دايماً. وصححنا أسئلة مشكوك فيها وقيم بعض أسئلة سين جيم، وقاعدة السرقة صارت مكتوبة، والأعداد (دقيقتين، مجموعات متاحة، أحرف…).</li>
@@ -310,6 +313,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
 </div>
 <main>
   <h1>مجلس<span>الألعاب!</span></h1>
+  <p class="free-line" id="freeline" hidden>🎁 مجاناً لكم: أول 3 مجموعات أسئلة في كل لعبة، واشتركوا وتنفتح كلها</p>
   <nav class="games" aria-label="الألعاب">
     <a class="game g1" href="min-akoon.html" data-g="mak">
       <div class="art"><span class="qmark" aria-hidden="true">؟</span><span class="dev-tag">📺 شاشة</span></div>
@@ -387,12 +391,8 @@ button, input, select, textarea, summary { font-family: var(--body); }
   }
   function refreshPass() {
     var P = window.MAJLIS_PASS; if (!P) return;
-    var small = innerWidth < 640 || innerHeight < 460;
-    [].forEach.call(document.querySelectorAll(".game[data-g]"), function (a) {
-      var i = P.setsInfo(a.getAttribute("data-g")), el = a.querySelector(".sets");
-      if (el) { el.textContent = "🎮 " + i.left + (small ? "" : " مجموعة متاحة"); el.title = i.left + " مجموعة متاحة (كل مجموعة " + i.size + " جولات)"; }
-    });
     var b = document.getElementById("sub"), sb = P.sub();
+    document.getElementById("freeline").hidden = !!sb; // قبل الاشتراك فقط
     b.classList.toggle("on", !!sb);
     b.textContent = sb ? "✅ مشترك — " + P.PLANS[sb.plan].name.replace("اشتراك ", "") : "⭐ اشترك";
     b.title = sb ? "اضغط لإلغاء الاشتراك (تجريبي)" : "افتح البنك كامل في كل الألعاب";
