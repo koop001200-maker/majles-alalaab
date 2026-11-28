@@ -229,7 +229,25 @@ main { justify-content: center; gap: clamp(14px, 3.2vh, 40px); }
 .lastbtn[hidden] { display: none; }
 .who-kind, .who-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .who-kind button, .who-row button { font: 800 16px var(--body); color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .3em 1em; cursor: pointer; }
-.who-kind button[aria-pressed="true"] { background: var(--yellow); box-shadow: 3px 3px 0 var(--ink); }
+.who-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 3px solid var(--ink); border-radius: 18px 18px 0 0; overflow: hidden; background: #e5e7eb; margin-bottom: -10px; }
+.who-tabs button { display: grid; gap: 2px; justify-items: center; padding: .55em .5em; font: inherit; color: var(--ink); background: #e5e7eb; border: 0; border-inline-start: 3px solid var(--ink); cursor: pointer; min-height: 52px; }
+.who-tabs button:first-child { border-inline-start: 0; }
+.who-tabs b { font: 800 clamp(15px, 2.4vh, 19px)/1.2 var(--body); } .who-tabs small { font: 700 clamp(11px, 1.7vh, 13px)/1.2 var(--body); opacity: .7; }
+.who-tabs button[aria-selected="true"] { background: var(--yellow); box-shadow: inset 0 -6px 0 var(--ink); }
+.who-tabs button[aria-selected="true"] small { opacity: 1; }
+.who-tabs button:focus-visible { outline: 4px solid #1d4ed8; outline-offset: -4px; }
+.who-list { border: 3px solid var(--ink); border-radius: 0 0 18px 18px; padding: 10px; margin-top: 0; background: #fffbeb; }
+@media (max-width: 420px) { .who-tabs small { display: none; } }
+.sp-names .box > * { flex: none; }
+/* قائمة الأسماء الجاهزة هي اللي تتمرر، والتبويبين والخانات وزر «يلا» يبقون ظاهرين دايماً */
+.sp-names .box:has(.who-tabs) { overflow: hidden; }
+.sp-names .who-chips { flex: 1 1 auto; min-height: 64px; max-height: none; overflow-y: auto; align-content: flex-start; }
+/* جوال بالعرض: الصندوق يتمرر داخلياً، والرأس أصغر عشان القائمة والأزرار تبان */
+@media (max-height: 520px) {
+  .sp-names { padding: 6px; align-items: start; } .sp-names .box { max-height: calc(100dvh - 12px); padding: 8px 14px; gap: 6px; }
+  .sp-names h2 { font-size: 20px; } .who-tabs button { min-height: 40px; padding: .25em .5em; } .who-tabs small { display: none; }
+  #whochipst, #whohint { display: none; } .who-row button { padding: .15em .8em; font-size: 14px; } .sp-names .who-chips { min-height: 56px; } .who-list input { padding: .25em .8em !important; font-size: 15px !important; }
+}
 .who-row button:disabled { opacity: .4; cursor: not-allowed; }
 .who-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(10em, 1fr)); gap: 8px; }
 .who-chips { max-height: 30vh; overflow: auto; }
@@ -291,7 +309,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
 </head>
 <body data-hub>
 <div class="sp-names" id="spnames" hidden role="dialog" aria-label="مين بيلعب؟"><div class="box"><h2>👥 مين بيلعب؟</h2>
-  <div class="who-kind" role="group" aria-label="طريقة اللعب"><button type="button" data-kind="teams">👥 فرق</button><button type="button" data-kind="players">🙋 كل واحد لحاله</button></div>
+  <div class="who-tabs" role="tablist" aria-label="طريقة اللعب"><button type="button" role="tab" data-kind="teams"><b>👥 فرق</b><small>فريقين أو أكثر يتنافسون</small></button><button type="button" role="tab" data-kind="players"><b>🙋 كل واحد لحاله</b><small>كل لاعب باسمه</small></button></div>
   <div class="who-list" id="wholist"></div>
   <div class="who-row"><button type="button" id="whoadd">＋ إضافة</button><button type="button" id="whodel">− حذف</button><button type="button" id="whorand">🎲 أسماء عشوائية</button></div>
   <p class="hint" id="whochipst"></p><div class="chips who-chips" id="whochips"></div>
@@ -306,6 +324,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.33:</b> «مين بيلعب؟»: صار فيها تبويبين أفقيين واضحين (👥 فرق | 🙋 كل واحد لحاله) مع سطر يشرح كل واحد، وتنتقلون بينهم بالأسهم، وعلى الجوال بالعرض قائمة الأسماء هي اللي تتمرر وزر «يلا» دايماً ظاهر.</li>
     <li><b>نسخة 0.32:</b> شلنا من أسماء الفرق: سوالف الطرنيب، الفهلوية، الطفشانين.</li>
     <li><b>نسخة 0.31:</b> «مين بيلعب؟»: لو اخترت «كل واحد لحاله» الشاشة كلها بدون كلمة فريق، وضفنا عبدالعزيز وإبراهيم وأسماء ثانية، وأسماء فرق فهلوية ومضحكة (الهياط، الطقطقة، أبو ريالين، الله يستر…) وصارت 29 اسم.</li>
     <li><b>نسخة 0.30:</b> لخبطة حروف: «ابدأ اللعب» يدخلك الجولة الأولى على طول. «مين بيلعب؟»: أسماء فرق إبداعية (الكبسة، الدلّة، السنافر…) مع 🎲 وقائمة تختارون منها، و«كل واحد لحاله» فيها قائمة أسماء أشخاص تضغطونها وتنضاف.</li>
@@ -504,7 +523,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   function whoRead() { var n = cur(); [].forEach.call(whoList.querySelectorAll("input"), function (inp, i) { n[i] = inp.value; }); }
   function whoPaint(err) {
     var k = whoDraft.kind, n = cur(), list = k === "teams" ? TEAM_FUN : PEOPLE;
-    [].forEach.call(nmBox.querySelectorAll("[data-kind]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-kind") === k)); });
+    [].forEach.call(nmBox.querySelectorAll("[data-kind]"), function (b) { var on = b.getAttribute("data-kind") === k; b.setAttribute("aria-selected", String(on)); b.setAttribute("aria-pressed", String(on)); b.tabIndex = on ? 0 : -1; });
     whoList.innerHTML = n.map(function (x, i) { return '<input data-wi="' + i + '" maxlength="18" aria-label="' + (k === "teams" ? "اسم الفريق " : "الاسم ") + (i + 1) + '" placeholder="' + (k === "teams" ? "اسم الفريق " : "الاسم ") + (i + 1) + '">'; }).join("");
     [].forEach.call(whoList.querySelectorAll("input"), function (inp, i) { inp.value = n[i] || ""; });
     document.getElementById("whoadd").disabled = n.length >= WHO_MAX[k]; document.getElementById("whodel").disabled = n.length <= 2;
@@ -556,6 +575,10 @@ button, input, select, textarea, summary { font-family: var(--body); }
       try { localStorage.setItem("majlis_who", JSON.stringify({ kind: k, names: names })); localStorage.setItem("majlis_names", JSON.stringify(names)); } catch (er) {}
       closeNames();
     } else if (b.id === "whoskip") closeNames();
+  });
+  nmBox.querySelector(".who-tabs").addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return; e.preventDefault(); e.stopPropagation(); whoRead();
+    whoDraft.kind = whoDraft.kind === "teams" ? "players" : "teams"; whoPaint(); nmBox.querySelector('[data-kind="' + whoDraft.kind + '"]').focus();
   });
   whoList.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); document.getElementById("namesdone").click(); } });
   document.getElementById("whobtn").addEventListener("click", openWho);
