@@ -306,6 +306,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
   <form id="dvform" autocomplete="off"><input id="dvcode" type="password" inputmode="numeric" maxlength="12" placeholder="الرمز" aria-label="رمز المطورين"><button type="submit" class="done">فتح</button></form>
   <p class="dv-err" id="dverr" role="alert" hidden>الرمز غير صحيح</p>
   <details class="dv-notes"><summary>📝 ملاحظات التحديثات</summary><ul>
+    <li><b>نسخة 0.31:</b> «مين بيلعب؟»: لو اخترت «كل واحد لحاله» الشاشة كلها بدون كلمة فريق، وضفنا عبدالعزيز وإبراهيم وأسماء ثانية، وأسماء فرق فهلوية ومضحكة (الفهلوية، الهياط، أبو ريالين، الله يستر…) وصارت 32 اسم.</li>
     <li><b>نسخة 0.30:</b> لخبطة حروف: «ابدأ اللعب» يدخلك الجولة الأولى على طول. «مين بيلعب؟»: أسماء فرق إبداعية (الكبسة، الدلّة، السنافر…) مع 🎲 وقائمة تختارون منها، و«كل واحد لحاله» فيها قائمة أسماء أشخاص تضغطونها وتنضاف.</li>
     <li><b>نسخة 0.29:</b> «ابدأ اللعب» يبدأ على طول لو الأسماء من المجلس (الإعدادات بزرها). تلميح على البطاقة لو الأسماء ما تنطبق عليها، وزر «▶ العب آخر لعبة مرة ثانية». جولة العائلة: الفرق من «مين بيلعب؟»، تختارون من 2 إلى 5 ألعاب أو «🎲 اختاروا لنا»، آخر لعبة دبل اختياري، وسجل الفايز بكل لعبة، وألعاب الفرق بس.</li>
     <li><b>نسخة 0.28:</b> بعد «يلا نلعب» تطلع «👥 مين بيلعب؟»: فرق (2–4) أو كل واحد لحاله (2–10)، وتنعكس على كل الألعاب وتنشال حقول الأسماء منها (فيها زر ✏️ تغيير). المجلس صار صفين: 📺 شاشة وحدة فوق و📱 بالجوالات تحت. شلنا «المجموعات المتاحة».</li>
@@ -491,8 +492,9 @@ button, input, select, textarea, summary { font-family: var(--body); }
   /* «مين بيلعب؟»: بعد «يلا نلعب» يكتبون الفرق أو الأسماء مرة وحدة، وتنعكس على كل الألعاب (majlis_who) */
   var nmBox = document.getElementById("spnames"), whoList = document.getElementById("wholist");
   // أسماء فرق إبداعية، وقائمة أسماء أشخاص للضغط عليها
-  var TEAM_FUN = ["فريق الكبسة", "فريق الدلّة", "فريق الصقور", "فريق الهيل", "فريق السنافر", "فريق البشت", "فريق المطازيز", "فريق الشاهي", "فريق الذيب", "فريق العقال", "فريق النخيل", "فريق البرق", "فريق الجمّال", "فريق القهوة", "فريق المندي", "فريق الفرسان"];
-  var PEOPLE = ["أبوي", "أمي", "جدي", "جدتي", "عمي", "خالي", "عمتي", "خالتي", "محمد", "أحمد", "عبدالله", "فهد", "خالد", "سلطان", "سعود", "تركي", "فيصل", "ناصر", "يوسف", "عمر", "نورة", "سارة", "ريم", "لمى", "هيا", "منى", "مها", "العنود", "دانة", "جود"];
+  var TEAM_FUN = ["فريق الكبسة", "فريق الدلّة", "فريق الصقور", "فريق الهيل", "فريق السنافر", "فريق البشت", "فريق المطازيز", "فريق الشاهي", "فريق الذيب", "فريق العقال", "فريق النخيل", "فريق البرق", "فريق الجمّال", "فريق القهوة", "فريق المندي", "فريق الفرسان",
+    "فريق الفهلوية", "فريق الهياط", "فريق الطقطقة", "فريق الطفشانين", "فريق الشاورما", "فريق النوّامين", "فريق الكشتة", "فريق أبو ريالين", "فريق الحوامة", "فريق الجكر", "فريق اللقافة", "فريق الدبابيس", "فريق فلتة الشوط", "فريق سوالف الطرنيب", "فريق ما نخسر", "فريق الله يستر"];
+  var PEOPLE = ["أبوي", "أمي", "جدي", "جدتي", "عمي", "خالي", "عمتي", "خالتي", "محمد", "أحمد", "عبدالله", "فهد", "خالد", "سلطان", "سعود", "تركي", "فيصل", "ناصر", "يوسف", "عمر", "عبدالعزيز", "إبراهيم", "بدر", "نواف", "ماجد", "راشد", "نورة", "سارة", "ريم", "لمى", "هيا", "منى", "مها", "العنود", "دانة", "جود"];
   var WHO_MAX = { teams: 4, players: 10 }, whoDraft = null;
   function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function funTeams(n, avoid) { return shuf(TEAM_FUN).filter(function (x) { return (avoid || []).indexOf(x) < 0; }).slice(0, n); }
@@ -502,13 +504,13 @@ button, input, select, textarea, summary { font-family: var(--body); }
   function whoPaint(err) {
     var k = whoDraft.kind, n = cur(), list = k === "teams" ? TEAM_FUN : PEOPLE;
     [].forEach.call(nmBox.querySelectorAll("[data-kind]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-kind") === k)); });
-    whoList.innerHTML = n.map(function (x, i) { return '<input data-wi="' + i + '" maxlength="18" aria-label="' + (k === "teams" ? "اسم الفريق " : "اسم اللاعب ") + (i + 1) + '" placeholder="' + (k === "teams" ? "اسم الفريق " : "اسم ") + (i + 1) + '">'; }).join("");
+    whoList.innerHTML = n.map(function (x, i) { return '<input data-wi="' + i + '" maxlength="18" aria-label="' + (k === "teams" ? "اسم الفريق " : "الاسم ") + (i + 1) + '" placeholder="' + (k === "teams" ? "اسم الفريق " : "الاسم ") + (i + 1) + '">'; }).join("");
     [].forEach.call(whoList.querySelectorAll("input"), function (inp, i) { inp.value = n[i] || ""; });
     document.getElementById("whoadd").disabled = n.length >= WHO_MAX[k]; document.getElementById("whodel").disabled = n.length <= 2;
     document.getElementById("whorand").hidden = k !== "teams";
     document.getElementById("whochipst").textContent = k === "teams" ? "أو اختاروا اسم جاهز:" : "اضغطوا الأسماء تنضاف (واضغطوها مرة ثانية تنشال):";
     document.getElementById("whochips").innerHTML = list.map(function (x) { var on = n.indexOf(x) >= 0; return '<button type="button" data-pick="' + x + '" aria-pressed="' + on + '">' + (on ? "✓ " : "") + x + "</button>"; }).join("");
-    var h = document.getElementById("whohint"); h.textContent = err || (k === "teams" ? "من 2 إلى 4 فرق — كل الألعاب الجماعية تاخذها تلقائياً." : "من 2 إلى 10 — كل لعبة تاخذ اللي يناسبها (ألعاب الفرق تاخذ لين 4–6)."); h.style.color = err ? "#b91c1c" : "";
+    var h = document.getElementById("whohint"); h.textContent = err || (k === "teams" ? "من 2 إلى 4 فرق — كل الألعاب الجماعية تاخذها تلقائياً." : "اكتبوا من 2 إلى 10 أسماء — كل لعبة تاخذ اللي يناسبها."); h.style.color = err ? "#b91c1c" : "";
   }
   function openWho() {
     var w = whoGet();
@@ -529,7 +531,7 @@ button, input, select, textarea, summary { font-family: var(--body); }
     [].forEach.call(document.querySelectorAll("a.game[data-g]"), function (a) {
       var g = a.getAttribute("data-g"), bad = !!w && g in fit && !fit[g], tip = a.querySelector(".fit-tip");
       if (bad && !tip) { tip = document.createElement("span"); tip.className = "fit-tip"; a.appendChild(tip); }
-      if (tip) { tip.hidden = !bad; tip.textContent = g === "br" ? "✍️ فردية: تكتبون اللاعبين فيها" : g === "hu" ? "✍️ لفريقين: تكتبون الأسماء فيها" : "✍️ لين 4 فرق: تكتبون الأسماء فيها"; }
+      if (tip) { tip.hidden = !bad; tip.textContent = g === "br" ? "✍️ للأفراد: تكتبون الأسماء فيها" : g === "hu" ? "✍️ لاثنين بس: تكتبون الأسماء فيها" : "✍️ لين 4 بس: تكتبون الأسماء فيها"; }
     });
     var last = null; try { last = localStorage.getItem("majlis_last"); } catch (e) {}
     var la = last && document.querySelector('a.game[href="' + last + '"]:not(.locked)'), lb = document.getElementById("lastbtn");

@@ -134,7 +134,7 @@
   settings.memTime = [4, 6, 8, 10].indexOf(+settings.memTime) >= 0 ? +settings.memTime : 6;
   function saveSettings() { Store.set(K.settings, settings); }
   /* names: the list registered on the entrance screen (shared across games), else common names */
-  var BOYS = ["محمد", "أحمد", "عبدالله", "فهد", "خالد", "سلطان", "سعود", "تركي", "فيصل", "ناصر", "يوسف", "عمر", "بدر", "نواف", "عبدالعزيز"];
+  var BOYS = ["محمد", "أحمد", "عبدالله", "فهد", "خالد", "سلطان", "سعود", "تركي", "فيصل", "ناصر", "يوسف", "عمر", "بدر", "نواف", "عبدالعزيز", "إبراهيم"];
   var GIRLS = ["نورة", "سارة", "ريم", "لمى", "هيا", "منى", "مها", "العنود", "دانة", "جود", "كادي", "ترف", "أسماء"];
   function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var COMMON = shuf(BOYS).concat(shuf(GIRLS));
